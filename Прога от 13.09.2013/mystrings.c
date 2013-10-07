@@ -1,7 +1,6 @@
 /**
  * Kirill Melentyev (c) 2013 
- * lib                       
- *
+ * Строковые функции
  */
 
 #include <stdio.h> 
@@ -41,7 +40,7 @@ int _strcmp(pchar s1, pchar s2) {
     return (*s1) - (*s2);
 }
 
-int main() {
+void tests() {
     char s1[] = "Hello, ";
     char s2[] = "World!";
     char s3[] = "String3";
@@ -49,8 +48,11 @@ int main() {
     
     _strcpy(buf, s1);
     _strcat(buf, s2);
-    
-    puts(buf);
+        puts(buf);
     printf("Compare: 'Hello, ' and 'Hello, World!' %d\n", strcmp(s1, buf) );
+}
+
+int main() {
+    tests();    
     return 0;
 }
