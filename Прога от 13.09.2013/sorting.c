@@ -1,26 +1,33 @@
 /**
  * Kirill Melentyev (c) 2013 
- * Сортировки интовых массивов                  
+ * РЎРѕСЂС‚РёСЂРѕРІРєРё РёРЅС‚РѕРІС‹С… РјР°СЃСЃРёРІРѕРІ                  
  *
- * По выводу программы видно в файле sortsout.txt видно, что на быстрая 
- * сортировка работает примерно в полтора раза быстрее, чем пирамидальная,
- * а модификация быстрой сортировки (сортировка маленьких подмассивов
- * "пузырьком") работает еще немного быстрее.
- * (сортировку пузырьком на массиве случайном 5000000 не запукаем совсем, 
- * потому что дождаться ее не реально,  но на отсортированом массиве, 
- * и на почти отсортированном она отрабатывает не слишком долго.
+ * РџРѕ РІС‹РІРѕРґСѓ РїСЂРѕРіСЂР°РјРјС‹ РІРёРґРЅРѕ РІ С„Р°Р№Р»Рµ sortout.txt РІРёРґРЅРѕ, С‡С‚Рѕ Р±С‹СЃС‚СЂР°СЏ 
+ * СЃРѕСЂС‚РёСЂРѕРІРєР° СЂР°Р±РѕС‚Р°РµС‚ РїСЂРёРјРµСЂРЅРѕ РІ РґРІР° СЂР°Р·Р° Р±С‹СЃС‚СЂРµРµ, С‡РµРј РїРёСЂР°РјРёРґР°Р»СЊРЅР°СЏ,
+ * Р° РјРѕРґРёС„РёРєР°С†РёСЏ Р±С‹СЃС‚СЂРѕР№ СЃРѕСЂС‚РёСЂРѕРІРєРё (СЃРѕСЂС‚РёСЂРѕРІРєР° РјР°Р»РµРЅСЊРєРёС… РїРѕРґРјР°СЃСЃРёРІРѕРІ
+ * "РїСѓР·С‹СЂСЊРєРѕРј") СЂР°Р±РѕС‚Р°РµС‚ РµС‰Рµ РЅРµРјРЅРѕРіРѕ Р±С‹СЃС‚СЂРµРµ.
+ * РЎРѕСЂС‚РёСЂРѕРІРєСѓ РїСѓР·С‹СЂСЊРєРѕРј РЅР° Р±РѕР»СЊС€РѕРј СЃР»СѓС‡Р°Р№РЅРѕРј РјР°СЃСЃРёРІРµ РЅРµ Р·Р°РїСѓРєР°РµРј СЃРѕРІСЃРµРј, 
+ * РїРѕС‚РѕРјСѓ С‡С‚Рѕ РґРѕР¶РґР°С‚СЊСЃСЏ РµРµ РЅРµ СЂРµР°Р»СЊРЅРѕ, РЅРѕ РЅР° Р±РѕР»СЊС€РѕРј РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРѕРј РјР°СЃСЃРёРІРµ, 
+ * Рё РЅР° Р±РѕР»СЊС€РѕРј РїРѕС‡С‚Рё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅРѕРј РѕРЅР° РѕС‚СЂР°Р±Р°С‚С‹РІР°РµС‚ РґРѕСЃС‚Р°С‚РѕС‡РЅРѕ Р±С‹СЃС‚СЂРѕ Р±Р»Р°РіРѕРґР°СЂСЏ РјРѕРґРёС„РёРєР°С†РёРё 
+ * РїРѕРѕС‡РµСЂРµРґРЅС‹С… РїСЂРѕС…РѕРґРѕРІ РѕС‚ РЅР°С‡Р°Р»Р° РІ РєРѕРЅРµС† Рё РѕС‚ РєРѕРЅС†Р° РІ РЅР°С‡Р°Р»Рѕ.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include <time.h>         
+#include <time.h>
+#include <math.h>
+#include <string.h>         
 
 #define min MIN_
 #define max MAX_
 
 #define true 1
 #define false 0
+
+#define BIG 5000000
+#define SMALL 500
+#define MEDIUM 50000
 
 typedef int(*pfunc)(int*, int);
 
@@ -62,7 +69,7 @@ int heap_sort(int *a, int n) {
     int i;
     int *last = a + n - 1;
     
-    // теперь мы никогда не будем обращаться к элементу a[0], но будем к a[n] (удобно для кучи);
+    // С‚РµРїРµСЂСЊ РјС‹ РЅРёРєРѕРіРґР° РЅРµ Р±СѓРґРµРј РѕР±СЂР°С‰Р°С‚СЊСЃСЏ Рє СЌР»РµРјРµРЅС‚Сѓ a[0], РЅРѕ Р±СѓРґРµРј Рє a[n] (СѓРґРѕР±РЅРѕ РґР»СЏ РєСѓС‡Рё);
     a--;
 
     for(i = n; i >= 1; i--) {
@@ -76,18 +83,32 @@ int heap_sort(int *a, int n) {
     return 0;     
 }
 
+// РќР° СЃР°РјРѕРј РґРµР»Рµ С€РµР№РєРµСЂ, РїРѕС‚РѕРјСѓ С‡С‚Рѕ РІ С‚Р°РєРѕР№ РјРѕРґРёС„РёРєР°С†РёРё С…РѕСЂРѕС€Рѕ СЂР°Р±РѕС‚Р°РµС‚ РЅР° "РїРѕС‡С‚Рё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹С…"
 int bubble_sort(int *a, int n) {
-    int i, j, swaps;
-    for(i = 1; i < n; i++) {
-        swaps = 0;
-        for(j = 0; j < n - i; j++) {
-            if(a[j] > a[j + 1]) {
-                swap(a + j, a + (j + 1) );
-                swaps = 1;
+    int i = 0, j, swaps = 0, dir = 0, init;
+    while(n > 1) {
+        if(i == 0) {
+            swaps = 0;
+            dir = 1;
+            init = 0;
+        }
+        else {
+            dir = -1;
+            init = n - 1;
+        }
+        for(j = init; j < n && j >= 0 && j + dir >= 0 && j + dir < n; j += dir) {
+            if(dir == 1 && a[j] > a[j + 1] || dir == -1 && a[j] < a[j - 1]) {
+                swap(a + j, a + (j + dir) );
+                swaps++;
             }
         }
-        if(!swaps) 
-            break;
+        if(i == 1) {
+            a++;
+            n -= 2;
+            if(swaps == 0) 
+                break;
+        }   
+        i ^= 1;
     }
     return 0;
 }
@@ -107,7 +128,7 @@ void sorted_array(int *a, int n, int l, int r) {
 void almost_sorted_array(int *a, int n, int l, int r) {
     int i;
     sorted_array(a, n, l, r);
-    for(i = 0; i < (n / 20); i++) {
+    for(i = 0; i < 2 * (double)log(n); i++) {
         swap(a + (my_rand() % n), a + (my_rand() % n));
     }
     
@@ -164,7 +185,7 @@ int _quick_sort(int *a, int n, int small_part, pfunc fn) {
         n1 = r - a + 1;
         n2 = a + n - l;
         
-        //Рекурсивно спускаемся только в меньшую ветвь - так стек не превысит log(n)
+        //Р РµРєСѓСЂСЃРёРІРЅРѕ СЃРїСѓСЃРєР°РµРјСЃСЏ С‚РѕР»СЊРєРѕ РІ РјРµРЅСЊС€СѓСЋ РІРµС‚РІСЊ - С‚Р°Рє СЃС‚РµРє РЅРµ РїСЂРµРІС‹СЃРёС‚ log(n)
         if(n1 > n2) {
             _quick_sort(a2, n2, small_part, fn);
             a = a1;
@@ -188,7 +209,7 @@ int quick_sort_bubble(int *a, int n) {
 }
 
 
-// Что бы удобно было
+// Р§С‚Рѕ Р±С‹ СѓРґРѕР±РЅРѕ Р±С‹Р»Рѕ
 int test_sort(int *a, int n, int(*fn)(int*, int), int show_res, int times) {
     int *buf, start, finish, sorted, step;
     buf = (int*)malloc(n * sizeof(int) );
@@ -220,26 +241,23 @@ int test_sort(int *a, int n, int(*fn)(int*, int), int show_res, int times) {
     }
 }
 
-#define BIG 50000
-#define SMALL 10
-#define MEDIUM 500
-
 void _test_array_type(pfunc functions[], char **sort_names, int sort_num, int smalltimes, int *small, int *medium, int *big, char *suff) {
     int res1, res2, res3;
 
     res1 = test_sort(small, SMALL, functions[sort_num], false, smalltimes);
     res2 = test_sort(medium, MEDIUM, functions[sort_num], false, 1);
     
-    if(sort_num > 0) {
-        res3 = test_sort(big, BIG, functions[sort_num], false, 1);    
-    }
-    else { 
-        res3 = 100500 * 1000;
-    }
-    
     printf("\n  small_%s: %.7lf\n", suff, (double)res1 / ((double)smalltimes) / 1000.0);
     printf("  medium_%s: %.7lf\n", suff, (double)res2 / 1000.0);
-    printf("  big_%s: %.7lf\n\n", suff, (double)res3 / 1000.0);
+
+
+    if(sort_num == 0 && strcmp(suff, "rand") == 0) {
+        printf("  big_%s: not runnig this sort algo on this data\n\n");
+    }
+    else {
+        res3 = test_sort(big, BIG, functions[sort_num], false, 1);    
+        printf("  big_%s: %.7lf\n\n", suff, (double)res3 / 1000.0);
+    }
 }
 
 void run_testing(int sorts_cnt, pfunc functions[], char **sort_names, int smalltimes) {
@@ -267,8 +285,8 @@ void run_testing(int sorts_cnt, pfunc functions[], char **sort_names, int smallt
     
     almost_sorted_array(small_almost_rand, SMALL, 0, SMALL * 3);
     almost_sorted_array(medium_almost_rand, MEDIUM, 0, MEDIUM * 3);
-    almost_sorted_array(big_almost_rand, BIG, 0, BIG * 3);
-
+    almost_sorted_array(big_almost_rand, BIG, 0, BIG * 3); 
+    
     sorted_array(small_sorted, SMALL, 0, SMALL * 3);
     sorted_array(medium_sorted, MEDIUM, 0, MEDIUM * 3);
     sorted_array(big_sorted, BIG, 0, BIG * 3);
@@ -294,9 +312,11 @@ void run_testing(int sorts_cnt, pfunc functions[], char **sort_names, int smallt
 
 int main() {            
     srand(117);
+    //int a[] = {4, 1, 2, 10, 3, 7, 8, 6, 9, 5};
     pfunc functions[] = {bubble_sort, heap_sort, quick_sort, quick_sort_bubble};
     char *sort_names[] = {"bubble_sort", "heap_sort", "quick_sort", "quick_sort_bubble"};
-    run_testing(4, functions, sort_names, 500);
+    run_testing(4, functions, sort_names, 1000);
+    //test_sort(a, 10, bubble_sort, 1, 1);
     return 0;
 }
     
