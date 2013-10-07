@@ -12,7 +12,6 @@ let webClient = new WebClient()
 
 type VkHelper = class
     static member APP_ID = "3916880"
-    static member API_SECRET = "ZtTnJBXF42Q0oiPepsia"
     static member API_METHOD_URL = "https://api.vk.com/method/"
     
     static member Auth (wb : WebBrowser)  = 
