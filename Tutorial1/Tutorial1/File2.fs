@@ -15,10 +15,12 @@ type VkHelper(webClient: WebClient) =
     let APP_ID = "3916880"
     let API_METHOD_URL = "https://api.vk.com/method/"
     
-    member this.Auth (wb : WebBrowser)  = 
+    member this.Auth (wb:WebBrowser) = 
         let url = "https://oauth.vk.com/authorize?client_id=" + APP_ID 
                 + "&scope=8&redirect_uri=" + "https://oauth.vk.com/blank.html" + "&display=page&v=3.0&response_type=token"
         wb.Navigate url
+        ()
+
     
     member this.RunMethodStr name access_token (lParams: list<string>) =
         let mutable url = API_METHOD_URL + name + ".xml?access_token=" + access_token
@@ -31,10 +33,6 @@ type VkHelper(webClient: WebClient) =
         let Doc = new XmlDocument() 
         this.RunMethodStr name access_token lParams |> Doc.LoadXml
         Doc
-    member this.logout (wb : WebBrowser) =    
-        let link = wb.Document.GetElementById("logout_link")
-        link.InvokeMember("click") |> ignore
-        ()
 
 let alert s = 
     MessageBox.Show s
@@ -44,16 +42,15 @@ type albumInfo = { album_id: string; title: string; }
 
 type MainForm() as form = 
     inherit Form() 
-    let syncBtn = new Button(Text = "Process", Left = 130, Top = 10, Visible = false)
     let syncLabel = new Label(Text = "", Left = 130, Width = 400, Top = 40, Visible = false)
     let mainMenu = new MainMenu()
     let mnuFile = new MenuItem(Text = "File")
     let mnuExit = new MenuItem(Text = "E&xit")
     let mnuAccountExit = new MenuItem(Text = "Account Exit")
-    let mnuProcessList = new MenuItem()
+    let mnuProcessList = new MenuItem(Text = "Get albums")
     let browser = new WebBrowser()
-    let access_token = ref ""
-    let user_id = ref ""
+    let mutable access_token =  ""
+    let mutable user_id = ""
     let savePath = ref ""
     let currentAlbumTitle = ref ""
     let downloadedCnt = ref 0
@@ -63,6 +60,8 @@ type MainForm() as form =
     let albumList = new ResizeArray<albumInfo>()
     let (checkboxes : Control list ref) = ref []
     let mutable accountExitDocumentCompletedHandler = null
+    let mutable browserAuthDocumentCompletedHandler = null
+    let mutable logoutState = "none"
     do form.InitializeForm()
 
     member this.InitializeForm() = 
@@ -70,13 +69,15 @@ type MainForm() as form =
         this.Height <- 400
         this.Width <- 600
         this.AutoScroll <- true
-        this.Controls.AddRange([| browser :> Control;
-            syncBtn :> Control;
+        this.Controls.AddRange([| 
+            browser :> Control;
             syncLabel :> Control;
             |]);
+        mnuProcessList.Click.AddHandler(new EventHandler(this.mnuProcessListClick) )
+        mnuAccountExit.Click.AddHandler(new EventHandler(this.mnuAccountExitClick) )
         mnuExit.Click.Add(fun _ -> this.Close() )
         mnuFile.MenuItems.AddRange([| mnuAccountExit; mnuExit |])
-        mainMenu.MenuItems.AddRange([| mnuFile |])
+        mainMenu.MenuItems.AddRange([| mnuFile; mnuProcessList |])
         this.Menu <- mainMenu
 
         browser.Width <- this.ClientSize.Width
@@ -88,30 +89,46 @@ type MainForm() as form =
                 + songList.Count.ToString() + ", file: " + perc + "%"
             |> this.syncProgressSet
         )
-        mnuProcessList.Click.AddHandler(new EventHandler(this.mnuProcessListClick) )
-        mnuAccountExit.Click.AddHandler(new EventHandler(this.mnuAccountExitClick) )
-        accountExitDocumentCompletedHandler <- new WebBrowserDocumentCompletedEventHandler(this.accountExitDocumentCompleted1) 
-        vkHelper.Auth browser
+        accountExitDocumentCompletedHandler <- new WebBrowserDocumentCompletedEventHandler(
+            this.accountExitDocumentCompleted1) 
+        browserAuthDocumentCompletedHandler <- new WebBrowserDocumentCompletedEventHandler(
+            this.browserAuthDocumentCompleted)
+        browser.DocumentCompleted.AddHandler(browserAuthDocumentCompletedHandler)
+        vkHelper.Auth browser 
+      
+
     member this.mnuAccountExitClick s e =
-        browser.Navigate("https://vk.com/");
+        logoutState <- "start"
+        //browser.DocumentCompleted.RemoveHandler(accountExitDocumentCompletedHandler) 
         browser.DocumentCompleted.AddHandler(accountExitDocumentCompletedHandler)
+        browser.Navigate("https://vk.com/");
         
     member this.accountExitDocumentCompleted1 s e =
         let link = browser.Document.GetElementById("logout_link")
-        browser.DocumentCompleted.AddHandler(accountExitDocumentCompletedHandler)
-        link.InvokeMember("click") |> ignore
+        if logoutState = "start" then
+            logoutState <- "logout_clicked"
+            link.InvokeMember("click") |> ignore
+        elif logoutState = "logout_clicked" then
+            logoutState <- "completed"
+            browser.DocumentCompleted.RemoveHandler(accountExitDocumentCompletedHandler)
+            vkHelper.Auth browser
+        else
+            browser.DocumentCompleted.RemoveHandler(accountExitDocumentCompletedHandler)
          
-    member this.browserDocumentCompleted s e = 
+    member this.browserAuthDocumentCompleted s e = 
         let frag = browser.Url.Fragment
         if (frag.Length > 1) then
             let parts = frag.Substring(1).Split('&')
-            access_token := parts.[0].Split('=').[1]
-            user_id := parts.[2].Split('=').[1]
-            this.Controls.Remove(browser)
-            ()
+            access_token <- parts.[0].Split('=').[1]
+            user_id <- parts.[2].Split('=').[1]
+            browser.Url <- new Uri("about:blank")
+            browser.DocumentCompleted.RemoveHandler(browserAuthDocumentCompletedHandler)
+            for c in this.Controls do
+                c.Show();
+            browser.Hide();
 
     member this.downloadAlbumList() =
-        let albumsRes = vkHelper.RunMethod "audio.getAlbums" !access_token ["owner_id=" + !user_id; "offset=0"; "count=100"]
+        let albumsRes = vkHelper.RunMethod "audio.getAlbums" access_token ["owner_id=" + user_id; "offset=0"; "count=100"]
         let nodes = albumsRes.SelectNodes("/response/album")
         albumList.Clear();
         songList.Clear();
@@ -138,8 +155,8 @@ type MainForm() as form =
             let cb = (!checkboxes).[number] :?> CheckBox
             if cb.Checked then 
                 let alb = albumList.[number]
-                let songsRes = (vkHelper.RunMethod "audio.get" !access_token) 
-                let songsRes = songsRes (["owner_id=" + !user_id; "album_id=" + cb.Tag.ToString(); "need_user=0"])
+                let songsRes = (vkHelper.RunMethod "audio.get" access_token) 
+                let songsRes = songsRes (["owner_id=" + user_id; "album_id=" + cb.Tag.ToString(); "need_user=0"])
                 let nodes = songsRes.SelectNodes("/response/audio")
                 for v in nodes do
                     songList.Add({ id = v.SelectSingleNode("id").InnerText;
@@ -184,6 +201,7 @@ type MainForm() as form =
 
     member this.mnuProcessListClick s args =
         Async.StartAsTask(async { this.downloadAlbumList() } ) |> ignore
+
     member this.mnuSelectAlbumsFolderClick(s, args) = 
         let folder = new FolderBrowserDialog()
         folder.SelectedPath <- "C:\\Users\\Admin\\Desktop\\Удалять можно\\vk_audio"
