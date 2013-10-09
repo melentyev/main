@@ -53,6 +53,7 @@
     <Reference Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Strmap.fs" />
     <Compile Include="File2.fs" />
   </ItemGroup>
   <PropertyGroup>

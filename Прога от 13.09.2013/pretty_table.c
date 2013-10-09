@@ -13,8 +13,14 @@
 
 int main(int argc, char **argv) {
     int n = 0, m = 0, i, j, prev, above, *a;
-    int cellsize = 5;
+    int cellsize = 7;
     char *strDelim, formatModifier[] = "%_d|";
+    
+    if(argc < 3) {
+         printf("pretty_table.exe rows columns [cellsize]\n");
+         return 0;
+    }
+    
     sscanf(argv[1],  "%d", &n);
     sscanf(argv[2],  "%d", &m);  
     

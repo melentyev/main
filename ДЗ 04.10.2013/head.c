@@ -10,13 +10,29 @@
 
 #define DEFAULT_STR_CNT 10 
 
+void run(FILE *stream, int strcnt) {
+    int cnt = 0, c; 
+    do {
+        c = getc(stream);
+        if(c != EOF) {
+            putc(c, stdout);
+        }
+        if(c == '\n') {
+            cnt++;
+        }
+    } while(c != EOF && cnt < strcnt);
+}
+
 int main(int argc, char **argv) {
-    int strcnt = DEFAULT_STR_CNT, cnt = 0, c, i;
+    int strcnt = DEFAULT_STR_CNT, i;
     FILE *stream = stdin;
     if(argc > 1) {
         for(i = 1; i < argc; i++) {
             if (strcmp(argv[i], "-n") == 0) {
-                sscanf(argv[i + 1], "%d", &strcnt); 
+                if (i + 1 >= argc || sscanf(argv[i + 1], "%d", &strcnt) <= 0) {
+                    fprintf(stderr, "Error: count not defined.\n");
+                    return 0; 
+                }                                   
                 i++;
             }
             else {
@@ -28,15 +44,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    do {
-        c = getc(stream);
-        if(c != EOF) {
-            putc(c, stdout);
-        }
-        if(c == '\n') {
-            cnt++;
-        }
-    } while(c != EOF && cnt < strcnt);
+    run(stream, strcnt);
     return 0;
 }
     

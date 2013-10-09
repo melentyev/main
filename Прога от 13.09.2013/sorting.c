@@ -158,8 +158,7 @@ int is_sorted(int *a, int n) {
 }
 
 
-int _quick_sort(int *a, int n, int small_part, pfunc fn) {
-    
+int _quick_sort(int *a, int n, int small_part, pfunc fn) {    
     while(n > 1) {
         int *l, *r, x, n1, n2, *a1, *a2;
         if(n < small_part && fn != NULL) {
@@ -209,7 +208,7 @@ int quick_sort_bubble(int *a, int n) {
 }
 
 
-// Что бы удобно было
+// Чтобы удобно было
 int test_sort(int *a, int n, int(*fn)(int*, int), int show_res, int times) {
     int *buf, start, finish, sorted, step;
     buf = (int*)malloc(n * sizeof(int) );
@@ -218,12 +217,7 @@ int test_sort(int *a, int n, int(*fn)(int*, int), int show_res, int times) {
 
     for(step = 0; step < times; step++) {
         memcpy(buf, a, n * sizeof(int) );
-    
-        
-    
-        (*fn)(buf, n);
-    
-        
+        fn(buf, n);
         if (show_res) {
             print_array(buf, min(n, 100) ); 
         }   
@@ -250,7 +244,6 @@ void _test_array_type(pfunc functions[], char **sort_names, int sort_num, int sm
     printf("\n  small_%s: %.7lf\n", suff, (double)res1 / ((double)smalltimes) / 1000.0);
     printf("  medium_%s: %.7lf\n", suff, (double)res2 / 1000.0);
 
-
     if(sort_num == 0 && strcmp(suff, "rand") == 0) {
         printf("  big_%s: not runnig this sort algo on this data\n\n");
     }
@@ -261,7 +254,6 @@ void _test_array_type(pfunc functions[], char **sort_names, int sort_num, int sm
 }
 
 void run_testing(int sorts_cnt, pfunc functions[], char **sort_names, int smalltimes) {
-
     int n,
         res_rand1 = 0, res_rand2 = 0, res_rand3 = 0, 
         res_almost1 = 0, res_almost2 = 0, res_almost3 = 0, 

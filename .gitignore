@@ -179,6 +179,8 @@ Desktop.ini
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
+*.exe
+
 # Mac crap
 .DS_Store
 
