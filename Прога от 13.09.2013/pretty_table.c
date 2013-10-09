@@ -13,11 +13,11 @@
 
 int main(int argc, char **argv) {
     int n = 0, m = 0, i, j, prev, above, *a;
-    int cellsize = 7;
+    int cellsize = 8;
     char *strDelim, formatModifier[] = "%_d|";
     
     if(argc < 3) {
-         printf("pretty_table.exe rows columns [cellsize]\n");
+         printf("Usage: pretty_table.exe rows columns [cellsize]\n");
          return 0;
     }
     
