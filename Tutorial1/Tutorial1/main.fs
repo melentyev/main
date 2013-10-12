@@ -11,6 +11,7 @@ open System.IO
 open System.Collections.Generic
 open System.Text
 open System.Configuration
+open System.Threading
  
 type songInfo = { id:string; artist: string; title:string; url: string; 
     albumFolder: string; album:string; filefull: string; }
@@ -55,11 +56,13 @@ type VkHelper(webClient: WebClient, savePath:string) as this =
         user_id <- parts.[2].Split('=').[1] 
 
     member this.Auth (wb:WebBrowser) = 
-        wb.Show();
-        let url = "https://oauth.vk.com/authorize?client_id=" + APP_ID 
-                + "&scope=8&redirect_uri=" + "https://oauth.vk.com/blank.html" + "&display=page&v=3.0&response_type=token"
-        wb.Navigate url
-        ()
+        wb.Invoke(new Action<_>(fun _ ->
+            wb.Show();
+            let url = "https://oauth.vk.com/authorize?client_id=" + APP_ID 
+                    + "&scope=8&redirect_uri=" + "https://oauth.vk.com/blank.html" + "&display=page&v=3.0&response_type=token"
+            wb.Navigate url
+            ()
+        ), [null]) |> ignore
 
     member this.RunMethodStr name (lParams: list<string>) =
         let mutable url = API_METHOD_URL + name + ".xml?access_token=" + access_token + "&v=3.0"
@@ -195,6 +198,7 @@ type MainForm() as form =
         this.Menu <- mainMenu
         
         let statusHeight = statusBar.Height
+        browser.AllowNavigation <- true
         browser.Width <- this.ClientSize.Width - 0
         browser.Height <- this.ClientSize.Height - 23
         browser.ScriptErrorsSuppressed <- true
@@ -267,7 +271,10 @@ type MainForm() as form =
         logoutState <- "start"
         for c in this.Controls do 
             c.Hide()
-        browser.Show()
+        mnuProcessList.Enabled <- false
+        mnuSynchronize.Enabled <- false
+        //mnuAccountExit.Enabled <- false
+        //browser.Show()
         //browser.DocumentCompleted.RemoveHandler(accountExitDocumentCompletedHandler) 
         browser.DocumentCompleted.AddHandler(accountExitDocumentCompletedHandler)
         browser.Navigate("https://vk.com/");
@@ -280,7 +287,10 @@ type MainForm() as form =
         elif logoutState = "logout_clicked" then
             logoutState <- "completed"
             browser.DocumentCompleted.RemoveHandler(accountExitDocumentCompletedHandler)
-            this.vkHelper.Auth browser
+            Async.StartAsTask( async { 
+                Thread.Sleep(1000); 
+                this.vkHelper.Auth browser
+            } ) |> ignore
         else
             browser.DocumentCompleted.RemoveHandler(accountExitDocumentCompletedHandler)
            
