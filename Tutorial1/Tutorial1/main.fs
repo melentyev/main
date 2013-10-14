@@ -5,7 +5,6 @@ open System.Drawing
 open System.Windows.Forms 
 open System.Web.Helpers
 open System.Net
-open System.Runtime.Serialization.Json
 open System.Xml
 open System.IO
 open System.Collections.Generic
@@ -32,7 +31,7 @@ type updatableLW =
         let k = 5
         ()
 
-type VkHelper(webClient: WebClient, savePath:string) as vkHelper = 
+type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHelper = 
     let APP_ID = "3916880"
     let API_METHOD_URL = "https://api.vk.com/method/"
     let mutable user_id = ""
@@ -47,7 +46,8 @@ type VkHelper(webClient: WebClient, savePath:string) as vkHelper =
     do vkHelper.savePath <- savePath
     [<DefaultValue>]
     val mutable namingStyle:string
-    
+    do vkHelper.namingStyle <- namingStyle
+
     let rec clearName (s : string) = 
         if(s.Length < 1) then ""
         elif (Char.IsLetterOrDigit s.[0] || s.[0] = ' ') then s.[0].ToString() + clearName(s.Substring(1))
@@ -166,7 +166,10 @@ and MainForm() as form =
     let browser = new WebBrowser(Visible = false)
     let webClient = new WebClient() 
     let downloadClient = new WebClient()
-    let mutable _vkHelper = new VkHelper(webClient, form.config.AppSettings.Settings.["savePath"].Value)
+    let mutable _vkHelper = 
+        new VkHelper (webClient
+            , form.config.AppSettings.Settings.["savePath"].Value
+            , form.config.AppSettings.Settings.["namingStyle"].Value)
     let (checkboxes : Control list ref) = ref []
     let mutable currentAlbumTitle = ""
     let mutable currentSongNumber = 0
