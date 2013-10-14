@@ -17,7 +17,22 @@ type songInfo = { id:string; artist: string; title:string; url: string;
     albumFolder: string; album:string; filefull: string; }
 type albumInfo = { album_id: string; title: string; }
 
-type VkHelper(webClient: WebClient, savePath:string) as this = 
+
+let alert s = 
+    MessageBox.Show s
+
+type updatableLW =
+    inherit ListView
+    new () = {
+        inherit ListView()
+    }
+    override this.InitLayout() =
+        base.InitLayout()
+        this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true)
+        let k = 5
+        ()
+
+type VkHelper(webClient: WebClient, savePath:string) as vkHelper = 
     let APP_ID = "3916880"
     let API_METHOD_URL = "https://api.vk.com/method/"
     let mutable user_id = ""
@@ -27,10 +42,12 @@ type VkHelper(webClient: WebClient, savePath:string) as this =
     let mutable last_name = ""
     let utf8 = Encoding.GetEncoding("utf-8");
     let win1251 = Encoding.GetEncoding("windows-1251");
-    let mutable _savePath = savePath
-        
+    [<DefaultValue>]
+    val mutable savePath:string
+    do vkHelper.savePath <- savePath
+    [<DefaultValue>]
+    val mutable namingStyle:string
     
-
     let rec clearName (s : string) = 
         if(s.Length < 1) then ""
         elif (Char.IsLetterOrDigit s.[0] || s.[0] = ' ') then s.[0].ToString() + clearName(s.Substring(1))
@@ -40,15 +57,11 @@ type VkHelper(webClient: WebClient, savePath:string) as this =
         Encoding.Convert(utf8, win1251, win1251.GetBytes(s) ) |> win1251.GetString
 
     let getUserNameLazy = lazy (
-        let res = this.RunMethod "users.get" []
+        let res = vkHelper.RunMethod "users.get" []
         first_name <- res.SelectSingleNode("/response/user/first_name").InnerText |> decode
         last_name <- res.SelectSingleNode("/response/user/last_name").InnerText |> decode
         first_name + " " + last_name 
     )
-
-    member this.savePath 
-        with get() = _savePath
-        and set(s) = do _savePath <- s
 
     member this.setAuthData(s:string) = 
         let parts = s.Substring(1).Split('&');
@@ -96,8 +109,13 @@ type VkHelper(webClient: WebClient, savePath:string) as this =
         for v in nodes do
             let artist = v.SelectSingleNode("artist").InnerText
             let title =  v.SelectSingleNode("title").InnerText
-            let filename = clearName artist + " - " + clearName title + ".mp3"
-            let albumFolder = _savePath + "\\" + clearName alb.title
+            let filename = 
+                match this.namingStyle with
+                | "artist_song" -> clearName artist + " - " + clearName title + ".mp3"
+                | "album_song" -> clearName alb.title + " - " + clearName title + ".mp3"
+                | _ -> clearName title + ".mp3"
+
+            let albumFolder = this.savePath + "\\" + clearName alb.title
             let song = { 
                 id = v.SelectSingleNode("aid").InnerText;
                 title = title;
@@ -110,21 +128,7 @@ type VkHelper(webClient: WebClient, savePath:string) as this =
             res.Add(song)   
         res
 
-let alert s = 
-    MessageBox.Show s
-
-type updatableLW =
-    inherit ListView
-    new () = {
-        inherit ListView()
-    }
-    override this.InitLayout() =
-        base.InitLayout()
-        this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true)
-        let k = 5
-        ()
-
-type MainForm() as form = 
+and MainForm() as form = 
     inherit Form()
      
     [<DefaultValue>]
@@ -132,6 +136,8 @@ type MainForm() as form =
     do form.config <- ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None)
     do if form.config.AppSettings.Settings.["savePath"] = null then 
         form.config.AppSettings.Settings.Add("savePath", "") |> ignore
+    do if form.config.AppSettings.Settings.["namingStyle"] = null then 
+        form.config.AppSettings.Settings.Add("namingStyle", "artist_song") |> ignore
     let anchorAll = (AnchorStyles.Left ||| AnchorStyles.Right 
         ||| AnchorStyles.Bottom ||| AnchorStyles.Top)
     let syncLabel = new Label(Text = "", Left = 130, Width = 400, Top = 40, Visible = false)
@@ -211,30 +217,32 @@ type MainForm() as form =
         albumListView.Height <- splitLayout1.Panel1.ClientSize.Height
         splitLayout1.Panel1.Controls.Add(albumListView :> Control)
         
-        downloadQueueListView.Columns.AddRange([| new ColumnHeader(Text = "Song", Width=200);
-            new ColumnHeader(Text = "Artist", Width = 100);
-            new ColumnHeader(Text = "Album", Width = 100);
-            new ColumnHeader(Text = "File", Width = 100);
-            new ColumnHeader(Text = "Status", Width = 100);
-        |])
+        downloadQueueListView.Columns.AddRange
+            ([| new ColumnHeader(Text = "Song", Width=200)
+                ; new ColumnHeader(Text = "Artist", Width = 100)
+                ; new ColumnHeader(Text = "Album", Width = 100)
+                ; new ColumnHeader(Text = "File", Width = 100)
+                ; new ColumnHeader(Text = "Status", Width = 100)
+            |])
         downloadQueueListView.Width <- splitLayout1.Panel2.ClientSize.Width
         downloadQueueListView.Height <- splitLayout1.Panel2.ClientSize.Height
 
-        downloadQueueContextMenu.MenuItems.AddRange([|
-            let item = new MenuItem(Text = "Process queue")
-            //item.Click
-            yield item;
-            let item = new MenuItem(Text = "Remove selected")
-            item.Click.Add(fun _ -> 
-                if(downloadQueueListView.Items.[0].Selected) then
-                    downloadClient.CancelAsync()
-                for v in downloadQueueListView.Items do 
-                    if v.Selected then downloadQueueListView.Items.Remove(v)
+        downloadQueueContextMenu.MenuItems.AddRange(
+            [|
+                let item = new MenuItem(Text = "Process queue")
+                //item.Click
+                yield item;
+                let item = new MenuItem(Text = "Remove selected")
+                item.Click.Add(fun _ -> 
+                    if(downloadQueueListView.Items.[0].Selected) then
+                        downloadClient.CancelAsync()
+                    for v in downloadQueueListView.Items do 
+                        if v.Selected then downloadQueueListView.Items.Remove(v)
                 
-                ()
-            )
-            yield item;
-        |])
+                    ()
+                )
+                yield item;
+            |])
         downloadQueueListView.ContextMenu <- downloadQueueContextMenu
 
         splitLayout1.Panel2.Controls.Add(downloadQueueListView :> Control)
@@ -255,7 +263,7 @@ type MainForm() as form =
                 downloadQueueListView.Items.[0].SubItems.[4].Text <- perc + "%"
             
             //downloadQueueListView.EndUpdate()
-            "Progress (" + currentAlbumTitle + " - " + songList.[downloadedCnt].title + "): " + downloadedCnt.ToString() + "/" 
+            "Progress (" + currentAlbumTitle + " - " + songList.[0].title + "): " + "Left: "
                 + songList.Count.ToString() + ", file: " + perc + "%"
             |> this.syncProgressSet
         )
@@ -273,9 +281,6 @@ type MainForm() as form =
             c.Hide()
         mnuProcessList.Enabled <- false
         mnuSynchronize.Enabled <- false
-        //mnuAccountExit.Enabled <- false
-        //browser.Show()
-        //browser.DocumentCompleted.RemoveHandler(accountExitDocumentCompletedHandler) 
         browser.DocumentCompleted.AddHandler(accountExitDocumentCompletedHandler)
         browser.Navigate("https://vk.com/");
         
@@ -352,24 +357,25 @@ type MainForm() as form =
             ), number) |> ignore 
     
     member this.singleSongDownloadedHandler(args) = 
-        let number = currentSongNumber
-        let song = songList.[number]
-        let data = args.Result
+        if(not(args.Cancelled) ) then 
+            let number = currentSongNumber
+            let song = songList.[number]
+            let data = args.Result
 
-        if not(Directory.Exists(song.albumFolder)) then
-            Directory.CreateDirectory(song.albumFolder) |> ignore
-        let file = new FileStream(song.filefull, FileMode.Create)
-        file.Write(data, 0, data.Length)
-        file.Close()
-        downloadedCnt <- downloadedCnt + 1
-        let labelText = ("Progress: " + downloadedCnt.ToString() + "/" + songList.Count.ToString() 
-            + "(handled song: " + song.title + ")")
-        this.syncProgressSet labelText
+            if not(Directory.Exists(song.albumFolder)) then
+                Directory.CreateDirectory(song.albumFolder) |> ignore
+            let file = new FileStream(song.filefull, FileMode.Create)
+            file.Write(data, 0, data.Length)
+            file.Close()
+            downloadedCnt <- downloadedCnt + 1
+            let labelText = ("Progress: " + downloadedCnt.ToString() + "/" + songList.Count.ToString() 
+                + "(handled song: " + song.title + ")")
+            this.syncProgressSet labelText
         this.Invoke(new Action<_>(fun _ ->
             if(not(args.Cancelled) ) then 
                 downloadQueueListView.Items.RemoveAt(0)
-            this.processSongQueue() 
         ), None) |> ignore
+        this.processSongQueue()
         
 
     member this.processSongQueue() =
@@ -401,23 +407,47 @@ type MainForm() as form =
 and SettingsForm(mainForm) as settingsForm =
     inherit Form()
     let mainForm = mainForm
+    do settingsForm.ClientSize <- new Size(503, 190)
+    do settingsForm.Text <- "Settings"
     let textBoxSelectSavePath = new TextBox(Location = new Point(10, 10)
         , Width = 400, Text = mainForm.vkHelper.savePath )
     let btnSelectSavePath = new Button(Location = new Point(420, 10), Text = "Browse...")
-    let btnOk = new Button(Text = "OK", Location = new Point(333, 50) )
-    let btnCancel = new Button(Text = "Cancel", Location = new Point(420, 50) )
+    let btnOk = new Button(Text = "OK"
+        , Location = new Point(333, settingsForm.ClientSize.Height - 30) )
+    let btnCancel = new Button(Text = "Cancel"
+        , Location = new Point(420, settingsForm.ClientSize.Height - 30) )
+    let radioNamingStyles = 
+        ([ 
+            new RadioButton(Text = "<Artist> - <Song>.mp3", Tag="artist_song");
+            new RadioButton(Text = "<Album> - <Song>.mp3", Tag="album_song");
+            new RadioButton(Text = "<Song>.mp3", Tag="song");
+        ])
+    let radioNamingStyles =
+        Seq.unfold
+            (fun (l: RadioButton list, height) -> 
+                match l with 
+                | head :: tail ->
+                     head.Location <- new Point(10, 62 + height)
+                     head.Width <- 300
+                     head.Checked <- mainForm.config.AppSettings.Settings.["namingStyle"].Value = (head.Tag :?> string)
+                     Some(head :> Control, (tail, height + 26) )
+                | [] -> None
+            ) 
+            (radioNamingStyles, 0) |> Seq.toList
+    let labelNamingStyles = new Label(Text = "File naming style:", Location=new Point(10, 40) ) 
     do btnSelectSavePath.Click.Add(settingsForm.btnSelectSavePathClick)
     do btnOk.Click.Add(settingsForm.btnOkClick)
     do btnCancel.Click.Add(settingsForm.btnCancelClick)
     do settingsForm.Visible <- false
-    do settingsForm.ClientSize <- new Size(503, 80)
-    do settingsForm.Text <- "Settings"
     do settingsForm.FormBorderStyle <- FormBorderStyle.FixedDialog
     do settingsForm.Controls.AddRange([|textBoxSelectSavePath;
         btnSelectSavePath;
+        labelNamingStyles;
         btnOk;
         btnCancel;
     |])
+    
+    do settingsForm.Controls.AddRange(List.toArray radioNamingStyles)
     member this.btnSelectSavePathClick args = 
         let folder = new FolderBrowserDialog()
         folder.ShowDialog() |> ignore
@@ -426,6 +456,9 @@ and SettingsForm(mainForm) as settingsForm =
     member this.btnOkClick args = 
         mainForm.vkHelper.savePath <- textBoxSelectSavePath.Text
         mainForm.config.AppSettings.Settings.["savePath"].Value <- mainForm.vkHelper.savePath
+        mainForm.vkHelper.namingStyle <- textBoxSelectSavePath.Text
+        mainForm.config.AppSettings.Settings.["namingStyle"].Value <- 
+            (List.find (fun (c:Control) -> (c :?> RadioButton).Checked) radioNamingStyles).Tag |> string
         mainForm.config.Save()
         this.Hide()
     
