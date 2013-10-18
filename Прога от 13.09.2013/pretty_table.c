@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     sscanf(argv[1],  "%d", &n);
     sscanf(argv[2],  "%d", &m);  
     
-    // Это что бы вывод был регулировался значением cellsize (< 10)
+    // Это что бы вывод был регулировался значением cellsize (при cellsize > 9 в любом случае уже будет плохо)
     if(argc > 3) { 
         sscanf(argv[3],  "%d", &cellsize); 
     }

@@ -36,6 +36,10 @@ int main(int argc, char **argv) {
                 i++;
             }
             else {
+                if(stream != stdin) {
+                    fprintf(stderr, "Error: more than one file provided.\n");
+                    return 0;
+                }
                 stream = fopen(argv[i], "r");
                 if (stream == NULL) {
                     fprintf(stderr, "File not found.\n");
