@@ -11,7 +11,7 @@ open System.Collections.Generic
 open System.Text
 open System.Configuration
 open System.Threading
- 
+
 type songInfo = { id:string; artist: string; title:string; url: string; 
     albumFolder: string; album:string; filefull: string; }
 type albumInfo = { album_id: string; title: string; }
@@ -20,16 +20,18 @@ type albumInfo = { album_id: string; title: string; }
 let alert s = 
     MessageBox.Show s
 
-type updatableLW =
-    inherit ListView
-    new () = {
-        inherit ListView()
-    }
-    override this.InitLayout() =
-        base.InitLayout()
-        this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true)
-        let k = 5
-        ()
+type updatableLW() as lw =
+    inherit ListView()
+    //do lw.SetStyle(ControlStyles.UserPaint,true)
+    do lw.SetStyle(ControlStyles.OptimizedDoubleBuffer, true)
+    do lw.SetStyle(ControlStyles.AllPaintingInWmPaint, true)
+    do lw.SetStyle(ControlStyles.Opaque, true)
+    do lw.DoubleBuffered <- true
+    override this.OnPaint(e) =
+        let c = 5
+        base.OnPaint(e)
+        //this.BeginUpdate()
+        //this.EndUpdate()
 
 type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHelper = 
     let APP_ID = "3916880"
@@ -53,13 +55,13 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
         elif (Char.IsLetterOrDigit s.[0] || s.[0] = ' ') then s.[0].ToString() + clearName(s.Substring(1))
         else clearName(s.Substring(1) )
 
-    let decode (s:string) = 
+    member this.decode (s:string) = 
         Encoding.Convert(utf8, win1251, win1251.GetBytes(s) ) |> win1251.GetString
 
-    let getUserNameLazy = lazy (
+    member this.getUserNameLazy = lazy (
         let res = vkHelper.RunMethod "users.get" []
-        first_name <- res.SelectSingleNode("/response/user/first_name").InnerText |> decode
-        last_name <- res.SelectSingleNode("/response/user/last_name").InnerText |> decode
+        first_name <- res.SelectSingleNode("/response/user/first_name").InnerText |> this.decode
+        last_name <- res.SelectSingleNode("/response/user/last_name").InnerText |> this.decode
         first_name + " " + last_name 
     )
 
@@ -69,10 +71,11 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
         user_id <- parts.[2].Split('=').[1] 
 
     member this.Auth (wb:WebBrowser) = 
+        let scope = 8 + 4096
         wb.Invoke(new Action<_>(fun _ ->
             wb.Show();
             let url = "https://oauth.vk.com/authorize?client_id=" + APP_ID 
-                    + "&scope=8&redirect_uri=" + "https://oauth.vk.com/blank.html" + "&display=page&v=3.0&response_type=token"
+                    + "&scope=" + scope.ToString()+ "&redirect_uri=" + "https://oauth.vk.com/blank.html" + "&display=page&v=3.0&response_type=token"
             wb.Navigate url
             ()
         ), [null]) |> ignore
@@ -90,7 +93,7 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
         Doc
 
     member this.getUserName() =
-        getUserNameLazy.Force()
+        this.getUserNameLazy.Force()
 
     member this.getAlbums() = 
         let res = new ResizeArray<albumInfo>()
@@ -99,7 +102,7 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
         
         for v in nodes do
             res.Add ({album_id = v.SelectSingleNode("album_id").InnerText;
-                title = v.SelectSingleNode("title").InnerText |> decode
+                title = v.SelectSingleNode("title").InnerText |> this.decode
             })
         res
     member this.AudioGet(alb) = 
@@ -107,8 +110,8 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
         let res = new ResizeArray<songInfo>();
         let nodes = songsRes.SelectNodes("/response/audio")
         for v in nodes do
-            let artist = v.SelectSingleNode("artist").InnerText
-            let title =  v.SelectSingleNode("title").InnerText
+            let artist = v.SelectSingleNode("artist").InnerText |> this.decode
+            let title =  v.SelectSingleNode("title").InnerText |> this.decode
             let filename = 
                 match this.namingStyle with
                 | "artist_song" -> clearName artist + " - " + clearName title + ".mp3"
@@ -202,7 +205,9 @@ and MainForm() as form =
             albumListView.Enabled <- false
             Async.StartAsTask(async { this.downloadAlbumSongsList(0) } ) |> ignore
         )
-        mnuFile.MenuItems.AddRange([| mnuAccountExit; mnuExit |])
+        let tmpMnu = new MenuItem()
+        tmpMnu.Click.Add(fun _ -> alert(this.vkHelper.RunMethodStr("messages.get") ([]) |> this.vkHelper.decode ) |> ignore );
+        mnuFile.MenuItems.AddRange([| mnuAccountExit; mnuExit; tmpMnu |])
         mainMenu.MenuItems.AddRange([| mnuFile; mnuProcessList; mnuSynchronize; mnuSettings |])
         this.Menu <- mainMenu
         
@@ -247,7 +252,6 @@ and MainForm() as form =
                 yield item;
             |])
         downloadQueueListView.ContextMenu <- downloadQueueContextMenu
-
         splitLayout1.Panel2.Controls.Add(downloadQueueListView :> Control)
         
         this.Controls.AddRange([| browser :> Control;
@@ -261,9 +265,9 @@ and MainForm() as form =
         downloadClient.DownloadProgressChanged.Add(fun args ->
             let perc = args.ProgressPercentage.ToString()
             //downloadQueueListView.BeginUpdate()
-            if (downloadQueueListView.Items.Count > 0 && (args.ProgressPercentage + 1) % 5 = 0 
-                && downloadQueueListView.Items.[0].SubItems.[4].Text <> perc + "%") then 
-                downloadQueueListView.Items.[0].SubItems.[4].Text <- perc + "%"
+            //if (downloadQueueListView.Items.Count > 0 && (args.ProgressPercentage + 1) % 5 = 0 
+             //   && downloadQueueListView.Items.[0].SubItems.[4].Text <> perc + "%") then 
+            downloadQueueListView.Items.[0].SubItems.[4].Text <- perc + "%"
             
             //downloadQueueListView.EndUpdate()
             "Progress (" + currentAlbumTitle + " - " + songList.[0].title + "): " + "Left: "
@@ -443,12 +447,14 @@ and SettingsForm(mainForm) as settingsForm =
     do btnCancel.Click.Add(settingsForm.btnCancelClick)
     do settingsForm.Visible <- false
     do settingsForm.FormBorderStyle <- FormBorderStyle.FixedDialog
-    do settingsForm.Controls.AddRange([|textBoxSelectSavePath;
-        btnSelectSavePath;
-        labelNamingStyles;
-        btnOk;
-        btnCancel;
-    |])
+    do settingsForm.Controls.AddRange
+        ([|
+            textBoxSelectSavePath;
+            btnSelectSavePath;
+            labelNamingStyles;
+            btnOk;
+            btnCancel;
+        |])
     
     do settingsForm.Controls.AddRange(List.toArray radioNamingStyles)
     member this.btnSelectSavePathClick args = 
@@ -474,5 +480,28 @@ let output = new RichTextBox(Width = debugForm.ClientSize.Width
     , Height = debugForm.ClientSize.Height)
 debugForm.Controls.Add(output)
 
+
 [<STAThread>] 
 do Application.Run(new MainForm() ) 
+(*
+let rec factor X d res =
+    match X with
+    | 1 | 2 -> X :: res 
+    | X when X % d = 0 ->  d :: factor (X / d) d res
+    | X -> factor X (d + 1) res
+
+let phi x = 
+    let mutable sumf = 1.0
+    for i in factor x 2 [] |> Seq.distinct  do
+        sumf <- sumf * (1.0 - (1.0 / float(i) ) )
+        ()
+    int(sumf * float(x) )
+
+let q = 
+    Seq.unfold
+        (fun x -> (Some(phi x, x + 1) ) )
+        1
+
+let A = Seq.toList (Seq.take 20 q)
+
+//printfn "%A" phi 2*)
