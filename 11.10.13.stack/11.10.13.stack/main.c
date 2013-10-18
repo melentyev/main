@@ -1,6 +1,6 @@
 /**
  * Kirill Melentyev (c) 2013 
- * Битовые операции
+ * Стековый калькулятор
  */
   
 #include <stdio.h>

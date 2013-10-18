@@ -1,3 +1,8 @@
+/**
+ * Kirill Melentyev (c) 2013 
+ * Разбор выражения - рекурсивный спуск
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <memory.h>
@@ -36,10 +41,7 @@ typedef struct __token {
 
 typedef struct __computationResult {
     errorType error;
-    union {
-        int value;
-        int offset;
-    } r; 
+    int value; 
 } result;
 
 result Factor();
@@ -49,7 +51,7 @@ result Expression();
 result make_result(errorType error, int value) {
      result res;
      res.error = error;
-     res.r.value = value;
+     res.value = value;
      return res;
 }
 
@@ -57,7 +59,7 @@ void print_result(char *prefix, result r) {
     char* k;
     printf("%s", prefix);
     if(r.error == ERR_NONE) {
-        printf("Result: %d\n", r.r.value);
+        printf("Result: %d\n", r.value);
     }
     else {
         printf("Error: ");
@@ -68,13 +70,18 @@ void print_result(char *prefix, result r) {
             case ERR_UNEXPECTED_TOKEN:
                 printf("unexpected token.\n");
                 puts(global_expression);
-                for(k = global_expression; k < global_position_pointer - 1; k++) {
+                for(k = global_expression; k < global_position_previous; k++) {
                     printf(" ");
                 }
                 printf("^\n");
                 break;
             case ERR_EXPECTED_BR_CLOSE:
-                printf("ERR_EXPECTED_BR_CLOSE\n");
+                printf("expected '('\n");
+                puts(global_expression);
+                for(k = global_expression; k < global_position_previous; k++) {
+                    printf(" ");
+                }
+                printf("^\n");
                 break;
             default:
                 printf("...\n");
@@ -151,10 +158,10 @@ result Expr() {
             return rhs;
         }
         if(op.type == TT_PLUS) {
-            lhs.r.value += rhs.r.value;
+            lhs.value += rhs.value;
         }
         else if(op.type == TT_MINUS) {
-            lhs.r.value -= rhs.r.value;
+            lhs.value -= rhs.value;
         } 
         else {
             return make_result(ERR_UNEXPECTED_TOKEN, 0);
@@ -165,7 +172,7 @@ result Expr() {
     }
     else {
         rollback();
-        return make_result(ERR_NONE, lhs.r.value); 
+        return make_result(ERR_NONE, lhs.value); 
     }
 }
 
@@ -186,11 +193,11 @@ result Term() {
             return rhs;
         }
         if(op.type == TT_ASTERISK) {
-            lhs.r.value *= rhs.r.value;
+            lhs.value *= rhs.value;
         }
         else if(op.type == TT_SLASH) {
-            if(rhs.r.value != 0) {
-                lhs.r.value /= rhs.r.value;
+            if(rhs.value != 0) {
+                lhs.value /= rhs.value;
             }
             else {
                 return make_result(ERR_DIVISION_BY_ZERO, 0); 
@@ -201,7 +208,7 @@ result Term() {
         }
     }
     rollback();
-    return make_result(ERR_NONE, lhs.r.value);
+    return make_result(ERR_NONE, lhs.value);
 }
 
 result Factor() {
@@ -216,7 +223,7 @@ result Factor() {
             return res;
         }
         if(next_token().type == TT_BR_CLOSE) {
-            return make_result(ERR_NONE, res.r.value);
+            return make_result(ERR_NONE, res.value);
         }
         else {
             return make_result(ERR_EXPECTED_BR_CLOSE, 0);
