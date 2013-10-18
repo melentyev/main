@@ -1,6 +1,7 @@
 /**
  * Kirill Melentyev (c) 2013 
  * Разбор выражения - рекурсивный спуск
+ * (с обработкой ошибок)
  */
 
 #include <stdio.h>
@@ -123,6 +124,16 @@ token next_token() {
                 else if(*s == '(') res.type = TT_BR_OPEN;
                 else if(*s == ')') res.type = TT_BR_CLOSE;
                 else if(*s == 0  ) res.type = TT_END;
+                else {
+                    char* k;
+                    printf("Parsing error:\n");
+                    puts(global_expression);
+                    for(k = global_expression; k < s; k++) {
+                        printf(" ");
+                    }
+                    printf("^\n");
+                    exit(0);
+                }
                 s++;
             }
         }
