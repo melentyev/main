@@ -27,6 +27,7 @@ let prepareTree filename =
             let b = buf.[i]
             dict.[b] <- if dict.ContainsKey(b) then dict.[b] + 1 else 1
         readCnt <- stream.Read(buf, 0, limit)
+    stream.Close();
     let mutable list = []
     for v in dict do 
         list <- (ref { parent = None; alpha = v.Key; value = v.Value; bit = byte(0) }) :: list

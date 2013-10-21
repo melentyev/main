@@ -1,3 +1,8 @@
+/**
+ * Kirill Melentyev (c) 2013 
+ * Стековый калькулятор
+ */
+
 #include <memory.h>
 #include <stdlib.h>
 #include "stack.h"
