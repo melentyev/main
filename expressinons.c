@@ -14,8 +14,7 @@
 #define MAX_LEN 1000
 
 char *global_expression, *global_position_pointer = 0, *global_position_previous = 0;
-
-typedef enum __tokenType {
+enum tokenType {
     TT_NUMBER = 0,
     TT_PLUS = 1,
     TT_MINUS = 2,
@@ -25,7 +24,7 @@ typedef enum __tokenType {
     TT_BR_CLOSE = 6,
     TT_END = (-1),
     TT_UNDEFINED = -2
-} tokenType;
+};
 
 typedef enum __errorType {
     ERR_NONE = 0,
@@ -34,7 +33,7 @@ typedef enum __errorType {
     ERR_EXPECTED_BR_CLOSE = 3,
 } errorType;
 
-typedef struct __token {
+typedef struct token {
     tokenType type;
     int value;
     char* begins;

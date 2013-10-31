@@ -7,6 +7,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <string>
 using namespace std;
 
 enum GifDataBlockType {
@@ -16,6 +17,12 @@ enum GifDataBlockType {
     BT_IMAGEADDITIONAL = 3,
     BT_END = 5
 };
+
+class GifStream;
+class GifDataBlock;
+class GifDataBlockApplication;
+class GifDataBlockImage;
+class GifDataDlockImageAdditional;
 
 struct GifColorTable {
     int *colors;
@@ -28,6 +35,8 @@ struct GifLogicalScreen {
     int backgroundIndex, sidesCoef;
 };
 
+
+
 struct GifDataSubblock {
     int size;
     unsigned char* data;
@@ -39,6 +48,7 @@ public:
     GifDataBlockType type;
     int subblockCnt;
     GifDataSubblock *subblocks;
+    ~GifDataBlock();
 };
 
 class GifDataBlockApplication : public GifDataBlock {
@@ -46,16 +56,6 @@ public:
     char id[8];
     unsigned char idCode[3];
     GifDataBlockApplication() { type = BT_APPLICATION; }
-};
-
-class GifDataBlockImage : public GifDataBlock {
-public:
-    GifDataBlockImage() :left(0), top(0), width(0), height(0), lzwMinCode(0), localTableSize(0) { type = BT_IMAGEDATA; }
-    unsigned short left, top, width, height; 
-    int localTableSize, lzwMinCode;
-    bool localTableFlag, interlaceFlag;
-    GifColorTable localTable;
-    
 };
 
 class GifDataDlockImageAdditional : public GifDataBlock {
@@ -66,18 +66,45 @@ public:
     bool userInput, transparentColorFlag;
 };
 
+class GifDataBlockImage : public GifDataBlock {
+public:
+    GifDataBlockImage() : 
+        left(0),
+        top(0), 
+        width(0), 
+        height(0),
+        lzwMinCode(0), 
+        localTableSize(0),
+        decodedData(0)
+    { 
+        type = BT_IMAGEDATA; 
+    }
+    unsigned short left, top, width, height; 
+    int localTableSize, lzwMinCode;
+    bool localTableFlag, interlaceFlag, hasAdditionalParams;
+    GifColorTable localTable;
+    GifDataDlockImageAdditional additionalParams;  
+    unsigned char *decodedData;
+};
+
+class GifCallbackBase {
+public:
+    virtual unsigned char* allocateMemory(unsigned int size_in_bytes)= 0;
+    virtual void onImageDecoded(GifDataBlockImage *img) = 0;
+};
+
 struct _byteSeq {
-    _byteSeq(signed short _Prev = 0, signed short _byte = 0) : Prev(_Prev), byte(_byte) {}
-    signed short Prev, byte;
+    _byteSeq(signed short _Prev = 0, unsigned char _byte = 0) : Prev(_Prev), byte(_byte) {}
+    signed short Prev;
+    unsigned char byte;
 };
 
 class GifStream {
-    GifLogicalScreen logicalScreen;
     vector<int> _dump;
     bool _makeDump;
-    _byteSeq codes[10000];
+    _byteSeq *codes;
+    int codesListCapacity;
     int codesCount;
-
     virtual unsigned char _readByte() = 0;
     unsigned char readByte() {
         if(_makeDump) {
@@ -96,8 +123,7 @@ class GifStream {
         table->colors = new int[table->size];
         memset(table->colors, 0, sizeof(int) * table->size);
         for(int i = 0; i < table->size; i++) {
-            readBytes((unsigned char*) (table->colors + i), 3); 
-            int g = 0;
+            readBytes((unsigned char*) (table->colors + i), 3);
         }
     }
     void readSubblocks(GifDataBlock* block) {
@@ -146,7 +172,9 @@ class GifStream {
                 block = add_img_block;
             }
             else if(header == 0xFE) {
-                
+                block = new GifDataBlock();
+                block->type = BT_COMMENT;
+                readSubblocks(block);
             }
         }
         else if (id == 0x2C) {
@@ -188,7 +216,6 @@ class GifStream {
         codes[(1 << lzwMinCode) + 1] = _byteSeq(-1, (1 << lzwMinCode) + 1);
         codesCount = (1 << lzwMinCode) + 2;
     }
-
     int unpackBitCounter;
     int unpackSubblockNum;
     int unpackCurByte;
@@ -211,15 +238,15 @@ class GifStream {
         }        
         unpackBitCounter = (unpackBitCounter + 1) & 7;
         return (unpackCurByte >>= 1) & 1;
-        'ab';
     }
-
     void unpackImageData(GifDataBlockImage *block, unsigned char *resultBuffer) {
         vector<unsigned char> result;
         int codeClear, codeEnd, codeLen, lenForReversing;
         int prevString;
-        
-        unsigned char arrForReversing[4096];
+        unsigned char arrForReversing[(1 << 10) * 8];
+        codesListCapacity = 4096;
+        codes = new _byteSeq[codesListCapacity];
+
         resetCodesTable(block->lzwMinCode);
         codeClear = (1 << block->lzwMinCode);
         codeEnd = (1 << block->lzwMinCode) + 1;
@@ -278,27 +305,40 @@ class GifStream {
                     }
                     *(resultBuffer++) = arrForReversing[lenForReversing - 1];
                 }
+                if(codesCount == codesListCapacity) {
+                    codesListCapacity += (1 << 8);
+                    codes = (_byteSeq*)realloc(codes, codesListCapacity * sizeof(_byteSeq) );
+                }
                 prevString = code;
             }
             if (codesCount == (1 << codeLen) ) {
                 if(codeLen < 12) codeLen++;
             }
         }
+        delete codes;
     }
-
-
+    static void deleteSubblocks(GifDataBlock *block) {
+        for (int i = 0; i < block->subblockCnt; i++) {
+            delete block->subblocks[i].data;
+        }
+        delete block->subblocks;
+    }
 public:
+    GifLogicalScreen logicalScreen;
+    friend GifDataBlock;
     char version[4];
     GifColorTable globalTable;
-    GifDataDlockImageAdditional *nextImageModifier;
-    void(*onImageDecodedCallback)(GifDataBlockImage*, unsigned char*);
+    GifDataDlockImageAdditional nextImageModifier;
+    bool hasNextImageModifier;
+    GifCallbackBase *callbacks;
     GifStream() {
         _makeDump = false;
         _dump.clear();
-        nextImageModifier = NULL;
+        hasNextImageModifier = false;
     }
-    void processStream(unsigned char*(*allocateMemory)(int w, int h) ) {
+    void processStream(GifCallbackBase *_callbacks) {
         unsigned char header[7];
+        callbacks = _callbacks;
         readBytes(header, 6);
         if (header[0] != 'G' || header[1] != 'I' || header[2] != 'F') {
             raiseError("Header not match");
@@ -325,28 +365,34 @@ public:
             readDataBlock(block);
             type = block->type;
             if(type == BT_IMAGEADDITIONAL) {
-                nextImageModifier = (GifDataDlockImageAdditional*)block;
+                nextImageModifier = *((GifDataDlockImageAdditional*)block);
+                delete (GifDataDlockImageAdditional*)block;
+                hasNextImageModifier = true;
             }
             else if(type == BT_IMAGEDATA) {
-                unsigned char *res = allocateMemory(( (GifDataBlockImage*) block)->width, ( (GifDataBlockImage*) block)->height);
-                unpackImageData( (GifDataBlockImage*) block, res);
-                onImageDecodedCallback( (GifDataBlockImage*) block, res);
-                if (nextImageModifier != NULL) {
-                    delete nextImageModifier;
-                    nextImageModifier = NULL;
+                ( (GifDataBlockImage*)block)->decodedData = callbacks->allocateMemory( 
+                    ( (GifDataBlockImage*) block)->width * ( (GifDataBlockImage*) block)->height * sizeof(unsigned char) );
+                unpackImageData( (GifDataBlockImage*) block, ( (GifDataBlockImage*)block)->decodedData);
+
+                if (hasNextImageModifier) {
+                    ( (GifDataBlockImage*)block)->additionalParams = nextImageModifier;
+                    hasNextImageModifier = false;
                 }
+                _callbacks->onImageDecoded( (GifDataBlockImage*) block);
             }
             else {
                  delete block;
             }
         } while(type != BT_END);
     }
-    void raiseError(char *s) {
-        puts(s);
-        system("pause");
-        exit(0);
+    void raiseError(std::string s) {
+        throw s;
     }
 };
+
+GifDataBlock::~GifDataBlock() {
+    GifStream::deleteSubblocks(this);
+}
 
 class GifStreamCIO : public GifStream {
     FILE *_stream;

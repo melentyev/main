@@ -2,7 +2,9 @@
 //
 #pragma comment(linker, "/STACK:16177216")
 #include "stdafx.h"
+#include "Mmsystem.h"
 #include "Win32Gif2.h"
+#pragma comment(lib, "winmm.lib")
 
 #define MAX_LOADSTRING 100
 
@@ -124,29 +126,47 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-PAINTSTRUCT ps;
-HDC hdc, buf;
-GifStreamString gif;
-HBITMAP hbmMem = NULL;
-HANDLE hOld;
 
-void onDecoded(GifDataBlockImage* img, unsigned char* data) {
-    if(hbmMem == NULL) {
-        hbmMem = CreateCompatibleBitmap(hdc, img->width, img->height);
+
+
+GifStreamString gif;
+
+class MyCallbacks : public GifCallbackBase {
+public:
+    HDC hdc, buf;
+    HBITMAP hbmMem;
+    HANDLE hOld;
+    MyCallbacks() : hbmMem(NULL) {}
+    unsigned char* allocateMemory(unsigned int size_in_bytes) {
+        return new unsigned char[size_in_bytes];
     }
-    hOld = SelectObject(buf, hbmMem);
-    for(int i = 0; i < img->height; i++) {
-        for(int j = 0; j < img->width; j++) {
-            if(gif.nextImageModifier == NULL || !(gif.nextImageModifier->transparentColorFlag) 
-                || gif.nextImageModifier->transparentColorIndex != *data) {
-                    SetPixel(buf, j, i, img->localTableFlag ? img->localTable.colors[*data] : gif.globalTable.colors[*data] );
+
+    void onImageDecoded(GifDataBlockImage* img) {
+        static DWORD nextImage = 0;
+        if(hbmMem == NULL) {
+            hbmMem = CreateCompatibleBitmap(hdc, gif.logicalScreen.width, gif.logicalScreen.height);
+        }
+        hOld = SelectObject(buf, hbmMem);
+        unsigned char* data = img->decodedData;
+        for(int i = 0; i < img->height; i++) {
+            for(int j = 0; j < img->width; j++) {
+                if(!img->hasAdditionalParams || !(img->additionalParams.transparentColorFlag) 
+                    || img->additionalParams.transparentColorIndex != *data) {
+                        SetPixel(buf, img->left + j, img->top + i, img->localTableFlag ? img->localTable.colors[*data] : gif.globalTable.colors[*data] );
+                }
+                data++;
             }
-            data++;
+        }
+        while(timeGetTime() < nextImage) {
+            Sleep(1);
+        }
+        BitBlt(hdc, img->left, img->top, img->width, img->height, buf, img->left, img->top, SRCCOPY);
+        SelectObject(buf, hOld);
+        if (img->hasAdditionalParams) {
+            nextImage = timeGetTime() + img->additionalParams.delayTime * 10;
         }
     }
-    BitBlt(hdc, 0, 0, img->width, img->height, buf, 0, 0, SRCCOPY);
-    SelectObject(buf, hOld);
-}
+} myCallbacks;
 
 unsigned char* allocateMemoryForImage(int w, int h) {
     return new unsigned char [w * h]; 
@@ -156,18 +176,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wmId, wmEvent;
     static FILE *fin = NULL;
-    
+    PAINTSTRUCT ps;
+
     static unsigned char *cont;
     static int filesize;
         
 	switch (message)
 	{
     case WM_CREATE:
-        fopen_s(&fin, "C:\\MinGW\\file2.gif", "rb");
+        fopen_s(&fin, "C:\\MinGW\\file11.gif", "rb");
         cont = new unsigned char[6 * 1000 * 1000];
         filesize = fread(cont, 1, 6 * 1000 * 1000, fin);
         gif = GifStreamString(cont);
-        gif.onImageDecodedCallback = onDecoded;
         break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam);
@@ -178,6 +198,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
+        case ID_FILE_AGAIN:
+            UpdateWindow(hWnd);
+            break;
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
 			break;
@@ -186,15 +209,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
+		myCallbacks.hdc = BeginPaint(hWnd, &ps);
         
-        buf = CreateCompatibleDC(hdc);
+        myCallbacks.buf = CreateCompatibleDC(myCallbacks.hdc);
         
-        gif.processStream(allocateMemoryForImage);
+        gif.processStream(&myCallbacks);
 	
         
-        DeleteObject(hbmMem);
-        DeleteDC    (buf);
+        DeleteObject(myCallbacks.hbmMem);
+        DeleteDC    (myCallbacks.buf);
 
         EndPaint(hWnd, &ps);
 		break;
