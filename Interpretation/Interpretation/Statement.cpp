@@ -29,13 +29,12 @@ namespace Interpretation
                 break;
             case TT_IF:
                 res = expr->execute();
-                if (res->type->isLogicalTrue || res->type->unaryPrefixOperations.count(TT_BOOL) > 0) {
-                    if (res->type->isLogicalTrue && res->isLogicalTrue() 
-                        || res->unaryPrefixOperation(TT_BOOL)->isLogicalTrue() ) 
+                if (res->type->isLogicalTrue) {
+                    if (res->isLogicalTrue() )
                     {
                         statement1->execute();
                     }
-                    else {
+                    else if(statement2) {
                         statement2->execute();
                     }
                 }

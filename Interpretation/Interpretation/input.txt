@@ -1,14 +1,22 @@
 int glob = 5;
 
-int func1(int a, int b) {
-	return a + b;
+int fact (int n) {
+	int res = 1;
+	for (int i = 1; i <= n; i = i + 1) {
+		res = res * i;
+	}
+	return res;
+}
+
+int max(int a, int b) {
+	if (a > b) return a;
+	else return b;
 }
 
 int main() {
-	int k = 0;
-	while ( (k = rand() ) < 32767) {
-		echo k;
-	}
-	echo k;
+	int a = 0;
+	int b = 0;
+	echo sin(1.5);
+	echo max(a, b);
     return 0;
 }

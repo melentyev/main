@@ -68,11 +68,15 @@
     <ClCompile Include="Factor.cpp" />
     <ClCompile Include="Function.cpp" />
     <ClCompile Include="FunctionArgs.cpp" />
+    <ClCompile Include="LogicalAndExpr.cpp" />
+    <ClCompile Include="LogicalOrExpr.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Namespace.cpp" />
     <ClCompile Include="Nonterminal.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Single.cpp" />
+    <ClCompile Include="Arithmetics.cpp" />
+    <ClCompile Include="Term.cpp" />
     <ClCompile Include="ThrowableExpr.cpp" />
     <ClCompile Include="VarDeclarationAllowDefault.cpp" />
     <ClCompile Include="Statement.cpp" />

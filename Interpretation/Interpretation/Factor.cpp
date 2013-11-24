@@ -5,7 +5,12 @@ namespace Interpretation
      pExprResult Factor::execute() 
      {
         if (isUnary) {
-            return innerFactor->execute()->unaryPrefixOperation(this->unaryOperator);
+            if (unaryOperator != TT_UNDEFINED) {
+                return innerFactor->execute()->unaryPrefixOperation(unaryOperator);
+            }
+            else {
+                return innerFactor->execute()->typeCast(innerTypename->getType() );
+            }
         }
         else {
             pExprResult res = innerSingle->execute();
@@ -35,19 +40,24 @@ namespace Interpretation
                 innerFactor = new_Factor()->parse();  
         }
         else if (currentToken().type == TT_PARENTHESIS_OPEN) {
-            tryParse([this]() {
+            tryParse([this, &match]() {
                 nextToken();
                 auto tn = new_Typename()->parse();
                 if (currentToken().type == TT_PARENTHESIS_CLOSE) {
                     isUnary = true;
-                    this->innerTypename = tn;
+                    innerTypename = tn;
                     nextToken();
+                    innerFactor = new_Factor()->parse();
+                    match = true;
                 }
                 else {
                     throw exception( (__FILE__ + to_string(__LINE__) ).c_str() );
                 }
             },
             [this, &match](exception &e) {
+                isUnary = false;
+                innerTypename = nullptr;
+                innerFactor = nullptr;
                 match = false;
             });
         }

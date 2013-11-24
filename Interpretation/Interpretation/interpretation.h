@@ -134,6 +134,11 @@ namespace Interpretation
         TT_INT,                 // "int"
         TT_CHAR,                // "char"
         TT_LONG,                // "long"
+        TT_LONGLONG,
+        TT_UNSIGNEDLONGLONG,
+        TT_UNSIGNEDINT,
+        TT_UNSIGNEDCHAR,
+        TT_LONGDOUBLE,
         TT_FLOAT,               // "float"
         TT_DOUBLE,              // "double"
         TT_BOOL,                // "bool"
@@ -262,6 +267,7 @@ namespace Interpretation
         bool simpleTypeIsUnsigned;
         bool simpleTypeIsLong;
         TokenType simpleType;
+        pType getType();
         Typename(Parser *_onwer) : Nonterminal(_onwer), simple(false), 
             simpleType(TT_UNDEFINED), simpleTypeIsLong(false), simpleTypeIsUnsigned(false) {}
         pTypename parse();
@@ -333,8 +339,9 @@ namespace Interpretation
         pStatementsBlock parentBlock;
         pStatement statement1, statement2;
         pStatementsBlock localStatementsBlock;
-        Statement(Parser *_owner) : Nonterminal(_owner), sb(nullptr), expr(nullptr), 
-            tn(nullptr), isSpecial(false), specialType(TT_UNDEFINED), parentBlock(nullptr) {}
+        Statement(Parser *_owner) : Nonterminal(_owner), sb(nullptr), expr(nullptr), expr2(nullptr), 
+            tn(nullptr), isSpecial(false), specialType(TT_UNDEFINED), parentBlock(nullptr),
+            statement1(nullptr), statement2(nullptr), localStatementsBlock(nullptr) {}
         pStatement parse();
         void execute();
     };
@@ -440,16 +447,18 @@ namespace Interpretation
     };
     class Type {
     public:
+        Parser *owner;
         bool isComplicated, isIntegral;
-        Type(bool _isIntegral = false, std::function<pExprResult(const std::string &)> __valueOf = nullptr) 
-            : isComplicated (false), _valueOf(__valueOf), isIntegral(_isIntegral),
+        Type(Parser *_owner, bool _isIntegral = false, std::function<pExprResult(const std::string &)> __valueOf = nullptr) 
+            : isComplicated (false), _valueOf(__valueOf), isIntegral(_isIntegral), owner(_owner),
             functionCallOperator(nullptr), arrayIndexerOperator(nullptr), isLogicalTrue(nullptr) {}
         map <pair<TokenType, pType>, std::function<pExprResult(pExprResult, pExprResult) > > binaryOperations;
-        map <TokenType, std::function<pExprResult(pExprResult) > > unaryPrefixOperations;
+        map <TokenType, std::function<pExprResult(pExprResult) > > unaryPrefixOperations; 
+        map <pType, std::function<pExprResult(pExprResult) > > typeCasts;
         std::function<pExprResult(const std::string &)> _valueOf;
         std::function<pExprResult(pExprResult, const vector<pSingleExpr>&)> functionCallOperator;
         std::function<pExprResult(pExprResult, const vector<pSingleExpr>&)> arrayIndexerOperator;
-        std::function<bool(pExprResult)> isLogicalTrue;
+        std::function<bool(pExprResult)> isLogicalTrue;  
         
         pExprResult valueOf(const std::string &s);
     };
@@ -462,6 +471,7 @@ namespace Interpretation
         pExprResult functionCallOperator(const vector<pSingleExpr> &args);
         pExprResult arrayIndexerOperator(const vector<pSingleExpr> &index);
         pExprResult unaryPrefixOperation(TokenType op);
+        pExprResult typeCast(pType tn);
         bool isLogicalTrue();
     };
     class StackFrame {

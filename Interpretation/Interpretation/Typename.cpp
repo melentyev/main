@@ -36,4 +36,13 @@ namespace Interpretation {
         nextToken();
         return pTypename(this);
     }
+    
+    pType Typename::getType() {
+        if (this->simple) {
+            return owner->basicTypes[simpleType];
+        }
+        else {
+            return nullptr;
+        }
+    }
 }

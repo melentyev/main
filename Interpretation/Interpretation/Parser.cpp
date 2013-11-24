@@ -2,12 +2,12 @@
 
 #define OP_DEFINING_SIMPLE(var, TT, SIGN, type) var->binaryOperations[make_pair(TT, var)] = [var, this](pExprResult lhs, pExprResult rhs) {pExprResult res = new_ExprResult(var); res->value.type = lhs->value.type SIGN rhs->value.type; return res; }
 #define OP_DEFINING(var_ret, var_l, var_r, TT, SIGN, type_ret, type_l, type_r) var_l->binaryOperations[make_pair(TT, var_r)] = [functionType, boolType, doubleType, intType, this](pExprResult lhs, pExprResult rhs) {pExprResult res = new_ExprResult(var_ret); res->value.type_ret = lhs->value.type_l SIGN rhs->value.type_r; return res; }
-
+#define OP_DEFINING_TYPECAST_SIMPLE(from, to, from_f, to_f, T) from->typeCasts[to] = [intType, doubleType, boolType, this](pExprResult operand) { pExprResult res = new_ExprResult(to); res->value.to_f = (T)(operand->value.from_f); return res; }
 namespace Interpretation {  
     Parser::Parser() {
         globalNamespace = pNamespace(new Namespace(this, "") ); 
         globalNamespace->statementsBlock = globalNamespace->new_StatementsBlock();
-        pType functionType = basicTypes[TT_FUNCTION] = new Interpretation::Type();
+        pType functionType = basicTypes[TT_FUNCTION] = new Interpretation::Type(this);
         functionType->functionCallOperator = 
             [functionType, this](pExprResult funcPtr, const vector<pSingleExpr>& args) 
         {
@@ -15,21 +15,21 @@ namespace Interpretation {
             return func->execute(args);
         };
         pType intType = basicTypes[TT_INT] = new Interpretation::Type
-            (true, [this](const string &s) 
+            (this, true, [this](const string &s) 
         {
             pExprResult res = new_ExprResult();
             res->value._int = stoi(s);
             return res;
         });
         pType boolType = basicTypes[TT_BOOL] = new Interpretation::Type
-            (true, [this](const string &s) 
+            (this, true, [this](const string &s) 
         {
             pExprResult res = new_ExprResult();
             res->value._bool = (s == "true");
             return res;
         });
         pType doubleType = basicTypes[TT_DOUBLE] = new Interpretation::Type
-            (true, [this](const string &s) 
+            (this, false, [this](const string &s) 
         {
             pExprResult res = new_ExprResult();
             res->value._double = stod(s);
@@ -56,7 +56,7 @@ namespace Interpretation {
         intType->unaryPrefixOperations[TT_MINUS] = [intType, this](pExprResult operand) 
         { 
             pExprResult res = new_ExprResult(intType); 
-            res->value._int = - (operand->value._int); 
+            res->value._int = -(operand->value._int); 
             return res; 
         };
         intType->isLogicalTrue = [intType, this](pExprResult operand) 
@@ -68,6 +68,9 @@ namespace Interpretation {
         OP_DEFINING_SIMPLE(doubleType, TT_MINUS, -, _double);
         OP_DEFINING_SIMPLE(doubleType, TT_ASTERISK, *, _double);
         OP_DEFINING_SIMPLE(doubleType, TT_SLASH, /, _double);
+
+        OP_DEFINING_TYPECAST_SIMPLE(doubleType, intType, _double, _int, int);
+        OP_DEFINING_TYPECAST_SIMPLE(intType, doubleType, _int, _double, double);
 
         boolType->isLogicalTrue = [](pExprResult operand) 
         {
@@ -89,6 +92,17 @@ namespace Interpretation {
             pExprResult res = new_ExprResult(intType);
             res->value._int = rand();
             return res;
+        });
+        globalNamespace->statementsBlock->vars["read"] = new_ExprResult(functionType);
+        globalNamespace->statementsBlock->vars["read"]->value.pointer 
+            = new Function(this, "read", [this, intType, boolType, doubleType](const vector<pSingleExpr> &args) 
+        {
+            for (auto &arg: args) {
+                pExprResult ins = arg->execute();
+                ins->type = intType;
+                cin >> ins->value._int;
+            }
+            return nullptr;
         });
         globalNamespace->statementsBlock->vars["true"] = new_ExprResult(boolType);
         globalNamespace->statementsBlock->vars["true"]->value._bool = true;
@@ -191,7 +205,8 @@ namespace Interpretation {
                     if (token.strVal == "+") token.type = TT_PLUS;
                     else if (token.strVal == "-") token.type = TT_MINUS;
                     else if (token.strVal == "*") token.type = TT_ASTERISK;
-                    else if (token.strVal == "-") token.type = TT_SLASH;
+                    else if (token.strVal == "/") token.type = TT_SLASH;
+                    else if (token.strVal == "%") token.type = TT_PERCENT;
                     else if (token.strVal == "=") token.type = TT_ASSIGN;
                     else if (token.strVal == "<") token.type = TT_LESS;
                     else if (token.strVal == ">") token.type = TT_GR;
