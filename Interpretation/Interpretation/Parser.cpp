@@ -1,5 +1,8 @@
 #include "interpretation.h"
 
+#define OP_DEFINING_SIMPLE(var, TT, SIGN, type) var->binaryOperations[make_pair(TT, var)] = [var, this](pExprResult lhs, pExprResult rhs) {pExprResult res = new_ExprResult(var); res->value.type = lhs->value.type SIGN rhs->value.type; return res; }
+#define OP_DEFINING(var_ret, var_l, var_r, TT, SIGN, type_ret, type_l, type_r) var_l->binaryOperations[make_pair(TT, var_r)] = [functionType, boolType, doubleType, intType, this](pExprResult lhs, pExprResult rhs) {pExprResult res = new_ExprResult(var_ret); res->value.type_ret = lhs->value.type_l SIGN rhs->value.type_r; return res; }
+
 namespace Interpretation {  
     Parser::Parser() {
         globalNamespace = pNamespace(new Namespace(this, "") ); 
@@ -12,69 +15,56 @@ namespace Interpretation {
             return func->execute(args);
         };
         pType intType = basicTypes[TT_INT] = new Interpretation::Type
-            ([this](const string &s) 
+            (true, [this](const string &s) 
         {
             pExprResult res = new_ExprResult();
             res->value._int = stoi(s);
             return res;
         });
-        intType->binaryOperations[make_pair(TT_PLUS, intType)] = 
-            [intType, this](pExprResult lhs, pExprResult rhs) 
+        pType boolType = basicTypes[TT_BOOL] = new Interpretation::Type
+            (true, [this](const string &s) 
         {
-            pExprResult res = new_ExprResult(intType);
-            res->value._int = lhs->value._int + rhs->value._int;
+            pExprResult res = new_ExprResult();
+            res->value._bool = (s == "true");
             return res;
-        };
-        intType->binaryOperations[make_pair(TT_MINUS, intType)] = 
-            [intType, this](pExprResult lhs, pExprResult rhs) 
-        {
-            pExprResult res = new_ExprResult(intType);
-            res->value._int = lhs->value._int - rhs->value._int;
-            return res;
-        };
-        intType->binaryOperations[make_pair(TT_ASTERISK, intType)] = 
-            [intType, this](pExprResult lhs, pExprResult rhs) 
-        {
-            pExprResult res = new_ExprResult(intType);
-            res->value._int = lhs->value._int * rhs->value._int;
-            return res;
-        };
-
+        });
         pType doubleType = basicTypes[TT_DOUBLE] = new Interpretation::Type
-            ([this](const string &s) 
+            (true, [this](const string &s) 
         {
             pExprResult res = new_ExprResult();
             res->value._double = stod(s);
             return res;
         });
-        doubleType->binaryOperations[make_pair(TT_PLUS, doubleType)] = 
-            [doubleType, this](pExprResult lhs, pExprResult rhs) 
-        {
-            pExprResult res = new_ExprResult(doubleType);
-            res->value._double = lhs->value._double + rhs->value._double;
-            return res;
+        OP_DEFINING(intType, intType, intType, TT_PLUS, +, _int, _int, _int);
+        OP_DEFINING(intType, intType, intType, TT_PLUS, +, _int, _int, _int);
+        OP_DEFINING(intType, intType, intType, TT_MINUS, -, _int, _int, _int);
+        OP_DEFINING(intType, intType, intType, TT_ASTERISK, *, _int, _int, _int);
+        OP_DEFINING(intType, intType, intType, TT_SLASH, /, _int, _int, _int);
+        OP_DEFINING(boolType, intType, intType, TT_EQUAL, == , _bool, _int, _int);
+        OP_DEFINING(boolType, intType, intType, TT_LESS_EQ, <= , _bool, _int, _int);
+        OP_DEFINING(boolType, intType, intType, TT_GR_EQ, >= , _bool, _int, _int);
+        OP_DEFINING(boolType, intType, intType, TT_NOT_EQ, != , _bool, _int, _int);
+        intType->unaryPrefixOperations[TT_MINUS] = [intType, this](pExprResult operand) 
+        { 
+            pExprResult res = new_ExprResult(intType); 
+            res->value._int = - (operand->value._int); 
+            return res; 
         };
-        doubleType->binaryOperations[make_pair(TT_MINUS, doubleType)] = 
-            [doubleType, this](pExprResult lhs, pExprResult rhs) 
+        intType->isLogicalTrue = [intType, this](pExprResult operand) 
         {
-            pExprResult res = new_ExprResult(doubleType);
-            res->value._double = lhs->value._double - rhs->value._double;
-            return res;
+            return (bool)(operand->value._int != 0);
         };
-        doubleType->binaryOperations[make_pair(TT_ASTERISK, doubleType)] = 
-            [doubleType, this](pExprResult lhs, pExprResult rhs) 
+ 
+        OP_DEFINING_SIMPLE(doubleType, TT_PLUS, +, _double);
+        OP_DEFINING_SIMPLE(doubleType, TT_MINUS, -, _double);
+        OP_DEFINING_SIMPLE(doubleType, TT_ASTERISK, *, _double);
+        OP_DEFINING_SIMPLE(doubleType, TT_SLASH, /, _double);
+
+        boolType->isLogicalTrue = [](pExprResult operand) 
         {
-            pExprResult res = new_ExprResult(doubleType);
-            res->value._double = lhs->value._double * rhs->value._double;
-            return res;
+            return (operand->value._bool);
         };
-        doubleType->binaryOperations[make_pair(TT_SLASH, doubleType)] = 
-            [doubleType, this](pExprResult lhs, pExprResult rhs) 
-        {
-            pExprResult res = new_ExprResult(doubleType);
-            res->value._double = lhs->value._double / rhs->value._double;
-            return res;
-        };
+
         globalNamespace->statementsBlock->vars["sin"] = new_ExprResult(functionType);
         globalNamespace->statementsBlock->vars["sin"]->value.pointer 
             = new Function(this, "sin", [this, doubleType](const vector<pSingleExpr> &args) 
@@ -83,6 +73,11 @@ namespace Interpretation {
             res->value._double = sin( ( *begin(args) )->execute()->value._double);
             return res;
         });
+        globalNamespace->statementsBlock->vars["true"] = new_ExprResult(boolType);
+        globalNamespace->statementsBlock->vars["true"]->value._bool = true;
+        globalNamespace->statementsBlock->vars["false"] = new_ExprResult(boolType);
+        globalNamespace->statementsBlock->vars["false"]->value._bool = false;
+
     }
     void Parser::run() {
         try {
@@ -130,9 +125,10 @@ namespace Interpretation {
                 }
                 else 
                 {
-                    /*for (auto vd: pDecl->vds) {
-                        globalNamespace->variables[pDecl->function->id] = pDecl->function;
-                    }*/
+                    for (auto vd: pDecl->vds) {
+                        globalNamespace->statementsBlock->vars[vd->vd->id] 
+                            = (vd->rhs ? vd->rhs->execute() : nullptr);
+                    }
                 }
             }
         }
@@ -163,6 +159,7 @@ namespace Interpretation {
                     else if (token.strVal == "return") token.type = TT_RETURN;
                     else if (token.strVal == "while") token.type = TT_WHILE;
                     else if (token.strVal == "if") token.type = TT_IF;
+                    else if (token.strVal == "else") token.type = TT_ELSE;
                     else if (token.strVal == "for") token.type = TT_FOR;
                     else if (token.strVal == "break") token.type = TT_BREAK;
                     else if (token.strVal == "continue") token.type = TT_CONTINUE;
@@ -360,5 +357,4 @@ namespace Interpretation {
         else if(t.type == TT_TRUE || t.type == TT_FALSE) return TT_BOOL;
         return TT_UNDEFINED;
     }
-
 }

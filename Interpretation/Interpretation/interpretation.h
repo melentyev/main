@@ -120,6 +120,7 @@ namespace Interpretation
         TT_CONST,               // "const"
         TT_RETURN,              // "return"
         TT_IF,                  // "if"
+        TT_ELSE,                // "else"
         TT_WHILE,               // "while"
         TT_FOR,                 // "for"
         TT_DO,                  // "do"
@@ -323,10 +324,11 @@ namespace Interpretation
         pStatementsBlock sb;
         vector<pVarDeclarationAllowDefault> vds;
         pTypename tn;
-        pExpr expr;
+        pExpr expr, expr2;
         bool isSpecial;
         TokenType specialType;
         pStatementsBlock parentBlock;
+        pStatement statement1, statement2;
         Statement(Parser *_owner) : Nonterminal(_owner), sb(nullptr), expr(nullptr), 
             tn(nullptr), isSpecial(false), specialType(TT_UNDEFINED), parentBlock(nullptr) {}
         pStatement parse();
@@ -427,6 +429,7 @@ namespace Interpretation
         char _char;
         float _float;
         double _double;
+        bool _bool;
         long long ll;
         unsigned long long ull;
         void *pointer;
@@ -434,14 +437,16 @@ namespace Interpretation
     class Type {
     public:
         bool isComplicated, isIntegral;
-        Type(std::function<pExprResult(const std::string &)> __valueOf = nullptr) 
-            : isComplicated (false), _valueOf(__valueOf), 
+        Type(bool _isIntegral = false, std::function<pExprResult(const std::string &)> __valueOf = nullptr) 
+            : isComplicated (false), _valueOf(__valueOf), isIntegral(_isIntegral),
             functionCallOperator(nullptr), arrayIndexerOperator(nullptr) {}
         map <pair<TokenType, pType>, std::function<pExprResult(pExprResult, pExprResult) > > binaryOperations;
-        map <TokenType, std::function<pExprResult(pExprResult, pExprResult) > > unaryPrefixOperations;
+        map <TokenType, std::function<pExprResult(pExprResult) > > unaryPrefixOperations;
         std::function<pExprResult(const std::string &)> _valueOf;
         std::function<pExprResult(pExprResult, const vector<pSingleExpr>&)> functionCallOperator;
         std::function<pExprResult(pExprResult, const vector<pSingleExpr>&)> arrayIndexerOperator;
+        std::function<bool(pExprResult)> isLogicalTrue;
+        
         pExprResult valueOf(const std::string &s);
     };
     class ExprResult {
@@ -452,7 +457,8 @@ namespace Interpretation
         pExprResult binaryOperation(TokenType op, pExprResult rhs);
         pExprResult functionCallOperator(const vector<pSingleExpr> &args);
         pExprResult arrayIndexerOperator(const vector<pSingleExpr> &index);
-        pExprResult unaryPrefixOperation(TokenType op) { return pExprResult(this); }
+        pExprResult unaryPrefixOperation(TokenType op);
+        bool isLogicalTrue();
     };
     class StackFrame {
     public:

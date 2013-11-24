@@ -7,20 +7,39 @@ namespace Interpretation {
             switch (specialType) {
             case TT_ECHO:
                 res = expr->execute();
-                if (res->type == owner->basicTypes[TT_DOUBLE] )
+                if (res->type == owner->basicTypes[TT_DOUBLE])
                 {
                     cout << "Program output: " << res->value._double << endl;
+                }
+                else if (res->type == owner->basicTypes[TT_BOOL]) 
+                {
+                    cout << "Program output: " << (bool)(res->value._bool) << endl;
                 }
                 else 
                 {
                     cout << "Program output: " << res->value._int << endl;
                 }
-                
                 break;
             case TT_RETURN:
                 owner->callStack.back()->returnValue = expr->execute();
                 break;
             case TT_IF:
+                res = expr->execute();
+                if (res->type->isIntegral) {
+                    if (res->isLogicalTrue() ) {
+                        statement1->execute();
+                    }
+                    else {
+                        statement2->execute();
+                    }
+                }
+                else {
+                    // TODO EXCEPTION
+                }
+                break;
+            case TT_FOR:
+                break;
+            case TT_WHILE:
                 break;
             }
         }
@@ -51,7 +70,15 @@ namespace Interpretation {
                 nextToken();
         }
         else if (currentToken().type == TT_IF) {
-            
+            isSpecial = true;
+            specialType = currentToken().type;
+            nextToken();
+            expr = new_Expr()->parse();
+            statement1 = new_Statement()->parse();
+            if (currentToken().type == TT_ELSE) {
+                nextToken();
+                statement2 = new_Statement()->parse();
+            }
         }
         else if (currentToken().type == TT_WHILE) {
 

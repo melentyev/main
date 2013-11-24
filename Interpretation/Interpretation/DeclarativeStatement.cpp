@@ -37,10 +37,17 @@ namespace Interpretation {
                     throw exception( (string("Unexpeted token") + to_string(__LINE__) ).c_str() );
                 }
             }
-            else if(tok.type == TT_COMMA) {
+            else if(currentToken().type == TT_COMMA) 
+            {
                     
             }
-            else {
+            else if (currentToken().type == TT_SEMICOLON)
+            {
+                vds.push_back(vd);
+                nextToken();
+            }
+            else 
+            {
                 throw exception( (string("Unexpeted token") + to_string(__LINE__) ).c_str() );
             }
         }

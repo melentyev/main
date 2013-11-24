@@ -45,7 +45,9 @@ namespace Interpretation {
             nextToken();
         }
         else {
-            if (currentToken().type != TT_WORD) {
+            if (currentToken().type != TT_WORD && currentToken().type != TT_TRUE 
+                && currentToken().type != TT_FALSE) 
+            {
                 throw exception( (string(__FILE__) + ": " + to_string(__LINE__) ).c_str() );
             }
             id = currentToken().strVal;

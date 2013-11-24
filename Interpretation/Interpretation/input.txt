@@ -1,11 +1,16 @@
+int glob = 5;
+
 int func1(int a, int b) {
 	return a + b;
 }
 
 int main() {
 	int kkk = 5;
-	int eps = 3;
-	echo (kkk * 2 + func1(6, - 50) );
-	echo sin(1.);
+	int glob = 2;
+	if (8 <= 1) 
+		echo true;
+	else 
+		echo false;
+	echo 555;
     return 0;
 }
