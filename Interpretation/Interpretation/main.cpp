@@ -10,24 +10,6 @@ namespace Interpretation
         inner = new_ThrowableExpr()->parse();
         return pSingleExpr(this);
     }
-    pThrowableExpr ThrowableExpr::parse() {
-        tryParse([this]() { 
-            pFactor lhs_candidate = new_Factor()->parse(); 
-            if (currentToken().type == TT_ASSIGN || currentToken().type == TT_PLUS_ASSIGN 
-                || currentToken().type == TT_MINUS_ASSIGN) {
-                    nextToken();
-                    lhs = lhs_candidate;
-                    operation = currentToken().type;
-                    innerThrowable = new_ThrowableExpr()->parse();
-            }
-            else {
-                throw exception( (__FILE__ + to_string(__LINE__) ).c_str() );
-            }
-        }, [this](exception &e) { 
-            innerLogical = new_LogicalOrExpr()->parse(); 
-        });
-        return pThrowableExpr(this);
-    }
     pLogicalOrExpr LogicalOrExpr::parse() {
         inner.push_back(new_LogicalAndExpr()->parse() );
         while (currentToken().type == TT_DOUBLE_PIPE) {
@@ -49,7 +31,9 @@ namespace Interpretation
     {
         inner.push_back(new_Arithmetics()->parse() );
         while (currentToken().type == TT_EQUAL || currentToken().type == TT_GR_EQ 
-            || currentToken().type == TT_LESS_EQ) {
+            || currentToken().type == TT_LESS_EQ || currentToken().type == TT_GR 
+            || currentToken().type == TT_LESS ) 
+        {
                 operators.push_back(currentToken().type);
                 nextToken();
                 inner.push_back(new_Arithmetics()->parse() );
@@ -84,16 +68,6 @@ namespace Interpretation
         }
         else {
             return this->inner->execute();
-        }
-    }
-    pExprResult ThrowableExpr::execute() {
-        if (this->innerLogical) {
-            return innerLogical->execute();
-        }
-        else {
-            pExprResult rhs = innerThrowable->execute();    
-            // TODO here;
-            return nullptr;
         }
     }
     pExprResult LogicalOrExpr::execute() {

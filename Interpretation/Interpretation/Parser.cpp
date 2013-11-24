@@ -36,14 +36,23 @@ namespace Interpretation {
             return res;
         });
         OP_DEFINING(intType, intType, intType, TT_PLUS, +, _int, _int, _int);
-        OP_DEFINING(intType, intType, intType, TT_PLUS, +, _int, _int, _int);
         OP_DEFINING(intType, intType, intType, TT_MINUS, -, _int, _int, _int);
         OP_DEFINING(intType, intType, intType, TT_ASTERISK, *, _int, _int, _int);
         OP_DEFINING(intType, intType, intType, TT_SLASH, /, _int, _int, _int);
+        OP_DEFINING(intType, intType, intType, TT_PERCENT, %, _int, _int, _int);
         OP_DEFINING(boolType, intType, intType, TT_EQUAL, == , _bool, _int, _int);
         OP_DEFINING(boolType, intType, intType, TT_LESS_EQ, <= , _bool, _int, _int);
         OP_DEFINING(boolType, intType, intType, TT_GR_EQ, >= , _bool, _int, _int);
+        OP_DEFINING(boolType, intType, intType, TT_LESS, < , _bool, _int, _int);
+        OP_DEFINING(boolType, intType, intType, TT_GR, > , _bool, _int, _int);
         OP_DEFINING(boolType, intType, intType, TT_NOT_EQ, != , _bool, _int, _int);
+        intType->binaryOperations[make_pair(TT_ASSIGN, intType)] = [intType, this](pExprResult lhs, pExprResult rhs) 
+        { 
+            pExprResult res = new_ExprResult(intType);
+            lhs->value._int = (rhs->value._int);  
+            res->value._int = (rhs->value._int); 
+            return res; 
+        };
         intType->unaryPrefixOperations[TT_MINUS] = [intType, this](pExprResult operand) 
         { 
             pExprResult res = new_ExprResult(intType); 
@@ -71,6 +80,14 @@ namespace Interpretation {
         {
             pExprResult res = new_ExprResult(doubleType);
             res->value._double = sin( ( *begin(args) )->execute()->value._double);
+            return res;
+        });
+        globalNamespace->statementsBlock->vars["rand"] = new_ExprResult(functionType);
+        globalNamespace->statementsBlock->vars["rand"]->value.pointer 
+            = new Function(this, "rand", [this, intType](const vector<pSingleExpr> &args) 
+        {
+            pExprResult res = new_ExprResult(intType);
+            res->value._int = rand();
             return res;
         });
         globalNamespace->statementsBlock->vars["true"] = new_ExprResult(boolType);
@@ -173,15 +190,17 @@ namespace Interpretation {
                 {
                     if (token.strVal == "+") token.type = TT_PLUS;
                     else if (token.strVal == "-") token.type = TT_MINUS;
+                    else if (token.strVal == "*") token.type = TT_ASTERISK;
+                    else if (token.strVal == "-") token.type = TT_SLASH;
                     else if (token.strVal == "=") token.type = TT_ASSIGN;
+                    else if (token.strVal == "<") token.type = TT_LESS;
+                    else if (token.strVal == ">") token.type = TT_GR;
                     else if (token.strVal == "==") token.type = TT_EQUAL;
                     else if (token.strVal == ">=") token.type = TT_GR_EQ;
                     else if (token.strVal == "<=") token.type = TT_LESS_EQ;
                     else if (token.strVal == "!=") token.type = TT_NOT_EQ;
                     else if (token.strVal == "||") token.type = TT_DOUBLE_PIPE;
                     else if (token.strVal == "&&") token.type = TT_DOUBLE_AMP;
-                    
-                    else if (token.strVal == "*") token.type = TT_ASTERISK;
                     else if (token.strVal == ";") token.type = TT_SEMICOLON;
                     else if (token.strVal == ",") token.type = TT_COMMA;
                     else if (token.strVal == ".") token.type = TT_DOT;

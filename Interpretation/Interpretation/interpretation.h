@@ -83,6 +83,8 @@ namespace Interpretation
         TT_BRACKET_OPEN,        // "["
         TT_BRACKET_CLOSE,       // "]"
         TT_ASSIGN,              // "="
+        TT_LESS,                // "<"
+        TT_GR,                  // ">"
         TT_PLUS_ASSIGN,         // "+="
         TT_MINUS_ASSIGN,        // "-="
         TT_ASTERISK_ASSIGN,     // "*="
@@ -96,6 +98,7 @@ namespace Interpretation
         TT_MINUS,               // "-"
         TT_ASTERISK,            // "*"
         TT_SLASH,               // "/"
+        TT_PERCENT,             // "%"
         TT_AMP,                 // "&"
         TT_PIPE,                // "|"
         TT_DOUBLE_AMP,          // "&&"
@@ -329,6 +332,7 @@ namespace Interpretation
         TokenType specialType;
         pStatementsBlock parentBlock;
         pStatement statement1, statement2;
+        pStatementsBlock localStatementsBlock;
         Statement(Parser *_owner) : Nonterminal(_owner), sb(nullptr), expr(nullptr), 
             tn(nullptr), isSpecial(false), specialType(TT_UNDEFINED), parentBlock(nullptr) {}
         pStatement parse();
@@ -439,7 +443,7 @@ namespace Interpretation
         bool isComplicated, isIntegral;
         Type(bool _isIntegral = false, std::function<pExprResult(const std::string &)> __valueOf = nullptr) 
             : isComplicated (false), _valueOf(__valueOf), isIntegral(_isIntegral),
-            functionCallOperator(nullptr), arrayIndexerOperator(nullptr) {}
+            functionCallOperator(nullptr), arrayIndexerOperator(nullptr), isLogicalTrue(nullptr) {}
         map <pair<TokenType, pType>, std::function<pExprResult(pExprResult, pExprResult) > > binaryOperations;
         map <TokenType, std::function<pExprResult(pExprResult) > > unaryPrefixOperations;
         std::function<pExprResult(const std::string &)> _valueOf;

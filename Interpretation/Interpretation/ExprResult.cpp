@@ -4,7 +4,7 @@ namespace Interpretation
 {
     pExprResult ExprResult::binaryOperation(TokenType op, pExprResult rhs) 
     { 
-        if(type->binaryOperations.count(make_pair(op, rhs->type) ) > 0) 
+        if (type->binaryOperations.count(make_pair(op, rhs->type) ) > 0) 
         { 
             return type->binaryOperations[make_pair(op, rhs->type) ](this, rhs); 
         }

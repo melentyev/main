@@ -73,6 +73,7 @@
     <ClCompile Include="Nonterminal.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Single.cpp" />
+    <ClCompile Include="ThrowableExpr.cpp" />
     <ClCompile Include="VarDeclarationAllowDefault.cpp" />
     <ClCompile Include="Statement.cpp" />
     <ClCompile Include="StatementsBlock.cpp" />
