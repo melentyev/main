@@ -177,14 +177,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int wmId, wmEvent;
     static FILE *fin = NULL;
     PAINTSTRUCT ps;
-
+    static char strings[][256] = {
+        "C:\\MinGW\\file11.gif",
+        "C:\\Users\\Admin\\Desktop\\Удалять можно\\giftest\\Ceric1.gif",
+        "C:\\Users\\Admin\\Desktop\\Удалять можно\\giftest\\Dvdp3.gif",
+        "C:\\Users\\Admin\\Desktop\\Удалять можно\\giftest\\Light_dispersion_conceptual.gif",
+        "C:\\Users\\Admin\\Desktop\\Удалять можно\\giftest\\moem_shlyukhoy_pol.gif",
+        "C:\\Users\\Admin\\Desktop\\Удалять можно\\giftest\\tumblr_mhpbw4VzEx1rldc56o1_500.gif",
+    };
     static unsigned char *cont;
     static int filesize;
         
 	switch (message)
 	{
     case WM_CREATE:
-        fopen_s(&fin, "C:\\MinGW\\file11.gif", "rb");
+        fopen_s(&fin, strings[1], "rb");
         cont = new unsigned char[6 * 1000 * 1000];
         filesize = fread(cont, 1, 6 * 1000 * 1000, fin);
         gif = GifStreamString(cont);

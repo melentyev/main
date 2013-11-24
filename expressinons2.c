@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Kirill Melentyev (c) 2013 
  * Разбор выражения - рекурсивный спуск
  * (с обработкой ошибок)
@@ -13,7 +13,7 @@
 //#define DEBUG_1
 #define MAX_LEN 1000
 
-char *global_expression, *global_position_pointer = 0, *global_position_previous = 0;
+char *global_expression, *global_position_pointer = 0, *global_position_previous = 0, *global_position_next;
 typedef enum tokenType {
     TT_NUMBER = 0,
     TT_PLUS = 1,
@@ -76,7 +76,7 @@ void print_result(char *prefix, result r) {
                 printf("^\n");
                 break;
             case ERR_EXPECTED_BR_CLOSE:
-                printf("expected '('\n");
+                printf("expected ')'\n");
                 puts(global_expression);
                 for(k = global_expression; k < global_position_previous; k++) {
                     printf(" ");
@@ -89,7 +89,7 @@ void print_result(char *prefix, result r) {
     }
 }
 
-token next_token() {
+token get_token() {
     char* s = global_position_pointer;
     int parsing_number = 0;
     token res;
@@ -140,25 +140,28 @@ token next_token() {
     if (res.type == TT_END) {
         s = 0;
     }
-    global_position_pointer = s;
+    global_position_next = s;
 #ifdef DEBUG_1
-    printf("next_token: type=%d value=%d\n", res.type, res.value);
+    printf("get_token: type=%d value=%d\n", res.type, res.value);
 #endif
     return res;
 }
 
-void rollback() {
-    global_position_pointer = global_position_previous;
+void next_token() {
+    if (global_position_pointer == global_position_next) {
+        get_token();
+    }
+    global_position_pointer = global_position_next;
 }
-
 result Expr() {
     result lhs = Term(), rhs;
     token op;
     if(lhs.error !=  ERR_NONE) {
         return lhs;
     }
-    for(op = next_token(); op.type == TT_PLUS || op.type == TT_MINUS; op = next_token() ) { 
-        rhs = Term();
+    for (op = get_token(); op.type == TT_PLUS || op.type == TT_MINUS; op = get_token() ) {         
+        next_token();
+        rhs = Term();    
 #ifdef DEBUG_1        
         print_result("Expr:lhs:", lhs);
         printf("Expr:op:%d\n", op.type);
@@ -177,11 +180,11 @@ result Expr() {
             return make_result(ERR_UNEXPECTED_TOKEN, 0);
         }
     }
-    if(op.type !=  TT_END && op.type != TT_BR_CLOSE) {
+    printf("Here: %d\n", op.type);
+    if(op.type != TT_END && op.type != TT_BR_CLOSE) {
         return make_result(ERR_UNEXPECTED_TOKEN, (int) op.type);    
     }
     else {
-        rollback();
         return make_result(ERR_NONE, lhs.value); 
     }
 }
@@ -192,7 +195,8 @@ result Term() {
     if(lhs.error !=  ERR_NONE) {
         return lhs;
     }
-    for(op = next_token(); op.type == TT_ASTERISK || op.type == TT_SLASH; op = next_token() ) { 
+    for(op = get_token(); op.type == TT_ASTERISK || op.type == TT_SLASH; op = get_token() ) {
+        next_token(); 
         rhs = Factor();
 #ifdef DEBUG_1
         print_result("Term:lhs:", lhs);
@@ -215,24 +219,26 @@ result Term() {
         }
         else {
             return make_result(ERR_UNEXPECTED_TOKEN, 0);
-        }
+        } 
     }
-    rollback();
     return make_result(ERR_NONE, lhs.value);
 }
 
 result Factor() {
-    token next = next_token();
+    token next = get_token();
     result res;
     if (next.type == TT_NUMBER) {
+        next_token();
         return make_result(ERR_NONE, next.value);
     }
     else if(next.type == TT_BR_OPEN) {
+        next_token();
         res = Expr();
         if(res.error != ERR_NONE) {
             return res;
         }
-        if(next_token().type == TT_BR_CLOSE) {
+        if(get_token().type == TT_BR_CLOSE) {
+            next_token();
             return make_result(ERR_NONE, res.value);
         }
         else {
@@ -252,7 +258,7 @@ result calculate() {
         return r; 
     }
     else {
-        t = next_token();
+        t = get_token();
         if (t.type != TT_END) {
             return make_result(ERR_UNEXPECTED_TOKEN, t.type);
         }
@@ -263,7 +269,7 @@ result calculate() {
 }
 
 int main() {
-    int k = int(5);
+
     global_expression = (char*)malloc(sizeof(char) * MAX_LEN);
     gets(global_expression);
     print_result("Finaly: ", calculate());
