@@ -10,10 +10,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-//#define DEBUG_1
+#define DEBUG_1
 #define MAX_LEN 1000
 
-char *global_expression, *global_position_pointer = 0, *global_position_previous = 0;
 typedef enum tokenType {
     TT_NUMBER = 0,
     TT_PLUS = 1,
@@ -48,6 +47,9 @@ result Factor();
 result Term();
 result Expression();
 
+
+char *global_expression, *global_position_pointer = 0, *global_position_previous = 0;
+token _currentToken;
 result make_result(errorType error, int value) {
      result res;
      res.error = error;
