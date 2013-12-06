@@ -135,7 +135,9 @@ class MyCallbacks : public GifCallbackBase {
 public:
     HDC hdc, buf;
     HBITMAP hbmMem;
+	BITMAPINFO bmi;
     HANDLE hOld;
+	DWORD *bits;
     MyCallbacks() : hbmMem(NULL) {}
     unsigned char* allocateMemory(unsigned int size_in_bytes) {
         return new unsigned char[size_in_bytes];
@@ -144,25 +146,45 @@ public:
     void onImageDecoded(GifDataBlockImage* img) {
         static DWORD nextImage = 0;
         if(hbmMem == NULL) {
-            hbmMem = CreateCompatibleBitmap(hdc, gif.logicalScreen.width, gif.logicalScreen.height);
+		    buf = CreateCompatibleDC(0);
+	
+		    ZeroMemory(&bmi, sizeof(BITMAPINFOHEADER));
+		    bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+		    bmi.bmiHeader.biWidth       = gif.logicalScreen.width;
+		    bmi.bmiHeader.biHeight      = -gif.logicalScreen.height;
+		    bmi.bmiHeader.biPlanes      = 1;
+		    bmi.bmiHeader.biCompression = BI_RGB;
+		    bmi.bmiHeader.biBitCount    = 32;
+
+		    hbmMem = CreateDIBSection(buf, &bmi, DIB_RGB_COLORS, (void**)&bits, 0, 0);
+		    SelectObject(buf, hbmMem);
+            //hbmMem = CreateCompatibleBitmap(hdc, gif.logicalScreen.width, gif.logicalScreen.height);
         }
         hOld = SelectObject(buf, hbmMem);
         unsigned char* data = img->decodedData;
-        for(int i = 0; i < img->height; i++) {
-            for(int j = 0; j < img->width; j++) {
-                if(!img->hasAdditionalParams || !(img->additionalParams.transparentColorFlag) 
-                    || img->additionalParams.transparentColorIndex != *data) {
-                        SetPixel(buf, img->left + j, img->top + i, img->localTableFlag ? img->localTable.colors[*data] : gif.globalTable.colors[*data] );
+        for (int i = 0; i < img->height; i++) 
+        {
+            for (int j = 0; j < img->width; j++) 
+            {
+                if (!img->hasAdditionalParams 
+                    || !(img->additionalParams.transparentColorFlag) 
+                    || img->additionalParams.transparentColorIndex != *data) 
+                {
+                    bits[( (img->top + i) * gif.logicalScreen.width) + img->left + j] 
+                    = (img->localTableFlag 
+                        ? img->localTable.colors[*data] : gif.globalTable.colors[*data] );
                 }
                 data++;
             }
         }
-        while(timeGetTime() < nextImage) {
-            Sleep(1);
+        while(timeGetTime() < nextImage) 
+        {
+            Sleep(20);
         }
         BitBlt(hdc, img->left, img->top, img->width, img->height, buf, img->left, img->top, SRCCOPY);
         SelectObject(buf, hOld);
-        if (img->hasAdditionalParams) {
+        if (img->hasAdditionalParams) 
+        {
             nextImage = timeGetTime() + img->additionalParams.delayTime * 10;
         }
     }
@@ -191,7 +213,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
     case WM_CREATE:
-        fopen_s(&fin, strings[1], "rb");
+        fopen_s(&fin, strings[2], "rb");
         cont = new unsigned char[6 * 1000 * 1000];
         filesize = fread(cont, 1, 6 * 1000 * 1000, fin);
         gif = GifStreamString(cont);
@@ -220,7 +242,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
         myCallbacks.buf = CreateCompatibleDC(myCallbacks.hdc);
         
-        gif.processStream(&myCallbacks);
+        gif.processStream(&myCallbacks, true);
 	
         
         DeleteObject(myCallbacks.hbmMem);

@@ -101,6 +101,7 @@ struct _byteSeq {
 
 class GifStream {
     vector<int> _dump;
+    vector<GifDataBlockImage*> decoded;
     bool _makeDump;
     _byteSeq *codes;
     int codesListCapacity;
@@ -124,6 +125,9 @@ class GifStream {
         memset(table->colors, 0, sizeof(int) * table->size);
         for(int i = 0; i < table->size; i++) {
             readBytes((unsigned char*) (table->colors + i), 3);
+            *(table->colors + i) = RGB ( *( (unsigned char*) (table->colors + i)), 
+                *( (unsigned char*) (table->colors + i) + 1), 
+                *( (unsigned char*) (table->colors + i) + 2) );
         }
     }
     void readSubblocks(GifDataBlock* block) {
@@ -201,7 +205,7 @@ class GifStream {
     }
     void finishReadingDump(int offset) {
         for (int i = 0; i < offset; i++) printf("   ");
-        for (int i = offset; i < _dump.size() + offset; i++) {
+        for (int i = offset; i < (int)_dump.size() + offset; i++) {
             if(i > 0 && i % 16 == 0) {
                 printf("\n");
             }
@@ -336,7 +340,7 @@ public:
         _dump.clear();
         hasNextImageModifier = false;
     }
-    void processStream(GifCallbackBase *_callbacks) {
+    void processStream(GifCallbackBase *_callbacks, bool bRunCycle = false) {
         unsigned char header[7];
         callbacks = _callbacks;
         readBytes(header, 6);
@@ -364,12 +368,14 @@ public:
         do {
             readDataBlock(block);
             type = block->type;
-            if(type == BT_IMAGEADDITIONAL) {
+            if(type == BT_IMAGEADDITIONAL) 
+            {
                 nextImageModifier = *((GifDataDlockImageAdditional*)block);
-                delete (GifDataDlockImageAdditional*)block;
+                //delete (GifDataDlockImageAdditional*)block;
                 hasNextImageModifier = true;
             }
-            else if(type == BT_IMAGEDATA) {
+            else if(type == BT_IMAGEDATA) 
+            {
                 ( (GifDataBlockImage*)block)->decodedData = callbacks->allocateMemory( 
                     ( (GifDataBlockImage*) block)->width * ( (GifDataBlockImage*) block)->height * sizeof(unsigned char) );
                 unpackImageData( (GifDataBlockImage*) block, ( (GifDataBlockImage*)block)->decodedData);
@@ -379,12 +385,25 @@ public:
                     hasNextImageModifier = false;
                 }
                 _callbacks->onImageDecoded( (GifDataBlockImage*) block);
+                decoded.push_back( (GifDataBlockImage*) block);
             }
             else {
                  delete block;
             }
         } while(type != BT_END);
+        if (bRunCycle) 
+        {
+            runInCycle(_callbacks);
+        }
     }
+    void runInCycle(GifCallbackBase *_callbacks) {
+        while (true) {
+            for (auto img: decoded) {
+                _callbacks->onImageDecoded(img);
+            }
+        }
+    }
+
     void raiseError(std::string s) {
         throw s;
     }
