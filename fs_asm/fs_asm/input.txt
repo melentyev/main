@@ -1,0 +1,4 @@
+mov r1 1
+mov r2 2
+add r1 r2
+hlt r1

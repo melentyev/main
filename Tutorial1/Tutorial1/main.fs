@@ -364,12 +364,12 @@ and MainForm() as form =
             ), number) |> ignore 
     
     member this.singleSongDownloadedHandler(args) = 
-        if(not(args.Cancelled) ) then 
+        if not args.Cancelled then 
             let number = currentSongNumber
             let song = songList.[number]
             let data = args.Result
 
-            if not(Directory.Exists(song.albumFolder)) then
+            if not (Directory.Exists(song.albumFolder) ) then
                 Directory.CreateDirectory(song.albumFolder) |> ignore
             let file = new FileStream(song.filefull, FileMode.Create)
             file.Write(data, 0, data.Length)
