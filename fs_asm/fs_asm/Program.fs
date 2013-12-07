@@ -18,7 +18,14 @@ type Command =
     | Mod of Register * CommandArg
     | Mov of CommandArg * CommandArg
     | Hlt of CommandArg
+    | Cmp of Register * CommandArg
     | Jmp of Label
+    | Je of CommandArg * Label
+    | Jne of CommandArg * Label
+    | Jg of CommandArg * Label
+    | Jng of CommandArg * Label
+    | Jl of CommandArg * Label
+    | Jnl of CommandArg * Label
 
 let getWords (lines: string seq) = 
     Seq.map (fun (s: string) -> s.Split [|' ';'\n';'\t'|] |> Array.toSeq) lines 
@@ -32,6 +39,9 @@ let parseRegister (tokens: string list) : Register * string list =
         | "r4" -> Register.r4
         | _ -> failwith "Not a register!"
     , tokens.Tail
+
+let parseLabel (tokens: string list) : Label * string list = 
+    tokens.Head, tokens.Tail
 let rec parseCommandArg (tokens: string list) : CommandArg * string list = 
     let constVal = ref 0
     match tokens.Head with
@@ -53,42 +63,49 @@ let rec parser (parsed: Command list) (labels: Map<Label,int>) (tokens: string l
         | "mov" -> 
             let register, (arg, tail) = localParse parseCommandArg parseCommandArg tokens.Tail
             parser (Mov (register, arg) :: parsed) labels tail 
-        | "add" ->
+        | "add" | "sub" | "mul" | "div" | "mod" | "cmp" ->
             let register, (arg, tail) = localParse parseRegister parseCommandArg tokens.Tail
-            parser (Add (register, arg) :: parsed) labels tail
-        | "sub" ->
-            let register, (arg, tail) = localParse parseRegister parseCommandArg tokens.Tail
-            parser (Sub (register, arg) :: parsed) labels tail
-        | "mul" ->
-            let register, (arg, tail) = localParse parseRegister parseCommandArg tokens.Tail
-            parser (Mul (register, arg) :: parsed) labels tail
-        | "div" ->
-            let register, (arg, tail) = localParse parseRegister parseCommandArg tokens.Tail
-            parser (Div (register, arg) :: parsed) labels tail
-        | "mod" ->
-            let register, (arg, tail) = localParse parseRegister parseCommandArg tokens.Tail
-            parser (Mod (register, arg) :: parsed) labels tail
+            match tokens.Head with
+            | "add" -> parser (Add (register, arg) :: parsed) labels tail
+            | "sub" -> parser (Sub (register, arg) :: parsed) labels tail
+            | "mul" -> parser (Mul (register, arg) :: parsed) labels tail
+            | "div" -> parser (Div (register, arg) :: parsed) labels tail
+            | "mod" -> parser (Mod (register, arg) :: parsed) labels tail
+            | "cmp" -> parser (Cmp (register, arg) :: parsed) labels tail
+            | _ -> failwith "error"  
         | "jmp" -> 
             let tail = tokens.Tail
             parser (Jmp(tail.Head) :: parsed) labels tail.Tail
+        | "je" | "jne" | "jg" | "jng" | "jl" | "jnl" ->
+            let arg, (label, tail) = localParse parseCommandArg parseLabel tokens.Tail
+            match tokens.Head with
+            | "je" -> parser (Je(arg, label) :: parsed) labels tail
+            | "jne" -> parser (Jne(arg, label) :: parsed) labels tail
+            | "jg" -> parser (Jg(arg, label) :: parsed) labels tail
+            | "jng" -> parser (Jng(arg, label) :: parsed) labels tail
+            | "jl" -> parser (Jl(arg, label) :: parsed) labels tail
+            | "jnl" -> parser (Jnl(arg, label) :: parsed) labels tail
+            | _ -> failwith "error"  
         | "hlt" -> 
             let arg, tail = parseCommandArg (tokens.Tail)
             parser (Hlt (arg) :: parsed) labels tail
         | lbl when lbl.Chars (lbl.Length - 1) = ':' ->
             parser parsed (labels.Add(lbl.Substring(0, lbl.Length - 1), parsed.Length) ) tokens.Tail
-        | _ -> failwith "error"
+        | _ -> failwith "error"  
 
 let execute (programRev: Command list, labels: Map<Label,int>) =
     let program = List.rev programRev |> List.toArray
     let regVals = new Dictionary<Register, int>();
+    let memory : int array = Array.zeroCreate 1000000
     regVals.Add(Register.r1, 0);
     regVals.Add(Register.r2, 0);
     regVals.Add(Register.r3, 0);
     regVals.Add(Register.r4, 0);
-    let evalCommandArg arg =
+    let rec evalCommandArg arg =
         match arg with
         | Constant c -> c
         | Register r -> regVals.[r] 
+        | Address p -> memory.[evalCommandArg p]
         | _ -> failwith "here"
     let mutable result = 0
     let mutable bDone = false
@@ -105,8 +122,14 @@ let execute (programRev: Command list, labels: Map<Label,int>) =
         | Mul (dest, src) -> regVals.[dest] <- regVals.[dest] * evalCommandArg src 
         | Div (dest, src) -> regVals.[dest] <- regVals.[dest] / evalCommandArg src 
         | Mod (dest, src) -> regVals.[dest] <- regVals.[dest] % evalCommandArg src 
-        | Jmp (label) ->
-            commandNumber <- labels.[label] - 1
+        | Cmp (dest, src) -> regVals.[dest] <- regVals.[dest] - evalCommandArg src 
+        | Jmp (label) -> commandNumber <- labels.[label] - 1
+        | Je (src, label) -> if (evalCommandArg src = 0) then commandNumber <- labels.[label] - 1 else ()
+        | Jne (src, label) -> if (evalCommandArg src <> 0) then commandNumber <- labels.[label] - 1 else ()
+        | Jg (src, label) -> if (evalCommandArg src > 0) then commandNumber <- labels.[label] - 1 else ()
+        | Jng (src, label) -> if (evalCommandArg src <= 0) then commandNumber <- labels.[label] - 1 else ()
+        | Jl (src, label) -> if (evalCommandArg src < 0) then commandNumber <- labels.[label] - 1 else ()
+        | Jnl (src, label) -> if (evalCommandArg src >= 0) then commandNumber <- labels.[label] - 1 else ()
         | Hlt (arg) ->
             bDone <- true
             result <- (evalCommandArg arg)
