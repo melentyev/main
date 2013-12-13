@@ -116,12 +116,13 @@ let execute (programRev: Command list, labels: Map<Label,int>) =
         | Mov (dest, src) ->
             match dest with
             | Register r -> regVals.[r] <- evalCommandArg src
+            | Address p -> memory.[evalCommandArg p] <- evalCommandArg src
             | _ -> failwith "here"
-        | Add (dest, src) -> regVals.[dest] <- regVals.[dest] + evalCommandArg src 
-        | Sub (dest, src) -> regVals.[dest] <- regVals.[dest] - evalCommandArg src 
-        | Mul (dest, src) -> regVals.[dest] <- regVals.[dest] * evalCommandArg src 
-        | Div (dest, src) -> regVals.[dest] <- regVals.[dest] / evalCommandArg src 
-        | Mod (dest, src) -> regVals.[dest] <- regVals.[dest] % evalCommandArg src 
+        | Add (dest, src) -> regVals.[dest] <- regVals.[dest] + evalCommandArg src
+        | Sub (dest, src) -> regVals.[dest] <- regVals.[dest] - evalCommandArg src
+        | Mul (dest, src) -> regVals.[dest] <- regVals.[dest] * evalCommandArg src
+        | Div (dest, src) -> regVals.[dest] <- regVals.[dest] / evalCommandArg src
+        | Mod (dest, src) -> regVals.[dest] <- regVals.[dest] % evalCommandArg src
         | Cmp (dest, src) -> regVals.[dest] <- regVals.[dest] - evalCommandArg src 
         | Jmp (label) -> commandNumber <- labels.[label] - 1
         | Je (src, label) -> if (evalCommandArg src = 0) then commandNumber <- labels.[label] - 1 else ()
