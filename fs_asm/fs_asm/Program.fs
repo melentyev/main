@@ -3,6 +3,7 @@ open System.IO
 open System.Collections.Generic
 type Register = r1 = 1 | r2  = 2 | r3 = 3 | r4 = 4
 
+
 type CommandArg = 
     | Register of Register
     | Constant of int

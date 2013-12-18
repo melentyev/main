@@ -1,0 +1,12 @@
+                mov r4 13
+
+                sub r4 1
+                mov r1 1
+                mov r2 2
+loop:	sub r4 1
+                je r4 exit
+                mov r3 r2
+                add r2 r1
+                mov r1 r3
+                jmp loop
+exit:	hlt r2
