@@ -29,6 +29,9 @@ int* resolveArg(CommandArg *arg)
     case AT_LABEL:
         return &arg->argv.mappedLabel;
         break;
+    default:
+        return NULL;
+        break;
     }
 }
 
@@ -45,6 +48,17 @@ void arithmeticalCommand(Command *cmd)
         break;
     case CT_SUB:
         registerValues[cmd->args.arg1.argv.r] -= *resolveArg(&cmd->args.arg2);
+        break;
+    case CT_MUL:
+        registerValues[cmd->args.arg1.argv.r] *= *resolveArg(&cmd->args.arg2);
+        break;
+    case CT_DIV:
+        registerValues[cmd->args.arg1.argv.r] /= *resolveArg(&cmd->args.arg2);
+        break;
+    case CT_MOD:
+        registerValues[cmd->args.arg1.argv.r] %= *resolveArg(&cmd->args.arg2);
+        break;
+    default:
         break;
     }
 }
@@ -71,6 +85,26 @@ void executeCommand(Command *cmd)
         break;
     case CT_JNE:
         globalState.commandNumber = (*resolveArg(&cmd->args.arg1) != 0)
+                ? cmd->args.arg2.argv.mappedLabel
+                : globalState.commandNumber + 1;
+        break;
+    case CT_JL:
+        globalState.commandNumber = (*resolveArg(&cmd->args.arg1) < 0)
+                ? cmd->args.arg2.argv.mappedLabel
+                : globalState.commandNumber + 1;
+        break;
+    case CT_JNL:
+        globalState.commandNumber = (*resolveArg(&cmd->args.arg1) >= 0)
+                ? cmd->args.arg2.argv.mappedLabel
+                : globalState.commandNumber + 1;
+        break;
+    case CT_JG:
+        globalState.commandNumber = (*resolveArg(&cmd->args.arg1) > 0)
+                ? cmd->args.arg2.argv.mappedLabel
+                : globalState.commandNumber + 1;
+        break;
+    case CT_JNG:
+        globalState.commandNumber = (*resolveArg(&cmd->args.arg1) <= 0)
                 ? cmd->args.arg2.argv.mappedLabel
                 : globalState.commandNumber + 1;
         break;
