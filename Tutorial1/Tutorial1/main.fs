@@ -13,8 +13,8 @@ open System.Configuration
 open System.Threading
 
 type songInfo = { id:string; artist: string; title:string; url: string; 
-    albumFolder: string; album:string; filefull: string; }
-type albumInfo = { album_id: string; title: string; }
+    albumFolder: string; album:string; filefull: string; lvItem: ListViewItem option }
+type albumInfo = { album_id: string; title: string; lvItem: ListViewItem option }
 
 
 let alert s = 
@@ -43,25 +43,26 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
     let mutable last_name = ""
     let utf8 = Encoding.GetEncoding("utf-8");
     let win1251 = Encoding.GetEncoding("windows-1251");
-    [<DefaultValue>]
-    val mutable savePath:string
-    do vkHelper.savePath <- savePath
-    [<DefaultValue>]
-    val mutable namingStyle:string
-    do vkHelper.namingStyle <- namingStyle
-
+    let mutable savePath = savePath
+    let mutable namingStyle = namingStyle
     let rec clearName (s : string) = 
         if(s.Length < 1) then ""
         elif (Char.IsLetterOrDigit s.[0] || s.[0] = ' ') then s.[0].ToString() + clearName(s.Substring(1))
         else clearName(s.Substring(1) )
-
-    member this.decode (s:string) = 
+    let decode (s:string) = 
         Encoding.Convert(utf8, win1251, win1251.GetBytes(s) ) |> win1251.GetString
+
+    member this.SavePath 
+        with get() = savePath
+        and set(value) = savePath <- value
+    member this.NamingStyle 
+        with get() = namingStyle
+        and set(value) = namingStyle <- value
 
     member this.getUserNameLazy = lazy (
         let res = vkHelper.RunMethod "users.get" []
-        first_name <- res.SelectSingleNode("/response/user/first_name").InnerText |> this.decode
-        last_name <- res.SelectSingleNode("/response/user/last_name").InnerText |> this.decode
+        first_name <- res.SelectSingleNode("/response/user/first_name").InnerText |> decode
+        last_name <- res.SelectSingleNode("/response/user/last_name").InnerText |> decode
         first_name + " " + last_name 
     )
 
@@ -73,21 +74,18 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
     member this.Auth (wb:WebBrowser) = 
         let scope = 8 + 4096
         wb.Invoke(new Action<_>(fun _ ->
-            wb.Show();
-            let url = "https://oauth.vk.com/authorize?client_id=" + APP_ID 
-                    + "&scope=" + scope.ToString()+ "&redirect_uri=" + "https://oauth.vk.com/blank.html" + "&display=page&v=3.0&response_type=token"
-            wb.Navigate url
-            ()
+            wb.Show()
+            "https://oauth.vk.com/authorize?client_id=" + APP_ID 
+                    + "&scope=" + scope.ToString()+ "&redirect_uri=" 
+                    + "https://oauth.vk.com/blank.html" + "&display=page&v=3.0&response_type=token"
+            |> wb.Navigate
         ), [null]) |> ignore
 
     member this.RunMethodStr name (lParams: list<string>) =
-        let mutable url = API_METHOD_URL + name + ".xml?access_token=" + access_token + "&v=3.0"
-        for p in lParams do
-            url <- url + "&" + p
-            ()
-        webClient.DownloadString url
+        API_METHOD_URL + name + ".xml?access_token=" + access_token + "&v=3.0" + List.fold 
+            (fun s p -> s + "&" + p) "" lParams |> webClient.DownloadString
 
-    member this.RunMethod (name:string) (lParams: list<string>) : XmlDocument =
+    member this.RunMethod (name:string) (lParams: list<string>): XmlDocument =
         let Doc = new XmlDocument() 
         this.RunMethodStr name lParams |> Doc.LoadXml
         Doc
@@ -96,30 +94,30 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
         this.getUserNameLazy.Force()
 
     member this.getAlbums() = 
-        let res = new ResizeArray<albumInfo>()
-        let albumsRes = this.RunMethod "audio.getAlbums" ["owner_id=" + user_id; "offset=0"; "count=100"]
-        let nodes = albumsRes.SelectNodes("/response/album")
+        (this.RunMethod "audio.getAlbums" 
+            ["owner_id=" + user_id; "offset=0"; "count=100"]).SelectNodes("/response/album") 
+        |> Seq.cast<XmlNode>
+        |> Seq.fold (fun lst v -> 
+            ({album_id = v.SelectSingleNode("album_id").InnerText;
+             title = v.SelectSingleNode("title").InnerText |> decode;
+             lvItem = None; }) :: lst) []
+        |> List.rev
         
-        for v in nodes do
-            res.Add ({album_id = v.SelectSingleNode("album_id").InnerText;
-                title = v.SelectSingleNode("title").InnerText |> this.decode
-            })
-        res
     member this.AudioGet(alb) = 
-        let songsRes = this.RunMethod "audio.get" ["owner_id=" + user_id; "album_id=" + alb.album_id; "need_user=0"; "count=6000"]
-        let res = new ResizeArray<songInfo>();
-        let nodes = songsRes.SelectNodes("/response/audio")
-        for v in nodes do
-            let artist = v.SelectSingleNode("artist").InnerText |> this.decode
-            let title =  v.SelectSingleNode("title").InnerText |> this.decode
+        (this.RunMethod "audio.get" ["owner_id=" + user_id;
+            "album_id=" + alb.album_id; "need_user=0"; "count=6000"]).SelectNodes("/response/audio")
+        |> Seq.cast<XmlNode>
+        |> Seq.fold (fun lst v -> 
+            let artist = v.SelectSingleNode("artist").InnerText |> decode
+            let title =  v.SelectSingleNode("title").InnerText |> decode
             let filename = 
-                match this.namingStyle with
+                match namingStyle with
                 | "artist_song" -> clearName artist + " - " + clearName title + ".mp3"
                 | "album_song" -> clearName alb.title + " - " + clearName title + ".mp3"
                 | _ -> clearName title + ".mp3"
 
-            let albumFolder = this.savePath + "\\" + clearName alb.title
-            let song = { 
+            let albumFolder = savePath + "\\" + clearName alb.title
+            { 
                 id = v.SelectSingleNode("aid").InnerText;
                 title = title;
                 artist = artist;
@@ -127,20 +125,18 @@ type VkHelper(webClient: WebClient, savePath:string, namingStyle:string) as vkHe
                 url = v.SelectSingleNode("url").InnerText;
                 albumFolder =  albumFolder;
                 filefull = albumFolder + "\\" + filename;
-            }
-            res.Add(song)   
-        res
+                lvItem = None;
+            } :: lst) []
 
 and MainForm() as form = 
-    inherit Form()
+    inherit Form(AutoScroll = true, ClientSize = new Size(740, 480), 
+        FormBorderStyle = FormBorderStyle.Sizable)
      
-    [<DefaultValue>]
-    val mutable config:Configuration
-    do form.config <- ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None)
-    do if form.config.AppSettings.Settings.["savePath"] = null then 
-        form.config.AppSettings.Settings.Add("savePath", "") |> ignore
-    do if form.config.AppSettings.Settings.["namingStyle"] = null then 
-        form.config.AppSettings.Settings.Add("namingStyle", "artist_song") |> ignore
+    let mutable config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None)
+    do if config.AppSettings.Settings.["savePath"] = null then 
+        config.AppSettings.Settings.Add("savePath", "") |> ignore
+    do if config.AppSettings.Settings.["namingStyle"] = null then 
+        config.AppSettings.Settings.Add("namingStyle", "artist_song") |> ignore
     let anchorAll = (AnchorStyles.Left ||| AnchorStyles.Right 
         ||| AnchorStyles.Bottom ||| AnchorStyles.Top)
     let syncLabel = new Label(Text = "", Left = 130, Width = 400, Top = 40, Visible = false)
@@ -171,42 +167,38 @@ and MainForm() as form =
     let downloadClient = new WebClient()
     let mutable _vkHelper = 
         new VkHelper (webClient
-            , form.config.AppSettings.Settings.["savePath"].Value
-            , form.config.AppSettings.Settings.["namingStyle"].Value)
-    let (checkboxes : Control list ref) = ref []
-    let mutable currentAlbumTitle = ""
-    let mutable currentSongNumber = 0
-    let mutable downloadedCnt = 0
-    let mutable songList = new ResizeArray<songInfo>()
-    let mutable albumList = new ResizeArray<albumInfo>()
+            , config.AppSettings.Settings.["savePath"].Value
+            , config.AppSettings.Settings.["namingStyle"].Value)
+    let mutable songQueue: songInfo list = []
+    let mutable songProcessing: songInfo list = []
+    let mutable queueLock = new Object()
+    let mutable albumList = []
     let mutable accountExitDocumentCompletedHandler = null
     let mutable browserAuthDocumentCompletedHandler = null
     let mutable logoutState = "none"
-    let mutable (settingsForm:SettingsForm option) = None 
+    let mutable settingsForm = null
+    let mutable downloadThreadsCount = 3 
     do form.InitializeForm()
 
     member this.vkHelper
         with get() = _vkHelper
         and set v = _vkHelper <- v
-
+    member this.Config = config
     member this.InitializeForm() = 
-        this.FormBorderStyle <- FormBorderStyle.Sizable
-        this.ClientSize <- new Size(740, 480)
-        this.AutoScroll <- true
-        settingsForm <- Some(new SettingsForm(form)) 
-        
-        mnuProcessList.Click.AddHandler(new EventHandler(this.mnuProcessListClick) )
-        mnuAccountExit.Click.AddHandler(new EventHandler(this.mnuAccountExitClick) )
-        mnuSettings.Click.AddHandler(new EventHandler(this.mnuSettingsClick) )
+        new EventHandler(this.mnuAccountExitClick) |> mnuAccountExit.Click.AddHandler
+        new EventHandler(fun _ _ -> 
+            Async.Start(async { this.downloadAlbumList() } ) ) |> mnuProcessList.Click.AddHandler
+        new EventHandler(fun _ _ -> 
+            (unbox<SettingsForm> settingsForm).Show()) |> mnuSettings.Click.AddHandler
         mnuExit.Click.Add(fun _ -> this.Close() )
         mnuSynchronize.Click.Add(fun _ ->
             this.syncProgressSet "Synchronization started"
             mnuSynchronize.Enabled <- false
             albumListView.Enabled <- false
-            Async.StartAsTask(async { this.downloadAlbumSongsList(0) } ) |> ignore
+            this.downloadAlbumSongsList()
         )
         let tmpMnu = new MenuItem()
-        tmpMnu.Click.Add(fun _ -> alert(this.vkHelper.RunMethodStr("messages.get") ([]) |> this.vkHelper.decode ) |> ignore );
+        //tmpMnu.Click.Add(fun _ -> alert(this.vkHelper.RunMethodStr("messages.get") ([]) |> this.vkHelper.decode ) |> ignore );
         mnuFile.MenuItems.AddRange([| mnuAccountExit; mnuExit; tmpMnu |])
         mainMenu.MenuItems.AddRange([| mnuFile; mnuProcessList; mnuSynchronize; mnuSettings |])
         this.Menu <- mainMenu
@@ -260,21 +252,7 @@ and MainForm() as form =
             splitLayout1 :> Control;
         |]);
 
-        
-        //this.DoubleBuffered <- true
-        downloadClient.DownloadProgressChanged.Add(fun args ->
-            let perc = args.ProgressPercentage.ToString()
-            //downloadQueueListView.BeginUpdate()
-            //if (downloadQueueListView.Items.Count > 0 && (args.ProgressPercentage + 1) % 5 = 0 
-             //   && downloadQueueListView.Items.[0].SubItems.[4].Text <> perc + "%") then 
-            downloadQueueListView.Items.[0].SubItems.[4].Text <- perc + "%"
-            
-            //downloadQueueListView.EndUpdate()
-            "Progress (" + currentAlbumTitle + " - " + songList.[0].title + "): " + "Left: "
-                + songList.Count.ToString() + ", file: " + perc + "%"
-            |> this.syncProgressSet
-        )
-        downloadClient.DownloadDataCompleted.Add(this.singleSongDownloadedHandler)
+        settingsForm <- new SettingsForm(form) |> box
         accountExitDocumentCompletedHandler <- new WebBrowserDocumentCompletedEventHandler(
             this.accountExitDocumentCompleted1) 
         browserAuthDocumentCompletedHandler <- new WebBrowserDocumentCompletedEventHandler(
@@ -291,7 +269,7 @@ and MainForm() as form =
         browser.DocumentCompleted.AddHandler(accountExitDocumentCompletedHandler)
         browser.Navigate("https://vk.com/");
         
-    member this.accountExitDocumentCompleted1 s e =
+    member this.accountExitDocumentCompleted1 _ _ =
         let link = browser.Document.GetElementById("logout_link")
         if logoutState = "start" then
             logoutState <- "logout_clicked"
@@ -320,160 +298,142 @@ and MainForm() as form =
             this.syncProgressSet ("Authorized as: " + this.vkHelper.getUserName() )
 
     member this.downloadAlbumList() =
-        albumList.Clear();
-        songList.Clear();
-        downloadedCnt <- 0
-        let CH = ref -20
+        albumList <- List.empty
+        songQueue <- List.empty
 
         albumList <- this.vkHelper.getAlbums()
-        checkboxes := [
-            for v in albumList do
-                CH := !CH + 23
-                yield (new CheckBox(Checked = false, Text = v.title
-                     ,Tag = v.album_id, Top = !CH, Width = 120) :> Control)
-            ]
         albumListView.Invoke(new Action<_>(fun _ ->
             albumListView.Items.Clear()
         ), [null]) |> ignore
-        albumListView.Items.Clear()
-        for v in albumList do
+        albumList <- List.map (fun v -> 
             let item = new ListViewItem(Text = v.title, Tag = v.album_id, Checked = false)
             albumListView.Invoke(new Action<_>(fun (item: ListViewItem) ->
                 albumListView.Items.Add(item) |> ignore
-            ), item )|> ignore
+            ), item ) |> ignore
+            { v with lvItem = Some(item) } ) albumList
   
-    member this.downloadAlbumSongsList(number) = 
-        if number >= albumList.Count then
-            downloadQueueListView.Invoke(new Action<_>(fun _ ->
-                downloadQueueListView.Items.AddRange(
-                    [| for i = 0 to songList.Count - 1 do
-                            let v = songList.[i] 
-                            let item = new ListViewItem([| v.title; v.artist; v.album; v.filefull; "Queued"|], -1 )
-                            item.Tag <- i
-                            yield item |])
+    member this.downloadAlbumSongsList() = 
+        let rec loop lst = async {
+            match lst with 
+            | alb :: tail ->
+                albumListView.Invoke(new Action<_>(fun _ ->
+                    let cb = alb.lvItem.Value
+                    if cb.Checked then 
+                        let songs = this.vkHelper.AudioGet(alb)
+                        songQueue <- (List.map(fun v -> 
+                            { v with lvItem = Some(
+                                               new ListViewItem(
+                                                 [| v.title; v.artist; v.album; v.filefull; "Queued"|], -1 ) ) }
+                            ) songs) @ songQueue    
+                    
+                ), [null]) |> ignore 
+                return! loop tail
+            | [] -> 
+                downloadQueueListView.Invoke(new Action<_>(fun _ ->
+                    List.map (fun (v: songInfo) -> 
+                            v.lvItem.Value
+                        ) songQueue |> List.toArray |> downloadQueueListView.Items.AddRange
+                ), [null]) |> ignore
                 this.processSongQueue()
-            ), [null]) |> ignore
-        else 
-            albumListView.Invoke(new Action<_>(fun (number:int) ->
-                let cb = albumListView.Items.[number]
-                if cb.Checked then 
-                    let alb = albumList.[number]
-                    let songs = this.vkHelper.AudioGet(alb)
-                    songList.AddRange(songs)    
-                Async.StartAsTask(async { this.downloadAlbumSongsList(number + 1) } ) |> ignore
-            ), number) |> ignore 
-    
-    member this.singleSongDownloadedHandler(args) = 
-        if not args.Cancelled then 
-            let number = currentSongNumber
-            let song = songList.[number]
-            let data = args.Result
-
-            if not (Directory.Exists(song.albumFolder) ) then
-                Directory.CreateDirectory(song.albumFolder) |> ignore
-            let file = new FileStream(song.filefull, FileMode.Create)
-            file.Write(data, 0, data.Length)
-            file.Close()
-            downloadedCnt <- downloadedCnt + 1
-            let labelText = ("Progress: " + downloadedCnt.ToString() + "/" + songList.Count.ToString() 
-                + "(handled song: " + song.title + ")")
-            this.syncProgressSet labelText
-        this.Invoke(new Action<_>(fun _ ->
-            if(not(args.Cancelled) ) then 
-                downloadQueueListView.Items.RemoveAt(0)
-        ), None) |> ignore
-        this.processSongQueue()
-        
-
-    member this.processSongQueue() =
-        if downloadQueueListView.Items.Count = 0 then
-            this.syncProgressSet "Finished"
-            this.Invoke(new Action<_>(fun (mnuSynchronize: MenuItem) ->
-                mnuSynchronize.Enabled <- true
-                albumListView.Enabled <- true
-            ), (mnuSynchronize)) |> ignore
-        else
-            let number = downloadQueueListView.Items.[0].Tag :?> int
-            let song = songList.[number] 
-            currentSongNumber <- number
-            currentAlbumTitle <- song.artist
-            downloadClient.DownloadDataAsync(new Uri(song.url) );
+        }
+        Async.Start (loop albumList) 
             
+    member this.DownloadSong () = 
+        lock queueLock <| fun () ->
+            match songQueue with
+            | song :: tail -> 
+                songQueue <- tail
+                songProcessing <- song :: songProcessing
+                let wc = new WebClient()
+                wc.DownloadDataCompleted.Add <| fun args ->
+                    lock queueLock <| fun () ->
+                        songProcessing <- List.filter (fun x -> x <> song) songProcessing 
+                        if not args.Cancelled then                         
+                            if not <| Directory.Exists(song.albumFolder)  then
+                                Directory.CreateDirectory song.albumFolder |> ignore
+                            File.WriteAllBytes(song.filefull, args.Result)
+                            if songQueue.IsEmpty then 
+                                if songProcessing.IsEmpty then 
+                                    this.syncProgressSet "Finished"
+                                    this.Invoke(new Action<_>(fun _ ->
+                                        mnuSynchronize.Enabled <- true
+                                        albumListView.Enabled <- true
+                                    ), None) |> ignore  
+                                else ()
+                            else this.DownloadSong()
+                        this.Invoke(new Action<_>(fun _ ->
+                            if not args.Cancelled then 
+                                song.lvItem.Value.Remove()
+                        ), None) |> ignore
+                
+                wc.DownloadProgressChanged.Add <| fun args ->
+                    this.Invoke(new Action<_>(fun _ ->
+                        song.lvItem.Value.SubItems.[4].Text <- 
+                            args.ProgressPercentage.ToString() + "%"
+                    ), None) |> ignore
+
+                wc.DownloadDataAsync(new Uri(song.url) )
+            | [] -> ()
+        
+    member this.processSongQueue() =
+        for i = 1 to Math.Min(downloadThreadsCount, songQueue.Length) do
+            Async.Start (async { 
+                this.DownloadSong () 
+            })
+
     member this.syncProgressSet (s) =
         statusBar.Invoke(new Action< string >(fun a -> 
             statusBar.Items.Clear()
             statusBar.Items.Add(a) |> ignore
         ), s) |> ignore
 
-    member this.mnuProcessListClick s args =
-        Async.StartAsTask(async { this.downloadAlbumList() } ) |> ignore
-
-    member this.mnuSettingsClick s args = 
-        settingsForm.Value.Show()
-
 and SettingsForm(mainForm) as settingsForm =
-    inherit Form()
-    let mainForm = mainForm
-    do settingsForm.ClientSize <- new Size(503, 190)
-    do settingsForm.Text <- "Settings"
+    inherit Form(Visible = false, Text = "Settings", ClientSize = new Size(503, 190)
+        , FormBorderStyle = FormBorderStyle.FixedDialog)
     let textBoxSelectSavePath = new TextBox(Location = new Point(10, 10)
-        , Width = 400, Text = mainForm.vkHelper.savePath )
+        , Width = 400, Text = mainForm.vkHelper.SavePath )
     let btnSelectSavePath = new Button(Location = new Point(420, 10), Text = "Browse...")
     let btnOk = new Button(Text = "OK"
         , Location = new Point(333, settingsForm.ClientSize.Height - 30) )
     let btnCancel = new Button(Text = "Cancel"
         , Location = new Point(420, settingsForm.ClientSize.Height - 30) )
-    let radioNamingStyles = 
-        ([ 
-            new RadioButton(Text = "<Artist> - <Song>.mp3", Tag="artist_song");
-            new RadioButton(Text = "<Album> - <Song>.mp3", Tag="album_song");
-            new RadioButton(Text = "<Song>.mp3", Tag="song");
-        ])
-    let radioNamingStyles =
-        Seq.unfold
-            (fun (l: RadioButton list, height) -> 
-                match l with 
-                | head :: tail ->
-                     head.Location <- new Point(10, 62 + height)
-                     head.Width <- 300
-                     head.Checked <- mainForm.config.AppSettings.Settings.["namingStyle"].Value = (head.Tag :?> string)
-                     Some(head :> Control, (tail, height + 26) )
-                | [] -> None
-            ) 
-            (radioNamingStyles, 0) |> Seq.toList
+    let (radioNamingStyles, _) =
+        List.fold
+            (fun (lst: Control list, height) (rb:RadioButton) -> 
+                rb.Location <- new Point(10, 62 + height)
+                rb.Width <- 300
+                rb.Checked <- mainForm.Config.AppSettings.Settings.["namingStyle"].Value = (rb.Tag :?> string)
+                ( (rb :> Control) :: lst, height + 26)
+            ) ([], 0)
+            [ new RadioButton(Text = "<Artist> - <Song>.mp3", Tag="artist_song");
+                new RadioButton(Text = "<Album> - <Song>.mp3", Tag="album_song");
+                new RadioButton(Text = "<Song>.mp3", Tag="song"); ] 
     let labelNamingStyles = new Label(Text = "File naming style:", Location=new Point(10, 40) ) 
     do btnSelectSavePath.Click.Add(settingsForm.btnSelectSavePathClick)
-    do btnOk.Click.Add(settingsForm.btnOkClick)
-    do btnCancel.Click.Add(settingsForm.btnCancelClick)
-    do settingsForm.Visible <- false
-    do settingsForm.FormBorderStyle <- FormBorderStyle.FixedDialog
-    do settingsForm.Controls.AddRange
-        ([|
+    do btnOk.Click.Add <| fun args ->
+        mainForm.vkHelper.SavePath <- textBoxSelectSavePath.Text
+        mainForm.Config.AppSettings.Settings.["savePath"].Value <- mainForm.vkHelper.SavePath
+        mainForm.vkHelper.NamingStyle <- textBoxSelectSavePath.Text
+        mainForm.Config.AppSettings.Settings.["namingStyle"].Value <- 
+            (List.find (fun (c:Control) -> (c :?> RadioButton).Checked) radioNamingStyles).Tag |> string
+        mainForm.Config.Save()
+        settingsForm.Hide()
+    do btnCancel.Click.Add <| fun args -> 
+        textBoxSelectSavePath.Text <- mainForm.vkHelper.SavePath 
+        settingsForm.Hide() 
+    do settingsForm.Controls.AddRange <| Array.concat [ 
+        [|
             textBoxSelectSavePath;
             btnSelectSavePath;
             labelNamingStyles;
             btnOk;
             btnCancel;
-        |])
-    
-    do settingsForm.Controls.AddRange(List.toArray radioNamingStyles)
+        |]; List.toArray radioNamingStyles]
+    do settingsForm.Closing.Add(fun a -> settingsForm.Hide(); a.Cancel <- true )
     member this.btnSelectSavePathClick args = 
         let folder = new FolderBrowserDialog()
         folder.ShowDialog() |> ignore
         textBoxSelectSavePath.Text <- folder.SelectedPath
-
-    member this.btnOkClick args = 
-        mainForm.vkHelper.savePath <- textBoxSelectSavePath.Text
-        mainForm.config.AppSettings.Settings.["savePath"].Value <- mainForm.vkHelper.savePath
-        mainForm.vkHelper.namingStyle <- textBoxSelectSavePath.Text
-        mainForm.config.AppSettings.Settings.["namingStyle"].Value <- 
-            (List.find (fun (c:Control) -> (c :?> RadioButton).Checked) radioNamingStyles).Tag |> string
-        mainForm.config.Save()
-        this.Hide()
-    
-    member this.btnCancelClick args = 
-        textBoxSelectSavePath.Text <- mainForm.vkHelper.savePath 
-        this.Hide()
 
 let debugForm = new Form()
 let output = new RichTextBox(Width = debugForm.ClientSize.Width
@@ -483,25 +443,3 @@ debugForm.Controls.Add(output)
 
 [<STAThread>] 
 do Application.Run(new MainForm() ) 
-(*
-let rec factor X d res =
-    match X with
-    | 1 | 2 -> X :: res 
-    | X when X % d = 0 ->  d :: factor (X / d) d res
-    | X -> factor X (d + 1) res
-
-let phi x = 
-    let mutable sumf = 1.0
-    for i in factor x 2 [] |> Seq.distinct  do
-        sumf <- sumf * (1.0 - (1.0 / float(i) ) )
-        ()
-    int(sumf * float(x) )
-
-let q = 
-    Seq.unfold
-        (fun x -> (Some(phi x, x + 1) ) )
-        1
-
-let A = Seq.toList (Seq.take 20 q)
-
-//printfn "%A" phi 2*)
