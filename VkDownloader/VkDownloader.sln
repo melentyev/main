@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tutorial1", "Tutorial1\Tutorial1.fsproj", "{3C2EA0AF-37FF-456C-B1C8-77332F1992B6}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "VkDownloader", "VkDownloader\VkDownloader.fsproj", "{3C2EA0AF-37FF-456C-B1C8-77332F1992B6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
