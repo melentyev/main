@@ -3,7 +3,6 @@ open System.IO
 open System.Collections.Generic
 type Register = r1 = 1 | r2  = 2 | r3 = 3 | r4 = 4
 
-
 type CommandArg = 
     | Register of Register
     | Constant of int
@@ -43,6 +42,7 @@ let parseRegister (tokens: string list) : Register * string list =
 
 let parseLabel (tokens: string list) : Label * string list = 
     tokens.Head, tokens.Tail
+
 let rec parseCommandArg (tokens: string list) : CommandArg * string list = 
     let constVal = ref 0
     match tokens.Head with
@@ -53,7 +53,7 @@ let rec parseCommandArg (tokens: string list) : CommandArg * string list =
         Register(fst (parseRegister tokens) ), tokens.Tail
     | _ -> Constant(!constVal), tokens.Tail
 
-let rec parser (parsed: Command list) (labels: Map<Label,int>) (tokens: string list) =        
+let rec parser (parsed: Command list) (labels: Map<Label,int>) (tokens: string list) = 
     let localParse fp1 pf2 tokens =
         let register, tail = fp1 tokens
         register, (pf2 tail)
@@ -94,59 +94,59 @@ let rec parser (parsed: Command list) (labels: Map<Label,int>) (tokens: string l
             parser parsed (labels.Add(lbl.Substring(0, lbl.Length - 1), parsed.Length) ) tokens.Tail
         | _ -> failwith "error"  
 
-let execute (programRev: Command list, labels: Map<Label,int>) =
-    let program = List.rev programRev |> List.toArray
-    let regVals = new Dictionary<Register, int>();
-    let memory : int array = Array.zeroCreate 1000000
-    regVals.Add(Register.r1, 0);
-    regVals.Add(Register.r2, 0);
-    regVals.Add(Register.r3, 0);
-    regVals.Add(Register.r4, 0);
+let rec execute (program: Command []) (labels: Map<Label,int>) (memory: int []) 
+    (regVals: Map<Register, int>) (commandNumber: int) : int =
     let rec evalCommandArg arg =
         match arg with
         | Constant c -> c
         | Register r -> regVals.[r] 
         | Address p -> memory.[evalCommandArg p]
+    
+    let mapSetValue (map: Map<Register, int>) key value = (map.Remove key |> Map.add key value) 
+    let nextStep = execute program labels memory regVals 
+    let nextStepChangeRegs = execute program labels memory
+    let nextStepArithm dest src op = 
+        execute program labels memory 
+            (mapSetValue regVals dest <| op regVals.[dest] (evalCommandArg src) ) (commandNumber + 1)
+    let nextStepCond src label op = 
+        nextStep <| if (op (evalCommandArg src) 0) then labels.[label] else commandNumber + 1
+    match program.[commandNumber] with
+    | Mov (dest, src) ->
+        match dest with
+        | Register r -> 
+            nextStepChangeRegs (mapSetValue regVals r <| evalCommandArg src ) (commandNumber + 1)
+        | Address p -> 
+            memory.[evalCommandArg p] <- evalCommandArg src
+            nextStep (commandNumber + 1)
         | _ -> failwith "here"
-    let mutable result = 0
-    let mutable bDone = false
-    let mutable commandNumber = 0
-    while not bDone do
-        let cmd = program.[commandNumber]
-        match cmd with
-        | Mov (dest, src) ->
-            match dest with
-            | Register r -> regVals.[r] <- evalCommandArg src
-            | Address p -> memory.[evalCommandArg p] <- evalCommandArg src
-            | _ -> failwith "here"
-        | Add (dest, src) -> regVals.[dest] <- regVals.[dest] + evalCommandArg src
-        | Sub (dest, src) -> regVals.[dest] <- regVals.[dest] - evalCommandArg src
-        | Mul (dest, src) -> regVals.[dest] <- regVals.[dest] * evalCommandArg src
-        | Div (dest, src) -> regVals.[dest] <- regVals.[dest] / evalCommandArg src
-        | Mod (dest, src) -> regVals.[dest] <- regVals.[dest] % evalCommandArg src
-        | Cmp (dest, src) -> regVals.[dest] <- regVals.[dest] - evalCommandArg src 
-        | Jmp (label) -> commandNumber <- labels.[label] - 1
-        | Je (src, label) -> if (evalCommandArg src = 0) then commandNumber <- labels.[label] - 1 else ()
-        | Jne (src, label) -> if (evalCommandArg src <> 0) then commandNumber <- labels.[label] - 1 else ()
-        | Jg (src, label) -> if (evalCommandArg src > 0) then commandNumber <- labels.[label] - 1 else ()
-        | Jng (src, label) -> if (evalCommandArg src <= 0) then commandNumber <- labels.[label] - 1 else ()
-        | Jl (src, label) -> if (evalCommandArg src < 0) then commandNumber <- labels.[label] - 1 else ()
-        | Jnl (src, label) -> if (evalCommandArg src >= 0) then commandNumber <- labels.[label] - 1 else ()
-        | Hlt (arg) ->
-            bDone <- true
-            result <- (evalCommandArg arg)
-        | _ -> failwith "here" 
-        commandNumber <- commandNumber + 1
-    result
+    | Add (dest, src) -> nextStepArithm dest src (+)
+    | Sub (dest, src) -> nextStepArithm dest src (-)
+    | Mul (dest, src) -> nextStepArithm dest src (*)
+    | Div (dest, src) -> nextStepArithm dest src (/)
+    | Mod (dest, src) -> nextStepArithm dest src (%)
+    | Cmp (dest, src) -> nextStepArithm dest src (-)
+    | Jmp (label) -> nextStep ( labels.[label] )
+    | Je (src, label) -> nextStepCond src label (=)
+    | Jne (src, label) -> nextStepCond src label (<>)
+    | Jg (src, label) -> nextStepCond src label (>)
+    | Jng (src, label) -> nextStepCond src label (<=)
+    | Jl (src, label) -> nextStepCond src label (<)
+    | Jnl (src, label) -> nextStepCond src label (>=)
+    | Hlt (arg) -> evalCommandArg arg
 
 [<EntryPoint>]
 let main argv =
     let filename = @"C:\Users\Admin\SkyDrive\Программирование\main\fs_asm\fs_asm\bin\Debug\input.txt"
-    getWords (File.ReadAllLines filename |> Array.toSeq) 
-    |> Seq.toList
-    |> List.filter (fun x -> x <> "")
-    |> parser [] Map.empty
-    |> execute
-    |> printf "%A"
+    let (programReversed, labels) = 
+        getWords (File.ReadAllLines filename |> Array.toSeq) 
+        |> Seq.toList
+        |> List.filter (fun x -> x <> "")
+        |> parser [] Map.empty
+    let regVals = 
+        Seq.fold (fun (m:Map<Register, int>) r -> m.Add(r, 0) ) Map.empty 
+            (List.toSeq [Register.r1; Register.r2; Register.r3; Register.r4]) 
+
+    execute (List.rev programReversed |> List.toArray) labels (Array.create 1000000 0) regVals 0
+        |> printf "%A"
     Console.ReadKey() |> ignore
     0
