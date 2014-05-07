@@ -14,6 +14,7 @@ namespace CtorShit
         private System.Windows.Forms.Timer mTimer = new Timer();
         static readonly Point DefaultPosition = new Point(30, 50);
         public Generator(Link Out = null, Point? pos = null)
+            : base()
         {
             if (pos == null)
             {
@@ -30,7 +31,7 @@ namespace CtorShit
                 Height = 25,
             };
             this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
-            mainForm.Controls.Add(this.UIRepresentaion);
+            MainForm.Instance.Controls.Add(this.UIRepresentaion);
             if (Out == null)
             {
                 Out = new Link(this, null);
@@ -52,7 +53,7 @@ namespace CtorShit
             mTimer.Tick += (o, e) => 
             {
                 SignalChanged(null);
-                Element.mainForm.Invalidate();
+                MainForm.Instance.Invalidate();
             };
             this.UIRepresentaion.ContextMenu = contextMenu1;
         }

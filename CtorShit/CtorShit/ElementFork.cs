@@ -11,39 +11,47 @@ namespace CtorShit
     class ElementFork : Element
     {
         static readonly Point DefaultPosition = new Point(30, 50);
-        public ElementFork(Link In = null, Link[] Outs = null, Point? pos = null)
+        public ElementFork(Link In = null, Link[] Outs = null, Point? pos = null, bool forSaving = false)
+            : base()
         {
-            if (pos == null)
+            if (!forSaving)
             {
-                pos = DefaultPosition;
-            }
-            this.UIRepresentaion = new Label()
-            {
-                Text = "",
-                Visible = true,
-                Tag = this,
-                BorderStyle = BorderStyle.FixedSingle,
-                Location = pos.Value,
-                Width = 25,
-                Height = 25,
-            };
-            this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
-            mainForm.Controls.Add(this.UIRepresentaion);
-            if (In == null)
-            {
-                In = new Link(null, this);
-            }
-            In.To = this;
-            for (int i = 0; i < Outs.Length; i++) 
-            { 
-                if (Outs[i] == null)
+                if (pos == null)
                 {
-                    Outs[i] = new Link(this, null);
+                    pos = DefaultPosition;
                 }
-                Outs[i].From = this;
+                this.UIRepresentaion = new Label()
+                {
+                    Text = "",
+                    Visible = true,
+                    Tag = this,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    Location = pos.Value,
+                    Width = 15,
+                    Height = 15,
+                };
+                this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
+                MainForm.Instance.Controls.Add(this.UIRepresentaion);
+                if (In == null)
+                {
+                    In = new Link(null, this);
+                }
+                In.To = this;
+                for (int i = 0; i < Outs.Length; i++)
+                {
+                    if (Outs[i] == null)
+                    {
+                        Outs[i] = new Link(this, null);
+                    }
+                    Outs[i].From = this;
+                }
             }
             this.inputs = new Link[1] { In };
             this.outputs = Outs;
+        }
+        public override Element GetCopyForSaving()
+        {
+            return new ElementFork(null, new Link[this.outputs.Length], null, true);
         }
         public override void SignalChanged(Link sender)
         {
@@ -51,11 +59,7 @@ namespace CtorShit
             {
                 foreach (var _out in outputs)
                 {
-                    _out.Signal = inputs[0].Signal;
-                    if (_out.To != null)
-                    {
-                        _out.To.SignalChanged(_out);
-                    }
+                    _out.ChangeSignalTo(inputs[0].Signal);
                 }
             }
         }

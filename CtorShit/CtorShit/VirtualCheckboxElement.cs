@@ -10,7 +10,8 @@ namespace CtorShit
 {
     public class VirtualCheckboxElement : Element, IDisposable
     {
-        public VirtualCheckboxElement(Link to = null, Element PositioningParent = null)
+        public VirtualCheckboxElement(Link to = null, Element PositioningParent = null, string label = "", int order = 0)
+            : base()
         {
             if (to == null)
             {
@@ -22,13 +23,14 @@ namespace CtorShit
             PositioningParent.PositionChildrens.Add(this);
             this.UIRepresentaion = new CheckBox()
             {
+                Text = label,
                 Visible = true,
                 Tag = this,
-                Location = PositionBase.UIRepresentaion.Location + new Size(-20, 2),
-                Width = 14
+                Location = PositionBase.UIRepresentaion.Location + new Size(-40, order * 25),
+                Width = 22 + label.Length * 10
             };
             this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
-            mainForm.Controls.Add(this.UIRepresentaion);
+            MainForm.Instance.Controls.Add(this.UIRepresentaion);
         }
         public override void SignalChanged(Link sender)
         {

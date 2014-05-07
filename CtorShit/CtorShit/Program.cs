@@ -22,10 +22,21 @@ namespace CtorShit
     }
     public abstract class Drawable
     {
+        private static int IdAutoIncrement = 0;
+        public int Id;
         public static Drawable MovingObject = null;
         public Point MovingPreviousLocation;
         public Control UIRepresentaion = null;
+        public virtual void PrepareForUI(Point? pos) { }
+        public static int NewId() 
+        {
+            return ++Drawable.IdAutoIncrement;
+        }
         public abstract void DrawSelf(Graphics g);
+        public Drawable()
+        {
+            this.Id = Drawable.NewId();  
+        }
     }
 
 }

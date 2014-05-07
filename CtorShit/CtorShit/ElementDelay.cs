@@ -14,6 +14,7 @@ namespace CtorShit
         static HashSet<Timer> ActiveTimers = new HashSet<Timer>();
         public int TimerInterval = 500;
         public ElementDelay(Link In = null, Link Out = null, Point? pos = null)
+            : base()
         {
             if (pos == null)
             {
@@ -30,7 +31,7 @@ namespace CtorShit
                 Height = 25,
             };
             this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
-            mainForm.Controls.Add(this.UIRepresentaion);
+            MainForm.Instance.Controls.Add(this.UIRepresentaion);
             if (In == null)
             {
                 In = new Link(null, this);
@@ -46,7 +47,7 @@ namespace CtorShit
         }
         public override void SignalChanged(Link sender)
         {
-            DelaySignalChanged();
+            var res = DelaySignalChanged();
         }
         public async Task DelaySignalChanged()
         {
@@ -58,8 +59,9 @@ namespace CtorShit
                 {
                     outputs[0].To.SignalChanged(outputs[0]);
                 }
-                Element.mainForm.Invoke(new Action(() => {
-                    Element.mainForm.Invalidate();
+                MainForm.Instance.Invoke(new Action(() =>
+                {
+                    MainForm.Instance.Invalidate();
                 }));
             }
         }

@@ -1,20 +1,27 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Threading.Tasks;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace CtorShit
 {
-    public abstract class Element : Drawable
+    [Serializable]
+    public class Element : Drawable, ISerializable
     {
+        public int[] preparedInputs;
+        public int[] preparedOutputs;
         public Link[] inputs = new Link[0];
         public Link[] outputs = new Link[0];
         public Element PositionBase = null;
         public List<Element> PositionChildrens = new List<Element>();
-        public static MainForm mainForm = null;
+        public Element() : base() {}
+
         public virtual void SignalChanged(Link sender)
         {
             foreach (var output in this.outputs)
@@ -25,31 +32,51 @@ namespace CtorShit
                 }
             }
         }
+        public virtual Element GetCopyForSaving()
+        {
+            var res = new Element();
+            res.inputs = new Link[this.inputs.Length];
+            res.outputs = new Link[this.outputs.Length];
+            return res;
+        }
         public static void UIRepresentaionMouseDown(object sender, MouseEventArgs e)
         {
-            if (mainForm.PlacingElementNow)
+            if (MainForm.Instance.PlacingElementNow)
             {
                 return;
             }
             Drawable el = (sender as Control).Tag as Drawable;
+            if (el == null) 
+            {
+                return;
+            }
+            else if (MainForm.Instance.UnitingNow)
+            {
+                if (el is Element && !(el is VirtualCheckboxElement)) 
+                { 
+                    ((Control)sender).BackColor = Color.Aqua;
+                    MainForm.Instance.UnitingElements.Add((Element)el);
+                    return;
+                }
+            }
             if (e.Button == MouseButtons.Left ) 
             {
                 if (el is VirtualCheckboxElement)
                 {
                     ((CheckBox)sender).Checked = !(((CheckBox)sender).Checked);
                     ((VirtualCheckboxElement)el).SignalChanged(null);
-                    mainForm.Invalidate();
-                    mainForm.Cursor = Cursors.Hand;
+                    MainForm.Instance.Invalidate();
+                    MainForm.Instance.Cursor = Cursors.Hand;
                 }
                 Element.MovingObject = el;
                 el.MovingPreviousLocation = e.Location + ((Size)el.UIRepresentaion.Location);
-                mainForm.Capture = true;
+                MainForm.Instance.Capture = true;
             }
             if (el is Link && e.Button == MouseButtons.Right)
             {
-                mainForm.Cursor = Cursors.Cross;
+                MainForm.Instance.Cursor = Cursors.Cross;
                 Link.ConnectingObject = (Link)el;
-                mainForm.Capture = true;
+                MainForm.Instance.Capture = true;
             }
         }
 
@@ -66,10 +93,17 @@ namespace CtorShit
                     el.MovingPreviousLocation = e.Location;
                     if (el is Element)
                     {
-                        foreach (var lnk in ((Element)el).inputs.Concat(((Element)el).outputs))
+                        foreach(var child in ((Element)el).PositionChildrens) 
+                        {
+                            if (child.UIRepresentaion != null)
+                            {
+                                child.UIRepresentaion.Location += delta;
+                            }
+                        }
+                        /*foreach (var lnk in ((Element)el).inputs.Concat(((Element)el).outputs))
                         {
                             lnk.RepositonChildrens(delta, (Element)el);
-                        }
+                        }*/
                     }
                 }
             }
@@ -81,15 +115,15 @@ namespace CtorShit
             {
                 Drawable el = Element.MovingObject;
                 Element.MovingObject = null;
-                mainForm.Cursor = Cursors.Default;
-                el.DrawSelf(mainForm.CreateGraphics());
+                MainForm.Instance.Cursor = Cursors.Default;
+                el.DrawSelf(MainForm.Instance.CreateGraphics());
             }
-            if (e.Button == MouseButtons.Right && Link.ConnectingObject != null) 
+            else if (e.Button == MouseButtons.Right && Link.ConnectingObject != null) 
             {
                 Link lnk = Link.ConnectingObject;
                 Link.ConnectingObject = null;
-                mainForm.Cursor = Cursors.Default;
-                Control ctrl = mainForm.GetChildAtPoint(e.Location);
+                MainForm.Instance.Cursor = Cursors.Default;
+                Control ctrl = MainForm.Instance.GetChildAtPoint(e.Location);
                 if (ctrl != null && ctrl.Tag is Element)
                 {
                     if (ctrl.Tag is VirtualCheckboxElement)
@@ -99,13 +133,73 @@ namespace CtorShit
                         lnk.To.inputs[Array.FindIndex(lnk.To.inputs, (link) => link == cb.outputs[0])] = lnk;
                         cb.Dispose();
                         lnk.To.SignalChanged(lnk);
-                        mainForm.VisibleElements.Remove(cb);
+                        MainForm.Instance.VisibleElements.Remove(cb);
                     }
                     else
                     {
                         lnk.To = (Element)ctrl.Tag;
                     }
-                    mainForm.Invalidate();
+                    MainForm.Instance.Invalidate();
+                }
+            }
+            else if (MainForm.Instance.UnitingNow && e.Button == MouseButtons.Right)
+            {
+                MainForm.Instance.UnitingNow = false;
+                MainForm.Instance.Cursor = Cursors.Default;
+                foreach (var el in MainForm.Instance.UnitingElements) 
+                {
+                    if (el.UIRepresentaion != null)
+                    {
+                        el.UIRepresentaion.BackColor = Color.FromKnownColor(KnownColor.Control);
+                    }
+                }
+                MainForm.Instance.UnitingElements.Clear();
+            }
+        }
+        public override void DrawSelf(Graphics g) {}
+
+        protected Element(SerializationInfo info, StreamingContext context) : base()
+        {
+            preparedInputs = (int[])info.GetValue("inputs", typeof(int[]));
+            preparedOutputs = (int[])info.GetValue("outputs", typeof(int[]));
+            Id = info.GetInt32("Id");
+        }
+
+        public virtual void GetObjectData(SerializationInfo info,  StreamingContext context)
+        {
+            preparedInputs = this.inputs.Select(el => el.Id).ToArray();
+            preparedOutputs = this.outputs.Select(el => el.Id).ToArray();
+            info.AddValue("Id", this.Id);
+            info.AddValue("inputs", preparedInputs);
+            info.AddValue("outputs", preparedOutputs);
+        }
+        public static Stream StoreElements(Element[] elems) 
+        {
+            Stream stream = new MemoryStream();
+
+            IFormatter bf = new BinaryFormatter();
+            HashSet<Link> allLinks = new HashSet<Link>();
+            foreach (var e in elems)
+            {
+                Array.ForEach(e.inputs.Concat(e.outputs).ToArray(), l => bf.Serialize(stream, l));
+                bf.Serialize(stream, e);
+            }
+            return stream;
+        }
+        public static void AwakeElements(Element[] elems, Link[] links)
+        {
+            foreach (var el in elems)
+            {
+                el.inputs = el.preparedInputs.Select(id => Array.Find(links, l => l.Id == id) ).ToArray();
+                el.outputs = el.preparedOutputs.Select(id => Array.Find(links, l => l.Id == id)).ToArray();
+                Array.ForEach(el.inputs, l => l.To = el);
+                Array.ForEach(el.outputs, l => l.From = el);
+                if (el is ElementCluster)
+                {
+                    var clel = ((ElementCluster)el);
+                    clel.ClusterElements.AddRange(clel.preparedClusterElements.Select(id => 
+                        Array.Find(elems, e => e.Id == id) 
+                    ) );
                 }
             }
         }
