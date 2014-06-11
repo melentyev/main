@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,39 +11,49 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace CtorShit
 {
+    [Serializable]
     public class ElementCluster : Element
     {
         public int[] preparedClusterElements;
-        public string Name = "";
         public List<Element> ClusterElements = new List<Element>();
         static readonly Point DefaultPosition = new Point(30, 50);
-
+        public override void PrepareForUI(Point pos)
+        {
+            base.PrepareForUI(pos);
+            this.UIRepresentaion = new Label()
+            {
+                Text = (this.Name == "" ? "Cluster" : this.Name),
+                Visible = true,
+                Tag = this,
+                BorderStyle = BorderStyle.FixedSingle,
+                Location = pos,
+                Width = 60,
+                Height = 25,
+                ContextMenu = this.CreateContextMenu(),
+            };
+            this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
+            MainForm.Instance.Controls.Add(this.UIRepresentaion);
+        }
         public ElementCluster(Point? pos = null, bool forSaving = false)
             : base()
         {
-            if (pos == null)
-            {
-                pos = DefaultPosition;
-            }
             if (!forSaving) 
-            { 
-                this.UIRepresentaion = new Label()
-                {
-                    Text = "Cluster",
-                    Visible = true,
-                    Tag = this,
-                    BorderStyle = BorderStyle.FixedSingle,
-                    Location = pos.Value,
-                    Width = 60,
-                    Height = 25,
-                };
-                this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
-                MainForm.Instance.Controls.Add(this.UIRepresentaion);
+            {
+                PrepareForUI(pos == null ? DefaultPosition : pos.Value);
             }
             this.inputs = new Link[0];
             this.outputs = new Link[0];
         }
         public override void SignalChanged(Link sender){}
+        public override void Remove()
+        {
+            base.Remove();
+            foreach (var e in ClusterElements)
+            {
+                e.Remove();
+            }
+            ClusterElements.Clear();
+        }
         public override void DrawSelf(Graphics g)
         {
             foreach (var e in ClusterElements)
@@ -64,93 +75,101 @@ namespace CtorShit
             else { 
                 ClusterElements.Add(e);
                 e.UIRepresentaion = this.UIRepresentaion;
-            }
-        }
-        public override Element GetCopyForSaving()
-        {
-            var NEW = new ElementCluster(null, true);
-            for (int i = 0; i < ClusterElements.Count; i++)
-            {
-                NEW.AddElement(ClusterElements[i].GetCopyForSaving());
-            }
-            for (int i = 0; i < ClusterElements.Count; i++)
-            {
-                for (int j = 0; j < ClusterElements[i].outputs.Length; j++)
+                foreach (var l in e.inputs)
                 {
-                    var lnk = ClusterElements[i].outputs[j];
-                    if (lnk != null && NEW.ClusterElements[i].outputs[j] == null) 
-                    { 
-                        var ind = ClusterElements.FindIndex(e => e == lnk.To);
-                        if (ind != -1)
+                    if (l.From is VirtualCheckboxElement)
+                    {
+                        if (l.From.PositionBase != null)
                         {
-                            var portInd = Array.FindIndex(ClusterElements[ind].inputs, l => l == lnk);
-                            NEW.ClusterElements[i].outputs[j] = new Link(
-                                NEW.ClusterElements[i],
-                                NEW.ClusterElements[ind]
-                            );
-                            NEW.ClusterElements[ind].inputs[portInd] = NEW.ClusterElements[i].outputs[j];
+                            l.From.PositionBase = this;
+                            this.PositionChildrens.Add(l.From);
                         }
                     }
                 }
-
             }
-            return NEW;
+        }
+        protected ElementCluster(SerializationInfo info, StreamingContext context) 
+            : base(info, context) 
+        { 
+            preparedClusterElements = (int[])info.GetValue("ClusterElements", typeof(int[]));
         }
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("ClusterElements", this.ClusterElements.Select(e => e.Id).ToArray());
+            base.GetObjectData(info, context);
+            preparedClusterElements = this.ClusterElements.Select(e => e.Id).ToArray();
+            info.AddValue("ClusterElements", preparedClusterElements);
         }
-        public void SaveAs(string name)
+        public void SerializeTo(IFormatter formatter, Stream stream)
         {
-            var savedInstance = (ElementCluster)(this.GetCopyForSaving());
-            savedInstance.Name = name;
+            formatter.Serialize(stream, this); 
+            var links = new HashSet<Link>();
+            foreach (var el in this.ClusterElements)
+            {
+                formatter.Serialize(stream, el);
+                foreach (var l in el.inputs.Concat(el.outputs)) 
+                { 
+                    links.Add(l);
+                }
+            }
+            foreach (var l in links)
+            {
+                formatter.Serialize(stream, l);
+                if (l.From is VirtualCheckboxElement)
+                {
+                    formatter.Serialize(stream, l.From);
+                }
+            }
+            stream.Flush();
+        }
+        public static ElementCluster DeserializeFrom(IFormatter formatter, Stream stream, List<Element> elems, List<Link> links)
+        {
+            ElementCluster res = null;
+            try
+            {
+                while (stream.CanRead)
+                {
+                    object obj = formatter.Deserialize(stream);
+                    if (obj is ElementCluster) res = (ElementCluster)obj;
+                    if (obj is Link) links.Add((Link)obj);
+                    else if (obj is Element) elems.Add((Element)obj);
+                }
+            }
+            catch (System.Runtime.Serialization.SerializationException) {}
+            finally { }
+            return res;
+        }
+        public void Awake(List<Element> elems)
+        {
+            this.PrepareForUI(DefaultPosition);
+            Array.ForEach(this.preparedClusterElements, (id) => {
+                this.AddElement(elems.Find(e => e.Id == id));
+            });
+        }
+        public static void AddClusterMenuItem(string name, IFormatter formatter, MemoryStream stream)
+        {
             var newItem = new ToolStripMenuItem() { Text = name };
-            newItem.Click += (o, e) => {
-                var NEW = savedInstance.Spawn();
+            newItem.Click += (o, e) =>
+            {
+                List<Element> elems = new List<Element>();
+                List<Link> links = new List<Link>();
+                stream.Position = 0;
+                var NEW = ElementCluster.DeserializeFrom(formatter, stream, elems, links);
+                NEW.Awake(elems);
+                Element.AwakeElements(elems.ToArray(), links.ToArray());
                 MainForm.Instance.VisibleElements.Add(NEW);
             };
             MainForm.Instance.myClustersToolStripMenuItem.DropDown.Items.Add(newItem);
         }
-        public ElementCluster Spawn(Point? pos = null)
+        public void SaveAs(string name)
         {
-            var newInstance = (ElementCluster)(this.GetCopyForSaving());
-            if (pos == null)
-            {
-                pos = DefaultPosition;
-            }
-            newInstance.UIRepresentaion = new Label()
-            {
-                Text = this.Name,
-                Visible = true,
-                Tag = newInstance,
-                BorderStyle = BorderStyle.FixedSingle,
-                Location = pos.Value,
-                Width = 65,
-                Height = 25,
-            };
-            foreach (var el in newInstance.ClusterElements)
-            {
-                el.UIRepresentaion = newInstance.UIRepresentaion;
-                for(int i = 0; i <  el.inputs.Length; i++)
-                {
-                    if (el.inputs[i] == null)
-                    {
-                        el.inputs[i] = new Link(null, el);
-                        var cb = new VirtualCheckboxElement(el.inputs[i], newInstance);
-                        MainForm.Instance.VisibleElements.Add(cb);
-                    }
-                }
-                for (int i = 0; i < el.outputs.Length; i++)
-                {
-                    if (el.outputs[i] == null)
-                    {
-                        el.outputs[i] = new Link(el, null);
-                    }
-                }
-            }
-            newInstance.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
-            MainForm.Instance.Controls.Add(newInstance.UIRepresentaion);
-            return newInstance;
+            IFormatter formatter = new BinaryFormatter();
+            MemoryStream stream = new MemoryStream();
+            this.SerializeTo(formatter, stream);
+            ElementCluster.AddClusterMenuItem(name, formatter, stream);
+            stream.Position = 0;
+            var buffer = new byte[stream.Length];
+            stream.Read(buffer, 0, buffer.Length);
+            File.WriteAllBytes("cl_" + DateTime.Now.ToString("HH_mm_ss") + name + ".cbin", buffer);
         }
     }
 }

@@ -10,38 +10,47 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace CtorShit
 {
+    [Serializable]
     public class ElementBinaryOp : Element
     {
         public string preparedOpName;
         static readonly Point DefaultPosition = new Point(30, 50);
         public Func<bool, bool, bool> SignalFunc = null;
-        string Label;
+        public static Dictionary<string, Func<bool, bool, bool>> Functions = new Dictionary<string, Func<bool, bool, bool>>();
+        static ElementBinaryOp()
+        {
+            Functions.Add("AND", (A, B) => A && B);
+            Functions.Add("OR", (A, B) => A || B);
+            Functions.Add("NAND", (A, B) => !(A && B));
+            Functions.Add("NOR", (A, B) => !(A || B));
+            Functions.Add("XOR", (A, B) => (A && !B) || (!A && B));
+        }
         public static ElementBinaryOp AND(Link InA = null, Link InB = null, 
                 Link Out = null, Point? pos = null, bool forSaving = false)
         {
-            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "AND", (A, B) => A && B, "AND");
+            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "AND", Functions["AND"], "AND");
         }
         public static ElementBinaryOp OR(Link InA = null, Link InB = null,
                 Link Out = null, Point? pos = null, bool forSaving = false)
         {
-            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "OR", (A, B) => A || B, "OR");
+            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "OR", Functions["OR"], "OR");
         }
         public static ElementBinaryOp NAND(Link InA = null, Link InB = null,
                 Link Out = null, Point? pos = null, bool forSaving = false)
         {
-            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "NAND", (A, B) => !(A && B), "NAND");
+            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "NAND", Functions["NAND"], "NAND");
         }
         public static ElementBinaryOp NOR(Link InA = null, Link InB = null,
                 Link Out = null, Point? pos = null, bool forSaving = false)
         {
-            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "NOR", (A, B) => !(A || B), "NOR");
+            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "NOR", Functions["NOR"], "NOR");
         }
         public static ElementBinaryOp XOR(Link InA = null, Link InB = null,
                 Link Out = null, Point? pos = null, bool forSaving = false)
         {
-            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "XOR", (A, B) => (A && !B) || (!A && B), "XOR");
+            return new ElementBinaryOp(InA, InB, Out, pos, forSaving, "XOR", Functions["XOR"], "XOR");
         }
-        public override void PrepareForUI(Point? pos)
+        public override void PrepareForUI(Point pos)
         {
             base.PrepareForUI(pos);
             if (pos == null)
@@ -52,13 +61,14 @@ namespace CtorShit
             {
                 this.UIRepresentaion = new Label()
                 {
-                    Text = this.Label,
+                    Text = this.Name,
                     Visible = true,
                     Tag = this,
                     BorderStyle = BorderStyle.FixedSingle,
-                    Location = pos.Value,
-                    Width = 35,
+                    Location = pos,
+                    Width = 45,
                     Height = 25,
+                    ContextMenu = this.CreateContextMenu(),
                 };
                 this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
                 MainForm.Instance.Controls.Add(this.UIRepresentaion);
@@ -79,40 +89,39 @@ namespace CtorShit
             }
             this.outputs[0].From = this;
         }
+
         public ElementBinaryOp(Link InA, Link InB, Link Out,
-            Point? pos, bool forSaving, string label,  Func<bool, bool, bool> signalFunc, string _preparedOpName)
+            Point? pos, bool forSaving, string name,  Func<bool, bool, bool> signalFunc, string _preparedOpName)
             : base()
         {
-            Label = label;
+            Name = name;
             SignalFunc = signalFunc;
             this.preparedOpName = _preparedOpName;
             this.inputs = new Link[2] { InA, InB };
             this.outputs = new Link[1] { Out };
             if (!forSaving)
             {
-                this.PrepareForUI(pos);
+                this.PrepareForUI(pos == null ? DefaultPosition : pos.Value);
             }
         }
 
         protected ElementBinaryOp(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            
+            this.preparedOpName = info.GetString("OpName");
+            SignalFunc = Functions[this.preparedOpName];
         }
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
+            base.GetObjectData(info, context);
             info.AddValue("OpName", this.preparedOpName);
-        }
-        public override Element GetCopyForSaving()
-        {
-            return new ElementBinaryOp(null, null, null, null, true, "", SignalFunc, preparedOpName);
         }
         public override void SignalChanged(Link sender)
         {
             if (inputs.Length > 1 && inputs[0] != null && inputs[1] != null
                 && outputs.Length > 0 && outputs[0] != null)
             {
-                outputs[0].ChangeSignalTo(SignalFunc(inputs[0].Signal, inputs[1].Signal) );
+                outputs[0].ChangeSignalTo(inputs[0].Signals.Zip(inputs[1].Signals, (a, b) => SignalFunc(a, b) ) );
             }
         }
         public override void DrawSelf(Graphics g)

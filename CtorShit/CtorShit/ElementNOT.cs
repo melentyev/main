@@ -32,6 +32,7 @@ namespace CtorShit
                     Location = pos.Value,
                     Width = 40,
                     Height = 25,
+                    ContextMenu = this.CreateContextMenu()
                 };
                 this.UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
                 MainForm.Instance.Controls.Add(this.UIRepresentaion);
@@ -50,16 +51,9 @@ namespace CtorShit
             this.outputs = new Link[1] { Out };
         }
         protected ElementNOT(SerializationInfo info, StreamingContext context) : base(info, context) { }
-        public override Element GetCopyForSaving()
-        {
-            return new ElementNOT(null, null, null, true);
-        }
         public override void SignalChanged(Link sender)
         {
-            if (inputs.Length > 0 && outputs.Length > 0)
-            {
-                outputs[0].ChangeSignalTo(!inputs[0].Signal);
-            }
+            outputs[0].ChangeSignalTo(inputs[0].Signals.Select(s => !s));
         }
         public override void DrawSelf(Graphics g)
         {

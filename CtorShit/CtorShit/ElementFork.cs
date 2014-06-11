@@ -5,9 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+
 
 namespace CtorShit
 {
+    [Serializable]
     class ElementFork : Element
     {
         static readonly Point DefaultPosition = new Point(30, 50);
@@ -49,17 +53,13 @@ namespace CtorShit
             this.inputs = new Link[1] { In };
             this.outputs = Outs;
         }
-        public override Element GetCopyForSaving()
-        {
-            return new ElementFork(null, new Link[this.outputs.Length], null, true);
-        }
         public override void SignalChanged(Link sender)
         {
             if (inputs.Length > 0 && outputs.Length > 0)
             {
                 foreach (var _out in outputs)
                 {
-                    _out.ChangeSignalTo(inputs[0].Signal);
+                    _out.ChangeSignalTo(inputs[0].Signals);
                 }
             }
         }
@@ -69,6 +69,14 @@ namespace CtorShit
             {
                 _out.DrawSelf(g);
             }
+        }
+        protected ElementFork(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
         }
     }
 }

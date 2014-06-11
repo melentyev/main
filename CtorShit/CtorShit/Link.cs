@@ -10,17 +10,19 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace CtorShit
 {
-    public class Link : Drawable, ISerializable
+    [Serializable]
+    public class Link : Drawable
     {
         private Element mFrom, mTo;
         public int preparedFrom, preparedTo;
         public static Link ConnectingObject = null;
-        public bool Signal = false;
-        public Link(Element from = null, Element to = null)
+        public bool[] Signals = null;
+        public Link(Element from = null, Element to = null, int width = 1)
             : base()
         {
             From = from;
             To = to;
+            Signals = new bool[width];
         }
         public Element To
         {
@@ -37,13 +39,19 @@ namespace CtorShit
                 {
                     UIRepresentaion = new Label()
                     {
-                        Text = "O",
+                        Text = this.Name,
                         Visible = true,
                         Tag = this,
                         BorderStyle = BorderStyle.FixedSingle,
                         Top = (mFrom != null) ? mFrom.UIRepresentaion.Top : 50,
                         Left = (mFrom != null) ? mFrom.UIRepresentaion.Right + 30 : 30,
-                        Width = 20
+                        Width = 40,
+                        ContextMenu = this.CreateContextMenu(new MenuItem("Connect", (o, e) =>
+                            {
+                                MainForm.Instance.Cursor = Cursors.Cross;
+                                Link.ConnectingObject = this;
+                                MainForm.Instance.Capture = true;
+                            }) { Index = 0 })
                     };
                     UIRepresentaion.MouseDown += Element.UIRepresentaionMouseDown;
                     MainForm.Instance.Controls.Add(UIRepresentaion);
@@ -57,14 +65,23 @@ namespace CtorShit
         }
         public override void DrawSelf(Graphics g)
         {
+            Func<Pen> pen = () => {
+                int signalsCnt = 0;
+                foreach (var s in Signals) 
+                { 
+                    if (s) signalsCnt++; 
+                }
+                return new Pen(signalsCnt == 0 ? Color.Black 
+                             : signalsCnt < Signals.Length ? Color.Pink 
+                             : Color.Red, Signals.Length == 1 ? 2.0f : 5.0f);
+            };
             if (mFrom != null && mTo == null)
             {
                 if (mFrom.UIRepresentaion != UIRepresentaion) 
                 {
                     var p1 = new Point(mFrom.UIRepresentaion.Right, mFrom.UIRepresentaion.Top + 5);
                     var p2 = new Point(UIRepresentaion.Left, UIRepresentaion.Top + 5);
-                    var pen = new Pen(Signal ? Color.Red : Color.Black, 2.0f);
-                    g.DrawLine(pen, p1, p2);
+                    g.DrawLine(pen(), p1, p2);
                 }
             }
             else if (mTo != null && mFrom != null)
@@ -73,8 +90,7 @@ namespace CtorShit
                 {
                     var p1 = new Point(mFrom.UIRepresentaion.Right, mFrom.UIRepresentaion.Top + 5);
                     var p2 = new Point(mTo.UIRepresentaion.Left, mTo.UIRepresentaion.Top + 5);
-                    var pen = new Pen(Signal ? Color.Red : Color.Black, 2.0f);
-                    g.DrawLine(pen, p1, p2);
+                    g.DrawLine(pen(), p1, p2);
                 }
             }
         }
@@ -89,27 +105,45 @@ namespace CtorShit
                 mFrom.UIRepresentaion.Location += delta;
             }
         }*/
-        public void ChangeSignalTo(bool newSignal) {
-            if (Signal != newSignal) {
-                Signal = newSignal;
-                if (To != null)
+        public void ChangeSignalTo(bool newSignal)
+        {
+            ChangeSignalTo(new bool[] { newSignal });
+        }
+        public void ChangeSignalTo(IEnumerable<bool> newSignals) {
+            int i = 0;
+            bool changed = false;
+            foreach (var newSignal in newSignals)
+            {
+                if (Signals[i] != newSignal)
                 {
-                    To.SignalChanged(this);
+                    Signals[i] = newSignal;
+                    changed = true;
                 }
+                i++;
+            }
+            if (To != null && changed)
+            {
+                To.SignalChanged(this);
             }
         }       
-        protected Link(SerializationInfo info, StreamingContext context) : base()
+        protected Link(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
-            Id = info.GetInt32("Id");
+            this.Signals = new bool[info.GetInt32("signals_count")];
+            this.preparedFrom = info.GetInt32("from");
+            this.preparedTo = info.GetInt32("to");
+            this.From = null;
+            this.To = null;
         }
 
-        public virtual void GetObjectData(SerializationInfo info,  StreamingContext context)
+        public override void GetObjectData(SerializationInfo info,  StreamingContext context)
         {
+            base.GetObjectData(info, context);
             preparedFrom = this.From == null ? -1 : this.From.Id;
             preparedTo = this.To == null ? -1 : this.To.Id;
-            info.AddValue("Id", this.Id);
-            info.AddValue("inputs", preparedFrom);
-            info.AddValue("outputs", preparedTo);
+            info.AddValue("from", preparedFrom);
+            info.AddValue("to", preparedTo);
+            info.AddValue("signals_count", Signals.Length);
         }
     }
 }

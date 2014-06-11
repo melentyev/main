@@ -34,6 +34,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -42,13 +43,16 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Drawable.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="ElementBinaryOp.cs" />
     <Compile Include="ElementCluster.cs" />
     <Compile Include="ElementDelay.cs" />
     <Compile Include="ElementFork.cs" />
+    <Compile Include="ElementLinkUniter.cs" />
     <Compile Include="ElementNOT.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>

@@ -59,11 +59,7 @@ namespace CtorShit
         }
         public override void SignalChanged(Link sender)
         {
-            this.outputs[0].Signal = !this.outputs[0].Signal;
-            if (outputs[0].To != null)
-            {
-                outputs[0].To.SignalChanged(outputs[0]);
-            }
+            outputs[0].ChangeSignalTo(outputs[0].Signals.Select(s => !s));
         }
         public override void DrawSelf(Graphics g)
         {

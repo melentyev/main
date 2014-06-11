@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace CtorShit
 {
@@ -18,24 +20,6 @@ namespace CtorShit
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
-        }
-    }
-    public abstract class Drawable
-    {
-        private static int IdAutoIncrement = 0;
-        public int Id;
-        public static Drawable MovingObject = null;
-        public Point MovingPreviousLocation;
-        public Control UIRepresentaion = null;
-        public virtual void PrepareForUI(Point? pos) { }
-        public static int NewId() 
-        {
-            return ++Drawable.IdAutoIncrement;
-        }
-        public abstract void DrawSelf(Graphics g);
-        public Drawable()
-        {
-            this.Id = Drawable.NewId();  
         }
     }
 

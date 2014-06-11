@@ -12,33 +12,22 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace CtorShit
 {
     [Serializable]
-    public class Element : Drawable, ISerializable
+    public class Element : Drawable
     {
         public int[] preparedInputs;
         public int[] preparedOutputs;
+        public int preparedPositionBase = -1;
         public Link[] inputs = new Link[0];
         public Link[] outputs = new Link[0];
+        public IEnumerable<Link> AllLinks
+        {
+            get { return inputs.Concat(outputs); }
+        }
         public Element PositionBase = null;
         public List<Element> PositionChildrens = new List<Element>();
         public Element() : base() {}
 
-        public virtual void SignalChanged(Link sender)
-        {
-            foreach (var output in this.outputs)
-            {
-                if (output.To != null)
-                {
-                    output.To.SignalChanged(output);
-                }
-            }
-        }
-        public virtual Element GetCopyForSaving()
-        {
-            var res = new Element();
-            res.inputs = new Link[this.inputs.Length];
-            res.outputs = new Link[this.outputs.Length];
-            return res;
-        }
+        public virtual void SignalChanged(Link sender){}
         public static void UIRepresentaionMouseDown(object sender, MouseEventArgs e)
         {
             if (MainForm.Instance.PlacingElementNow)
@@ -58,6 +47,7 @@ namespace CtorShit
                     MainForm.Instance.UnitingElements.Add((Element)el);
                     return;
                 }
+                return;
             }
             if (e.Button == MouseButtons.Left ) 
             {
@@ -74,9 +64,9 @@ namespace CtorShit
             }
             if (el is Link && e.Button == MouseButtons.Right)
             {
-                MainForm.Instance.Cursor = Cursors.Cross;
+                /*MainForm.Instance.Cursor = Cursors.Cross;
                 Link.ConnectingObject = (Link)el;
-                MainForm.Instance.Capture = true;
+                MainForm.Instance.Capture = true;*/
             }
         }
 
@@ -118,7 +108,7 @@ namespace CtorShit
                 MainForm.Instance.Cursor = Cursors.Default;
                 el.DrawSelf(MainForm.Instance.CreateGraphics());
             }
-            else if (e.Button == MouseButtons.Right && Link.ConnectingObject != null) 
+            else if (Link.ConnectingObject != null && e.Button == MouseButtons.Left) 
             {
                 Link lnk = Link.ConnectingObject;
                 Link.ConnectingObject = null;
@@ -135,43 +125,62 @@ namespace CtorShit
                         lnk.To.SignalChanged(lnk);
                         MainForm.Instance.VisibleElements.Remove(cb);
                     }
-                    else
-                    {
-                        lnk.To = (Element)ctrl.Tag;
-                    }
                     MainForm.Instance.Invalidate();
                 }
             }
-            else if (MainForm.Instance.UnitingNow && e.Button == MouseButtons.Right)
+            else if (Link.ConnectingObject != null && e.Button == MouseButtons.Right)
             {
-                MainForm.Instance.UnitingNow = false;
+                Link.ConnectingObject = null;
                 MainForm.Instance.Cursor = Cursors.Default;
-                foreach (var el in MainForm.Instance.UnitingElements) 
+            }
+            else if (MainForm.Instance.UnitingNow) 
+            {
+                if(e.Button == MouseButtons.Right)
                 {
-                    if (el.UIRepresentaion != null)
+                    MainForm.Instance.UnitingNow = false;
+                    MainForm.Instance.Cursor = Cursors.Default;
+                    foreach (var el in MainForm.Instance.UnitingElements) 
                     {
-                        el.UIRepresentaion.BackColor = Color.FromKnownColor(KnownColor.Control);
+                        if (el.UIRepresentaion != null)
+                        {
+                            el.UIRepresentaion.BackColor = Color.FromKnownColor(KnownColor.Control);
+                        }
                     }
+                    MainForm.Instance.UnitingElements.Clear();
                 }
-                MainForm.Instance.UnitingElements.Clear();
             }
         }
         public override void DrawSelf(Graphics g) {}
 
-        protected Element(SerializationInfo info, StreamingContext context) : base()
+        public virtual void Remove() 
+        {
+            foreach (var l in this.inputs) { l.To = null; }
+            foreach (var l in this.outputs) { l.From = null; }
+            if (this.UIRepresentaion != null)
+            {
+                MainForm.Instance.Controls.Remove(this.UIRepresentaion);
+                this.UIRepresentaion.Dispose();
+            }
+            MainForm.Instance.VisibleElements.Remove(this);
+        }
+
+        protected Element(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
             preparedInputs = (int[])info.GetValue("inputs", typeof(int[]));
             preparedOutputs = (int[])info.GetValue("outputs", typeof(int[]));
-            Id = info.GetInt32("Id");
+            preparedPositionBase = info.GetInt32("PositionBase");
         }
 
-        public virtual void GetObjectData(SerializationInfo info,  StreamingContext context)
+        public override void GetObjectData(SerializationInfo info,  StreamingContext context)
         {
+            base.GetObjectData(info, context);
             preparedInputs = this.inputs.Select(el => el.Id).ToArray();
             preparedOutputs = this.outputs.Select(el => el.Id).ToArray();
-            info.AddValue("Id", this.Id);
+            preparedPositionBase = (this.PositionBase == null ? -1 : this.PositionBase.Id);
             info.AddValue("inputs", preparedInputs);
             info.AddValue("outputs", preparedOutputs);
+            info.AddValue("PositionBase", preparedPositionBase);
         }
         public static Stream StoreElements(Element[] elems) 
         {
@@ -194,14 +203,25 @@ namespace CtorShit
                 el.outputs = el.preparedOutputs.Select(id => Array.Find(links, l => l.Id == id)).ToArray();
                 Array.ForEach(el.inputs, l => l.To = el);
                 Array.ForEach(el.outputs, l => l.From = el);
-                if (el is ElementCluster)
-                {
-                    var clel = ((ElementCluster)el);
-                    clel.ClusterElements.AddRange(clel.preparedClusterElements.Select(id => 
-                        Array.Find(elems, e => e.Id == id) 
-                    ) );
-                }
+                el.PositionBase = Array.Find(elems, e => e.Id == el.preparedPositionBase);
             }
+            foreach (var el in elems)
+            {
+                el.Id = Drawable.NewId();
+                if (el is VirtualCheckboxElement)
+                {
+                    el.PrepareForUI(new Point(0, 0));
+                }
+                foreach (var l in el.inputs.Concat(el.outputs)) l.Id = Drawable.NewId();
+            }
+        }
+        public override ContextMenu CreateContextMenu(params object[] items)
+        {
+            var _items = items.Select(e => e as MenuItem).Concat(new MenuItem[] { new MenuItem("Remove", (o, e) => {
+                this.Remove();
+            }) { Index = 110 } }).ToArray();
+            return base.CreateContextMenu(_items);
+            
         }
     }
 }

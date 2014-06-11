@@ -54,11 +54,7 @@ namespace CtorShit
             await Task.Delay(TimerInterval);
             if (inputs.Length > 0 && outputs.Length > 0)
             {
-                outputs[0].Signal = inputs[0].Signal;
-                if (outputs[0].To != null)
-                {
-                    outputs[0].To.SignalChanged(outputs[0]);
-                }
+                outputs[0].ChangeSignalTo(inputs[0].Signals);
                 MainForm.Instance.Invoke(new Action(() =>
                 {
                     MainForm.Instance.Invalidate();
