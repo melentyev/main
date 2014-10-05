@@ -11,11 +11,11 @@ public:
 	pixel(double _x, double _y) : x((int)floor(_x)), y((int)floor(_y)){} 
 };
 
-class renderer;
+class Renderer;
 
 class camera {
 public:
-	friend class renderer;
+	friend class Renderer;
 	matrix4 conv;
 	void apply(vertex &v) {
 		double xt, yt, zt;
@@ -63,7 +63,7 @@ public:
 const int Z_BUFFER = 0;
 const int R_TRACE = 1;
 
-class renderer {
+class Renderer {
 public:
 	Canvas c;
 	camera cam;
@@ -76,8 +76,8 @@ public:
     bool drawFrames;
 	std::vector<polygon*> data;
 	void(*Debug)(Canvas &canv);
-	renderer() : Debug(NULL) { drawFrames = false, color_data = NULL; depth_data = NULL; }
-	renderer(int W, int H, int type) : c(W, H), Debug(NULL) { 
+	Renderer() : Debug(NULL) { drawFrames = false, color_data = NULL; depth_data = NULL; }
+	Renderer(int W, int H, int type) : c(W, H), Debug(NULL) { 
 		memsize = W * H;
 		color_data = new DWORD[memsize]; 
 		depth_data = new double[memsize]; 
@@ -202,13 +202,13 @@ public:
 	}	
 };
 
-class AntiAliaser : public renderer {
+class AntiAliaser : public Renderer {
 public:
 	void(*AADebug)(Canvas &canv);
 	Canvas aacanv, aliased;
 	bool AAproc;
 	AntiAliaser(int _W, int _H, bool flag, int type) : AAproc(flag), 
-				renderer(flag ? _W * 2 : _W, flag ? _H * 2 : _H, type), 
+				Renderer(flag ? _W * 2 : _W, flag ? _H * 2 : _H, type), 
 				aacanv(flag ? _W * 2 : _W, flag ? _H * 2 : _H), aliased(_W, _H) {} 
 	DWORD midcolor(DWORD a, DWORD b, DWORD c, DWORD d) {
 		DWORD R = a % 256 + b % 256 + c % 256 + d % 256;

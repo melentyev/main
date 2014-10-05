@@ -1,23 +1,19 @@
-// ZBufferRenderer.cpp : Defines the entry point for the application.
-//
-
 #include "stdafx.h"
 #include "ZBufferRenderer.h"
 #include "Mmsystem.h"
+#include <iostream>
+#include "EasyBMP.h"
 #pragma comment(lib, "winmm.lib")
 #define MAX_LOADSTRING 100
-
-#include <iostream>
 using namespace std;
 
-// Global Variables:
-HINSTANCE hInst;								// current instance
-TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
-TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
+HINSTANCE hInst;		
+TCHAR szTitle[MAX_LOADSTRING];	
+TCHAR szWindowClass[MAX_LOADSTRING];		
 bool keys[1 << 16];
 int temp;
 HWND hWnd;
-// Forward declarations of functions included in this code module:
+
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -28,6 +24,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
+	BMP Image;
+	Image.ReadFromFile("example.bmp");
 
  	// TODO: Place code here.
 	MSG msg;
@@ -77,9 +75,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
 	WNDCLASSEX wcex;
-
 	wcex.cbSize = sizeof(WNDCLASSEX);
-
 	wcex.style			= CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc	= WndProc;
 	wcex.cbClsExtra		= 0;
@@ -111,7 +107,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
 	return TRUE;
 }
 
-AntiAliaser *MainRenderer = NULL;
+AntiAliaser *renderer = NULL;
 
 int dx = 0, dy = 0, mdx = 0;
 double delta;
@@ -123,15 +119,15 @@ void MainLoop() {
 	//if(cur - prev < 20) return;
 	delta = (cur - prev) / 1000.0;
 	double mk = 1.3, mr = 0.37;
-	if (keys[VK_UP]) MainRenderer->cam.moveBy(vertex(0, 0, 1) * delta* mk);
-	if (keys[VK_DOWN]) MainRenderer->cam.moveBy(vertex(0, 0, -1) * delta * mk);
-	MainRenderer->cam.rotateY(mr * dx * delta);
-	MainRenderer->cam.rotateX(mr * dy * delta);
-	//if(keys[VK_RIGHT]) MainRenderer.cam.rotateY(mr * dx);
-	if (keys[VK_LEFT]) MainRenderer->cam.moveBy(vertex(-1, 0, 0) * delta * mk);
-    if (keys[VK_RIGHT]) MainRenderer->cam.moveBy(vertex(1, 0, 0) * delta * mk);
-	if (keys[VK_PRIOR]) MainRenderer->cam.moveBy(vertex(0, 1, 0) * delta * mk);
-	if (keys[VK_NEXT]) MainRenderer->cam.moveBy(vertex(0, -1, 0) * delta * mk);
+	if (keys[VK_UP]) renderer->cam.moveBy(vertex(0, 0, 1) * delta* mk);
+	if (keys[VK_DOWN]) renderer->cam.moveBy(vertex(0, 0, -1) * delta * mk);
+	renderer->cam.rotateY(mr * dx * delta);
+	renderer->cam.rotateX(mr * dy * delta);
+	//if(keys[VK_RIGHT]) renderer.cam.rotateY(mr * dx);
+	if (keys[VK_LEFT]) renderer->cam.moveBy(vertex(-1, 0, 0) * delta * mk);
+	if (keys[VK_RIGHT]) renderer->cam.moveBy(vertex(1, 0, 0) * delta * mk);
+	if (keys[VK_PRIOR]) renderer->cam.moveBy(vertex(0, 1, 0) * delta * mk);
+	if (keys[VK_NEXT]) renderer->cam.moveBy(vertex(0, -1, 0) * delta * mk);
     if (keys['S']) {
        temp++; temp--;
     }
@@ -172,7 +168,7 @@ void PrepareScene() {
 	
 	//MainRenderer.cam.rotateY(0.3);
 	for(int i = 0; i<12; i++) 
-		MainRenderer->submitPolygon(cube[i]);
+		renderer->submitPolygon(cube[i]);
 }
 
 inline void DebugMsg(Canvas &canv) {
@@ -209,17 +205,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static bool bCamMove = false;
 	switch (message) {
 	case WM_CREATE:
-        MainRenderer = new AntiAliaser(640, 640, true, Z_BUFFER);
-		mnew.x = MainRenderer->c.W / 2;
-		mnew.y = MainRenderer->c.H / 2;
+		renderer = new AntiAliaser(640, 640, true, Z_BUFFER);
+		mnew.x = renderer->c.W / 2;
+		mnew.y = renderer->c.H / 2;
 		mold = mnew;
 		ClientToScreen(hWnd, &mnew);
 		SetCursorPos(mnew.x, mnew.y);
 		//SetCapture(hWnd);
 		//ShowCursor(false);
-		MainRenderer->AAproc = true;
-        MainRenderer->drawFrames = true;
-		MainRenderer->cam.moveBy(vertex(0.0, 0.0, -4.0) );
+		renderer->AAproc = true;
+		renderer->drawFrames = true;
+		renderer->cam.moveBy(vertex(0.0, 0.0, -4.0));
 
 		break;
 	case WM_COMMAND:
@@ -239,8 +235,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		hdc = BeginPaint(hWnd, &ps);
 		MainLoop();
 		PrepareScene();
-		MainRenderer->DebugOutput(DebugMsg);
-		MainRenderer->AArenderScene(hdc);
+		renderer->DebugOutput(DebugMsg);
+		renderer->AArenderScene(hdc);
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_KEYDOWN: 

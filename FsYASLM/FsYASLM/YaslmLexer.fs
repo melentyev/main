@@ -5,23 +5,23 @@ open FSharpx.Prelude
 open System
 
 type LexemType = 
-           | Indent
-           | Dedent
-           | Newline
-           | LxName of name: string
-           | LxNumber of value: int
-           | LxLiteral of string
-           | Keyword of string
-           | Op of string
-           | Comma
-           | Semicolon
-           | ParenthesisOpen
-           | ParenthesisClose
-           | BracketOpen
-           | BracketClose
-           | BraceOpen
-           | BraceClose
-           | End
+    | Indent
+    | Dedent
+    | Newline
+    | LxName of name: string
+    | LxNumber of value: int
+    | LxLiteral of string
+    | Keyword of string
+    | Op of string
+    | Comma
+    | Semicolon
+    | ParenthesisOpen
+    | ParenthesisClose
+    | BracketOpen
+    | BracketClose
+    | BraceOpen
+    | BraceClose
+    | End
 
 type Lexem = {
     lxType      : LexemType;
@@ -33,6 +33,13 @@ type LexerState = {
     lsLogged      : string list;
     lsIndentStack : int list
 }    
+
+let (=^=) l1 = function
+    | ParenthesisOpen -> match l1 with ParenthesisOpen -> true | _ -> false
+    | ParenthesisClose -> match l1 with ParenthesisClose -> true | _ -> false
+    | Op x -> match l1 with Op y when x = y -> true | _ -> false
+    | LxName x -> match l1 with LxName y when x = y -> true | _ -> false
+    | _ -> false
 
 type Expr = 
     | Const of float

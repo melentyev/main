@@ -204,10 +204,10 @@ public:
 	vertex() { x = y = z = 0; }
 	vertex(double a, double b, double c) : x(a), y(b), z(c) {}
 	vertex(vertex v1, vertex v2) : x(v2.x - v1.x), y(v2.y - v1.y), z(v2.z - v1.z) {}
-	vertex operator+(vertex v) const { return vertex(x + v.x, y + v.y, z + v.z); }
-	vertex operator+=(vertex v) { return vertex(x = x + v.x, y = y + v.y, z = z + v.z); }
-	vertex operator-(vertex v) const { return vertex(x - v.x, y - v.y, z - v.z); }
-	vertex operator-=(vertex v) { return vertex(x = x - v.x, y = y - v.y, z = z - v.z); }
+	vertex operator+(const vertex &v) const { return vertex(x + v.x, y + v.y, z + v.z); }
+	vertex operator+=(const vertex &v) { return vertex(x = x + v.x, y = y + v.y, z = z + v.z); }
+	vertex operator-(const vertex &v) const { return vertex(x - v.x, y - v.y, z - v.z); }
+	vertex operator-=(const vertex &v) { return vertex(x = x - v.x, y = y - v.y, z = z - v.z); }
 	vertex operator*(double k) const { return vertex(x * k, y * k, z * k); }
 	vertex operator*=(double k) { return vertex(x = x * k, y = y * k, z = z * k); }
 	vertex operator-() const { return vertex(-x, -y, -z); }

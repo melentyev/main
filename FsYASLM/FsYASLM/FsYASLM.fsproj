@@ -52,8 +52,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GenParser.fs" />
+    <Compile Include="AST.fs" />
     <Compile Include="YaslmLexer.fs" />
     <Compile Include="YaslmParser.fs" />
+    <Compile Include="CYaslmParser.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <None Include="packages.config" />

@@ -17,8 +17,7 @@ type songInfo = { id:string; artist: string; title:string; url: string;
 type albumInfo = { album_id: string; title: string; lvItem: ListViewItem option }
 
 
-let alert s = 
-    MessageBox.Show s
+let alert s = MessageBox.Show s
 
 type updatableLW() as lw =
     inherit ListView()
@@ -230,7 +229,6 @@ and MainForm() as form =
         downloadQueueContextMenu.MenuItems.AddRange(
             [|
                 let item = new MenuItem(Text = "Process queue")
-                //item.Click
                 yield item;
                 let item = new MenuItem(Text = "Remove selected")
                 item.Click.Add(fun _ -> 
@@ -290,11 +288,9 @@ and MainForm() as form =
             this.vkHelper.setAuthData frag 
             browser.Url <- new Uri("about:blank")
             browser.DocumentCompleted.RemoveHandler(browserAuthDocumentCompletedHandler)
-            splitLayout1.Show()
-            browser.Hide();
-            mnuAccountExit.Enabled <- true
-            mnuSynchronize.Enabled <- true
-            mnuProcessList.Enabled <- true
+            splitLayout1.Visible <- true
+            browser.Visible <- false
+            [ mnuAccountExit; mnuSynchronize; mnuProcessList ] |> List.iter (fun c -> c.Enabled <- true) 
             this.syncProgressSet ("Authorized as: " + this.vkHelper.getUserName() )
 
     member this.downloadAlbumList() =
