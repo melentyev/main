@@ -1,0 +1,49 @@
+TRYPERN2  CSECT                                                         00010001
+PROLOG    EQU      *                                                    00011001
+          STM      R14,R12,12(R13)                                      00020001
+          LR       R12,R15                                              00030001
+          USING    PROLOG,R12                                           00040001
+          GETMAIN  R,LV=DFRAMELEN                                       00050001
+          ST       R1,8(,R13)                                           00060001
+          ST       R13,4(,R1)                                           00070001
+          LR       R13,R1                                               00080001
+          USING    DYNFRAME,R13                                         00090001
+********  MAIN PART *********                                           00091001
+*         WTO      'BEGIN'                                              00100001
+          ESTAEX   RECOV,CT                                             00110001
+          WTO      'ESTAE ACTIVATED'                                    00120001
+          BR       0                    PLACE FOR PER                   00130001
+          WTO      'AFTER POSSIBLE PER'                                 00140001
+          B        RETRY1                                               00150001
+*         ABEND    544,DUMP                                             00160001
+RETRY1    EQU      *                                                    00170001
+          ESTAEX   0                                                    00180001
+*         ABEND    777,DUMP                                             00190001
+          WTO      'IN RETRY'                                           00200001
+          B        EPILOG                                               00210001
+RECOV     EQU      *                                                    00220001
+          DROP     R12                                                  00230001
+          USING    RECOV,R15                                            00240001
+          L        R12,#BASE                                            00250001
+          DROP     R15                                                  00260001
+          USING    PROLOG,R12                                           00270001
+          LR       R5,R1                                                00280001
+          WTO      'IN RECOVERY'                                        00290001
+          LR       R1,R5                                                00300001
+          SETRP    RETREGS=YES,RC=4,RETADDR=RETRY1,FRESDWA=YES          00310001
+          BR       R14                                                  00320001
+EPILOG    EQU      *                                                    00330001
+          WTO      'IN EPILOG'                                          00340001
+          L        R13,4(,R13)                                          00350001
+          FREEMAIN R,A=(R13),LV=DFRAMELEN                               00360001
+          LM       R14,R12,12(R13)                                      00370001
+          XR       R15,R15                                              00380001
+          BR       R14                                                  00390001
+********* STATIC DATA **********                                        00400001
+#BASE     DC       A(PROLOG)                                            00410001
+DYNFRAME  DSECT                                                         00420001
+SAVEAREA  DS       18F                                                  00430001
+DFRAMELEN EQU      *-DYNFRAME                                           00440001
+          IHASDWA                                                       00450001
+          YREGS                                                         00460001
+          END                                                           00470001

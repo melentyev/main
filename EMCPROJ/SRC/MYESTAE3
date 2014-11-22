@@ -1,0 +1,36 @@
+MYESTAET  PROLOG                                                        00010000
+                                                                        00010204
+          PRRET                                                         00010303
+*         ESTAE   RECOV,CT                                              00011002
+          WTO     'ESTAE ACTIVATED'                                     00012000
+          L       R5,=X'B00B5000'                                       00012101
+          PRRET                                                         00012202
+          ABEND   777,DUMP                                              00012301
+          DC      X'0000'                                               00012400
+RETRY     DS      0H                                                    00012500
+*         ESTAEX  0                                                     00012602
+          WTO     'RETURNED TO RETRY'                                   00012701
+*         ABEND   777,DUMP                                              00012802
+          PRRET                                                         00012900
+RECOV     DS      0H                                                    00013000
+          DROP    ,                                                     00013101
+          USING   RECOV,R15                                             00013201
+          L       R12,#BASE                                             00013301
+          DROP    R15                                                   00013401
+          USING   MYESTAET,R12                                          00013501
+*         DC      X'0000'                                               00013601
+*         WTO     'IN RECOVERY'                                         00013701
+*         SETRP   RETREGS=YES,RC=4,RETADDR=RETRY,FRESDWA=YES            00014002
+          BR      R14                                                   00014101
+          DC      X'0000'                                               00014201
+          EPILOG                                                        00020000
+          BR      0                                                     00020101
+          BR      0                                                     00020201
+          BR      0                                                     00020301
+#BASE     DC      A(MYESTAET)                                           00021001
+          APRDATA                                                       00030000
+          BPRDATA                                                       00040000
+*----------------------------------                                     00040100
+          IHASDWA                                                       00045000
+          YREGS                                                         00046000
+          END                                                           00050000

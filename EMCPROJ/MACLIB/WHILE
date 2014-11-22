@@ -1,0 +1,22 @@
+*********************************************************               00010000
+* WHILE (REG),OP,<(REG) | MEM>                                          00020000
+* ...                                                                   00050000
+* ENDWHILE                                                              00060000
+*********************************************************               00070000
+* CAN BE NESTED                                                         00080000
+*********************************************************               00090000
+             MACRO                                                      00100001
+             WHILE  &PARMS                                              00110001
+             GBLA   &WHSTC#ID(100)                                      00120001
+             GBLC   &WHSTC#ST(100)                                      00130001
+             GBLA   &WHSTC#SZ                                           00140001
+&WHSTC#SZ    SETA   &WHSTC#SZ+1                                         00150001
+&WHSTC#ID(&WHSTC#SZ) SETA &SYSNDX                                       00160001
+&ENDWH       SETC   'WENDLB#'.'&WHSTC#ID(&WHSTC#SZ)'                    00180001
+&WHLOOP      SETC   'WHLOOP#'.'&WHSTC#ID(&WHSTC#SZ)'                    00180101
+&WHLOOP      EQU    *                                                   00180202
+             IF     &PARMS                                              00181001
+             ELSE                                                       00182001
+              B     &ENDWH                                              00182101
+             ENDIF                                                      00183001
+             MEND                                                       00190000

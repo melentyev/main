@@ -1,0 +1,49 @@
+COPYDS       PROLOG                                                     00010001
+             USING IHADCB,R11                                           00010102
+             L     R3,0(,R1)                                            00010202
+             LH    R4,0(,R3)                                            00010302
+             LA    R5,2(,R3)                                            00010402
+             LR    R6,R5                                                00010502
+LLOOP1       EQU   *                                                    00010702
+             LLGC  R7,0(,R6)                                            00010802
+             IF    ((R7),NE,=X'0000006B')                               00011002
+               LA    R6,1(,R6)                                          00011102
+               B     LLOOP1                                             00011202
+             ENDIF                                                      00011302
+             LR    R7,R6                                                00011402
+             SR    R7,R5                                                00011502
+             LR    R8,R4                                                00011602
+             SR    R8,R7                                                00011702
+             BCTR  R7,0                                                 00011802
+             BCTR  R8,0                                                 00011902
+             BCTR  R8,0                                                 00012002
+             LA    R6,1(,R6)                                            00012102
+             LA    R11,OUTFILE                                          00012302
+             EX    R8,MVCDDN                                            00012402
+             LR    R6,R5                                                00012502
+             LA    R11,INFILE                                           00012602
+             EX    R7,MVCDDN                                            00013002
+             OPEN  (INFILE,INPUT)                                       00020402
+             OPEN  (OUTFILE,OUTPUT)                                     00020502
+INLOOP       EQU   *                                                    00020602
+             GET   INFILE,INAREA                                        00020702
+             PUT   OUTFILE,INAREA                                       00020802
+             B     INLOOP                                               00020903
+INEOF        EQU   *                                                    00021002
+             CLOSE (INFILE)                                             00021102
+             CLOSE (OUTFILE)                                            00022002
+             EPILOG                                                     00023001
+INFILE       DCB   DDNAME=,DEVD=DA,MACRF=(GM),                         X00024002
+               LRECL=80,DSORG=PS,EODAD=INEOF                            00025001
+OUTFILE      DCB   DDNAME=,DEVD=DA,MACRF=(PM),                         X00026002
+               LRECL=80,DSORG=PS                                        00027002
+DEBSTR       DC    H'80'                                                00028001
+DEBCONT      DS    CL133                                                00029001
+MVCDDN       MVC   DCBDDNAM(0),0(R6)                                    00029102
+             APRDATA                                                    00029201
+INAREA       DS    CL180                                                00029301
+PAR1         DS    F                                                    00029401
+             BPRDATA                                                    00029501
+             DCBD                                                       00029602
+             YREGS                                                      00029702
+             END                                                        00050001

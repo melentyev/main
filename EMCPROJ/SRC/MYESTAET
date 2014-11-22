@@ -1,0 +1,59 @@
+MYESTAET  RSECT                                                         00001001
+          STM      R14,R12,12(R13)                                      00010000
+          LR       R12,R15                                              00011000
+          USING    MYESTAET,R12                                         00030000
+          GETMAIN  R,LV=DFRAMELEN                                       00031000
+          ST       R1,8(,R13)                                           00031100
+          ST       R13,4(,R1)                                           00031200
+          LR       R13,R1                                               00031300
+          USING    DYNFRAME,R13                                         00031400
+          WTO      'BEGIN'                                              00032000
+          ESTAEX   RECOV,CT                                             00032100
+          WTO      'ESTAE ACTIVATED'                                    00032200
+          DC       X'0000'                                              00032300
+*         ABEND    544,DUMP                                             00032400
+RETRY1    EQU      *                                                    00032500
+          ESTAEX   0                                                    00032600
+*         ABEND    777,DUMP                                             00032700
+          WTO      'IN RETRY'                                           00032800
+          B        EPILOG                                               00032900
+RECOV     EQU      *                                                    00033000
+          DROP     R12                                                  00033100
+          USING    RECOV,R15                                            00033200
+          L        R12,#BASE                                            00033300
+          DROP     R15                                                  00033400
+          USING    MYESTAET,R12                                         00033500
+          LR       R5,R1                                                00033600
+          LR       R6,R14                                               00033701
+          GETMAIN  R,LV=LSTWTO1L                                        00033903
+          LR       R8,R1                                                00034003
+          USING    TMPLBL,R8                                            00034203
+          MVC      0(LSTWTO1L,R8),LISTWTO1                              00034303
+          WHOLE    TMPLBL+16,0,(R5)                                     00034403
+          WTO      MF=(E,(R8))                                          00034503
+          FREEMAIN R,LV=LSTWTO1L,A=(R8)                                 00034603
+          LR       R1,R5                                                00034700
+          LR       R14,R6                                               00034801
+          SETRP    RETREGS=YES,RC=4,RETADDR=RETRY1,FRESDWA=YES          00034900
+          BR       R14                                                  00035000
+EPILOG    EQU      *                                                    00035100
+          WTO      'IN EPILOG'                                          00035200
+          L        R13,4(,R13)                                          00035300
+          FREEMAIN R,A=(R13),LV=DFRAMELEN                               00036000
+          LM       R14,R12,12(R13)                                      00040000
+          XR       R15,R15                                              00041000
+          BR       R14                                                  00050000
+********* STATIC DATA **********                                        00051000
+#BASE     DC       A(MYESTAET)                                          00052000
+MSGTMPL   DC       H'40'                                                00052102
+          DC       CL4'R1: '                                            00052202
+LISTWTO1  WTO      'REGCONTENT:                    ',MF=L               00052403
+LSTWTO1L  EQU      *-LISTWTO1                                           00052503
+TMPLBL    DSECT                                                         00052603
+********* DYNAMIC DATA *********                                        00053001
+DYNFRAME  DSECT                                                         00060000
+SAVEAREA  DS       18F                                                  00061000
+DFRAMELEN EQU      *-DYNFRAME                                           00070000
+          IHASDWA                                                       00071000
+          YREGS                                                         00080000
+          END                                                           00090000

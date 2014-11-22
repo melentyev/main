@@ -1,0 +1,11 @@
+//EASYJOB JOB
+//ASMSTEP EXEC ASMACLG
+//MYFILE  DD   DSN=MELEN.TEST.SEQ2,DISP=(NEW,CATLG,DELETE),
+//             DCB=(DSORG=PS,RECFM=FB,LRECL=80,BLKSIZE=320),
+//             SPACE=(RECORDS,(80,15))
+//C.SYSIN DD   *
+MYBR14    CSECT
+          XR   15,15
+          BR   14
+          END
+/*

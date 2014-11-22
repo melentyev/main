@@ -1,0 +1,36 @@
+MHUTSVCS  CSECT                                                         00010001
+MHUTSVCS  AMODE    31                                                   00020001
+PROLOG    EQU      *                                                    00030001
+          STM      R14,R12,12(R13)                                      00040001
+          LR       R12,R15                                              00050001
+          USING    PROLOG,R12                                           00060001
+          GETMAIN  R,LV=FRAMELEN                                        00070001
+          ST       R13,4(,R1)                                           00080001
+          ST       R1,8(,R13)                                           00090001
+          LR       R13,R1                                               00100001
+          USING    FRAME,R13                                            00110001
+********* MAIN PART ***********                                         00120001
+          WTO      'HELLO1'                                             00170001
+          MODESET  KEY=ZERO,MODE=SUP   SAVEKEY=SAVEKEYA,                00180001
+          WTO      'AFTER MODESET'                                      00240001
+          SVCUPDTE 201,REPLACE,TYPE=3,EPNAME=IGC0020A                   00290001
+*         SVC      201                                                  00310001
+          LR       R5,R15                                               00340001
+*         ABEND    222,DUMP                                             00350001
+********* SVC SET ****************                                      00360001
+          WTO      'SVC SET'                                            00370001
+          MODESET  KEY=NZERO,MODE=PROB                                  00380001
+          LR       R1,R13                                               00510001
+          L        R13,SAVEAREA+4                                       00520001
+          FREEMAIN R,LV=FRAMELEN,A=(R1)                                 00530001
+          LM       R14,R12,12(R13)                                      00540001
+          BR       R14                                                  00550001
+********* DYNAMIC *********                                             00610001
+FRAME     DSECT                                                         00620001
+SAVEAREA  DS       18F                                                  00630001
+          DS       0F                                                   00640001
+FRAMELEN  EQU      *-FRAME                                              00650001
+**************************************                                  00700001
+          CVT      DSECT=YES,LIST=YES                                   00730001
+          YREGS                                                         00750001
+          END                                                           00760001

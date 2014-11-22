@@ -1,0 +1,25 @@
+say '=================== START ======================'
+SRC.0=4
+SRC.1="AAA     CSECT                 "
+SRC.2="BBB     DC      X'AABBCCAA'   "
+SRC.3="CCC     DC      X'BBDDAACC'   "
+SRC.4="        END                   "
+'EXECIO 'SRC.0' DISKW SYSIN (STEM SRC.'
+'EXECIO 0 DISKW SYSIN (FINIS'
+ADDRESS LINKMVS 'ASMA90'
+'EXECIO * DISKR SYSLIN (STEM RES.'
+say RES.0
+Do I=1 to RES.0 by 1
+  say RES.I
+  End
+SRC.3="CCC     DC      X'AAAAAAAA'   "
+'EXECIO 'SRC.0' DISKW SYSIN (STEM SRC.'
+'EXECIO 0 DISKW SYSIN (FINIS'
+ADDRESS LINKMVS 'ASMA90'
+'EXECIO * DISKR SYSLIN (STEM RES.'
+'EXECIO 0 DISKR SYSLIN (STEM RES.'
+say RES.0
+Do I=1 to RES.0 by 1
+  say RES.I
+  End
+/*"CALL 'HLA.SASMMOD1(ASMA90)'"*/

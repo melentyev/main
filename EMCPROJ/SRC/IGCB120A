@@ -1,0 +1,123 @@
+IGC0020A  CSECT                                                         00010001
+IGC0020A  AMODE    31                                                   00020001
+*GC0020A  RMODE    24                                                   00030005
+          STM      R14,R7,RBEXSAVE-RBBASIC(R5)                          00040001
+          LR       R11,R5                                               00050001
+          USING    RBBASIC,R11     ADDRESSABILITY TO RB                 00060001
+          BASR     R12,0                                                00070007
+          USING    *,R12                          TO THIS ROUTINE       00080001
+          GETMAIN  R,LV=FRAMELEN                                        00090001
+          LR       R13,R1                                               00100001
+          USING    DYNFRAME,R13                   TO DYNAMIC FRAME      00110001
+          WTO      'IN SVC ROUTINE'                                     00120001
+*         MVC      DCBGET(150),SVCGMTPL            LISTS TO DYNFRAME    00130205
+*         MVC      DCBGET+150(WORKAREA-DCBGET-150),SVCGMTPL+150         00131005
+          MVC      DCBGET(255),SVCGMTPL                                 00132007
+          MVC      OPENGMFL(255),OGMFLTPL                               00133007
+          MVC      CLOSEMFL(255),CMFLTPL                                00134007
+          OPEN     (DCBGET,INPUT),MODE=31,MF=(E,OPENGMFL) OPEN GET      00200003
+          LR       R5,R15                                               00200107
+          DC       X'0000'                                              00200207
+          GET      DCBGET,WORKAREA                                      00200307
+          CLOSE    (DCBGET),MODE=31,MF=(E,CLOSEMFL)                     00200407
+          WTO      'AFTER OPEN IN SVC'                                  00210005
+*         LR    R2,R0                                                   00214105
+*         LR    R3,R1                                                   00214205
+*         LR    R4,R15                                                  00214305
+*         ABEND 777,DUMP                                                00214405
+*         XR       R15,R15                                              00214507
+*         ICM      R5,15,DCBGET+49                                      00214607
+*         MVC                                                           00214707
+*         ABEND     999,DUMP                                            00214807
+*         LA       R5,WORKAREA                                          00214907
+*         ABEND    555,DUMP                                             00215007
+*            LA    1,DCBGET                                             00215207
+*            LA    0,WORKAREA                                           00215307
+*            SLR   15,15                                                00215407
+*            ICM   15,7,49(1)                                           00215507
+*            LR    R5,R15                                               00215607
+*            DC    '0000'                                               00215707
+*            BALR  14,15                                                00215807
+          ABEND 888,DUMP                                                00216005
+          WTO      'AFTER GET'                                          00230005
+          CLOSE    (DCBGET),MODE=31,MF=(E,CLOSEMFL)                     00231004
+          WTO      'AFTER CLOSE'                                        00232005
+          L        R4,RBLINK                        LOOKING FOR OLD PSW 00240001
+          N        R4,=X'00FFFFFF'                                      00250001
+*         MVC      MESSAGE+4(8),RBOPSW-RBBASIC(R4)                      00260001
+*         WTO      MF=(E,MESSAGE)                                       00270001
+          L        R5,RBOPSWA-RBBASIC(R4)        OLD PSW FOUND          00280001
+*         S        R5,=F'2'                                             00290004
+          LA       R7,WORKAREA                                          00291004
+SCLOOP    EQU      *                                                    00291104
+          WTO      'SCLOOP'                                             00291205
+          CLC      0(8,R7),=CL8'AAAABBBB'                               00292004
+          BE       SCEOF                                                00293004
+          CLC      0(8,R7),=CL8'--------'                               00294004
+          BNE      SCFOUND                                              00295004
+          A        R7,=F'10'                                            00295104
+SCFOUND   EQU      *                                                    00296004
+          MVC      0(2,R5),8(R7)                                        00296104
+          MVC      EPNMFLD(8),0(R7)                                     00297004
+          XR       R1,R1                                                00297104
+          LA       R1,RBGRSAVE                                          00297204
+          LA       R1,10              FOR TEST                          00297305
+          LINK     SF=(E,LNKMFL),EPLOC=EPNMFLD                          00298004
+          MVC      0(10,R7),=CL10'--------++'                           00299004
+          WTO      'SVC ACTIONS DONE'                                   00420004
+          OPEN     (DCBPUT,OUTPUT),MODE=31,MF=(E,OPENPMFL) OPEN GET     00420104
+          PUT      DCBPUT,WORKAREA                                      00420304
+          CLOSE    (DCBPUT),MODE=31,MF=(E,CLOSEMFL)                     00420504
+          WTO      'BEFORE IEARBUP'                                     00450001
+          IEARBUP  ADDRTYPE=DELTA,PSWDELTA=PSWD,MF=(E,IEARBUML),       X00460001
+               WHICHRB=PREV,PSWBYTE03=NO                                00470001
+*         LR       R6,R15                                               00480001
+*         LR       R7,R0                                                00490001
+*         ABEND    333,DUMP                                             00500001
+LFINISH   EQU      *                                                    00501001
+          WTO      'FINISHING SVC1'                                     00510001
+          FREEMAIN R,LV=FRAMELEN,A=(R13)                                00520002
+          LM       R14,R1,RBEXSAVE                                      00530001
+          BR       R14                                                  00540001
+SCEOF     EQU      *                                                    00541004
+          WTO      'END OF COMMUNICATION DATASET'                       00542004
+          ABEND    42,DUMP                                              00543004
+********* CONST **********************                                  00550001
+          DS       0F                                                   00551005
+SVCGMTPL  DCB      DDNAME=SVCCOM42,DEVD=DA,DSORG=PS,MACRF=(GM),        X00560005
+               LRECL=80,EODAD=SCEOF                                     00560105
+SVCPMTPL  DCB      DDNAME=SVCCOM42,DEVD=DA,DSORG=PS,MACRF=(PM),LRECL=80 00561005
+OGMFLTPL  OPEN     (0,INPUT),MODE=31,MF=L                               00580005
+OPMFLTPL  OPEN     (0,OUTPUT),MODE=31,MF=L                              00591005
+CMFLTPL   CLOSE    (0),MODE=31,MF=L                                     00600001
+IUMLTPLB  EQU      *                                                    00620001
+          IEARBUP  MF=(L,IUMLTPL)                                       00630001
+IEARUMLL  EQU      *-IUMLTPLB                                           00640001
+LNKTPL    LINK     EPLOC=,SF=L                                          00641002
+MSGTMPL   WTO      '                                             ',MF=L 00660001
+PSWD      DC       F'-2'                                                00661002
+MSGLEN    EQU      *-MSGTMPL                                            00670001
+********* DYNAMIC ********************                                  00680001
+DYNFRAME  DSECT                                                         00690001
+          DS       0F                                                   00710001
+DCBGET    DCB      DDNAME=SVCCOM42,DEVD=DA,DSORG=PS,MACRF=(GM),        X00720005
+               LRECL=80,EODAD=SCEOF                                     00720105
+DCBPUT    DCB      DDNAME=SVCCOM42,DEVD=DA,DSORG=PS,MACRF=(PM),LRECL=80 00721005
+OPENGMFL  OPEN     (0,INPUT),MODE=31,MF=L                               00730005
+OPENPMFL  OPEN     (0,OUTPUT),MODE=31,MF=L                              00731005
+CLOSEMFL  CLOSE    (0),MODE=31,MF=L                                     00740005
+IEARBUML  DS       XL(IEARUMLL)                                         00750002
+LNKMFL    DS       XL(PSWD-LNKTPL)                                      00751002
+MESSAGE   WTO      '                                             ',MF=L 00752002
+WORKAREA  DS       XL256                                                00760004
+EPNMFLD   DS       CL8                                                  00761002
+CARGSZ    DS       H                                                    00762006
+CARGSTR   DS       CL16''                                               00763006
+FRAMELEN  EQU      *-DYNFRAME                                           00770001
+********* MAPPINGS *******************                                  00780001
+          CVT      DSECT=YES                                            00800001
+          IHAECVT                                                       00810001
+          IKJRB    DSECT=YES      MAP SVRB AND PRB                      00820001
+*         IEEXSA                                                        00830001
+          YREGS                                                         00840001
+          END                                                           00850001

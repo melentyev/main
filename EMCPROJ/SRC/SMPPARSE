@@ -1,0 +1,50 @@
+NEXTTTOK  EQU      *                                                    00002000
+THISTOK   USING    LEXMSTR,GLOBTOK                                      00002100
+          IF       ((R3),CLCEQ#1,=C'(')                                 00002200
+           MVI     THISTOK.LXSTYPE,LXLPAREN                             00002300
+           LA      R3,1(,R3)                                            00002400
+           B       MATCHED                                              00002500
+          ENDIF                                                         00002600
+          IF       ((R3),CLCEQ#1,=C')')                                 00002700
+           MVI     THISTOK.LXSTYPE,LXRPAREN                             00002800
+           LA      R3,1(,R3)                                            00002900
+           B       MATCHED                                              00003000
+          ENDIF                                                         00003100
+          IF       ((R3),CLCEQ#2,=CL2'<-')                              00003200
+           MVI     THISTOK.LXSTYPE,LXLARROW                             00003300
+           LA      R3,1(,R3)                                            00003400
+           B       MATCHED                                              00003500
+          ENDIF                                                         00003600
+          LLGC     R5,0(,R3)                                            00003700
+          IF       (((R5),LE,DIGIT9),AND,((R5),GE,DIGIT0))              00004400
+           MVI     THISTOK.LXSTYPE,LXNUMBER                             00004500
+             STRTOINT THISTOK.LXSVAL,(R3)                               00004600
+             WHILE (((R5),LE,DIGIT9),AND,((R5),GE,DIGIT0))              00004700
+              LLGC R5,R3                                                00004800
+              LA   R3,1(,R3)                                            00004900
+             ENDWHILE                                                   00005000
+            ELSE                                                        00005100
+            ENDIF                                                       00005200
+           ENDIF                                                        00005300
+          ENDIF                                                         00005400
+MATCHED   EQU      *                                                    00005500
+***************************************************                     00006000
+          FREEMAIN R,LV=FRAMELEN                                        00020000
+********* STATIC **********************************                     00020100
+CLPAREN   DC       CL1'('                                               00020200
+CRPAREN   DC       CL1')'                                               00020300
+***************************************************                     00020900
+LEXEMSTR  DSECT                                                         00021000
+LXSTYPE   F                                                             00021100
+LXSVAL    F                                                             00021200
+LXLPAREN  EQU      1                                                    00021300
+LXRPAREN  EQU      2                                                    00021400
+LXNAME    EQU      3                                                    00021500
+LXNUMBER  EQU      4                                                    00021600
+LXCOMMA   EQU      5                                                    00021700
+LXLARROW  EQU      6                                                    00021800
+***************************************************                     00022000
+FRAME     DSECT                                                         00030000
+SAVEAREA  DS       18F                                                  00040000
+GLOBTOK   DS       XL8                                                  00041000
+FRAMELEN  EQU      *-FRAME                                              00050000

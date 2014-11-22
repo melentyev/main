@@ -1,0 +1,17 @@
+*********************************************************               00001001
+* PART OF 'IF-THEN-ELSE' CONSTRUCT                                      00002001
+*********************************************************               00003001
+             MACRO                                                      00010000
+             ENDIF                                                      00020000
+             GBLA   &IFSTC#ID(100)                                      00030000
+             GBLC   &IFSTC#ST(100)                                      00040004
+             GBLA   &IFSTC#SZ                                           00050000
+&ENDIF       SETC   'IENDILB#'.'&IFSTC#ID(&IFSTC#SZ)'                   00060000
+             AIF    ('&IFSTC#ST(&IFSTC#SZ)' EQ '1').SIMPLE              00061005
+&ELSE        SETC   'ILSLB#'.'&IFSTC#ID(&IFSTC#SZ)'                     00061103
+&ELSE        EQU    *                                                   00062002
+.SIMPLE      ANOP                                                       00063002
+&IFSTC#SZ    SETA   &IFSTC#SZ-1                                         00070000
+.*           &IFSTC#ID(1) &IFSTC#ID(2),&IFSTC#ID(3)                     00080000
+&ENDIF       EQU    *                                                   00090000
+             MEND                                                       00100000

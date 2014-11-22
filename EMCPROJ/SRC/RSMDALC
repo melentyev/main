@@ -1,0 +1,75 @@
+RSMDALC   PROLOG                                                        00010000
+          LR      R5,R1          SAVE PARM LIST ADDR TO R5              00020000
+          L       R2,0(,R5)      ADDR OF FIRST PARM TO R2               00030000
+          LH      R3,0(,R2)      STR LEN TO R3                          00040000
+          MVC     DSNTU(4),DSNTUTMPL                                    00050000
+          MVC     DDNTU(6),DDNTUTMPL                                    00060000
+          STH     R3,DSNTUL                                             00070000
+          BCTR    R3,0                                                  00080000
+          EX      R3,DSNMVC                                             00090000
+          L       R2,4(R5)                                              00100000
+          LH      R3,0(,R2)                                             00110000
+          STH     R3,DDNTUL                                             00120000
+          BCTR    R4,0                                                  00130000
+          EX      R3,DDNMVC                                             00140000
+          LA      R8,RBDATA                                             00150000
+          USING   S99RBP,R8      R8 - S99RBP DSECT.                     00160000
+          LA      R4,S99RBPTR+4                                         00170000
+          USING   S99RB,R4       ESTABLISH ADDRESSABILITY FOR RB DSECT. 00180000
+          ST      R4,S99RBPTR         MAKE 'RBPTR' POINT TO RB.         00190000
+          OI      S99RBPTR,S99RBPND   TURN ON HIGH-ORDER BIT IN RBPTR.  00200000
+          XC      S99RB(RBLEN),S99RB  ZERO OUT 'RB' ENTIRELY.           00210000
+          MVI     S99RBLN,RBLEN       PUT THE LENGTH OF                 00220000
+          MVI     S99VERB,S99VRBAL SET THE VERB CODE FIELD              00230000
+          LA      R5,S99RB+RBLEN POINT PAST 'RB' TO START OF TUP LIST.  00240000
+          USING   S99TUPL,R5                                            00250000
+          ST      R5,S99TXTPP STORE ADDRESS OF TUP LIST IN THE RB.      00260000
+          LA      R6,DSNTU GET ADDRESS OF FIRST TEXT UNIT               00270000
+          ST      R6,S99TUPTR AND STORE IN TUP LIST.                    00280000
+          LA      R5,S99TUPL+4 GET ADDRESS OF NEXT TUP LIST ENTRY.      00290000
+          LA      R6,STATUSTU GET ADDRESS OF SECOND TEXT UNIT           00300000
+          ST      R6,S99TUPTR AND STORE IN TUP LIST.                    00310000
+*                                                                       00311000
+          LA      R5,S99TUPL+4 GET ADDRESS OF NEXT TUP LIST ENTRY.      00320000
+          LA      R6,MEMBTU                                             00321000
+          ST      R6,S99TUPTR AND STORE IN TUP LIST.                    00322000
+*                                                                       00322100
+          LA      R5,S99TUPL+4 GET ADDRESS OF NEXT TUP LIST ENTRY.      00323000
+          LA      R6,DDNTU                                              00330000
+          ST      R6,S99TUPTR                                           00340000
+          OI      S99TUPTR,S99TUPLN TURN ON HIGH-ORDER BIT IN LAS       00350000
+          LR      R1,R8                                                 00360000
+          DYNALLOC                                                      00370000
+INEOF     EQU     *                                                     00380000
+          EPILOG                                                        00390000
+RBLEN     EQU (S99RBEND-S99RB)                                          00400000
+DSNMVC    MVC DSNTUNM(0),2(R2)                                          00410000
+DDNMVC    MVC DDNTUNM(0),2(R2)                                          00420000
+DSNTUTMPL DC AL2(DALDSNAM)                                              00430000
+          DC X'0001'                                                    00440000
+STATUSTU  DC AL2(DALSTATS)                                              00450000
+          DC X'0001'                                                    00460000
+          DC X'0001'                                                    00470000
+          DC X'08'                                                      00480000
+DDNTUTMPL DC AL2(DALDDNAM)                                              00490000
+          DC X'0001'                                                    00500000
+          DC X'0008'                                                    00510000
+MEMBTUTPL DC AL2(DALMEMBR)                                              00511000
+          DC X'0001'                                                    00512000
+          DC X'0000'                                                    00513000
+          APRDATA                                                       00520000
+DDNTU     DS F                                                          00530000
+DDNTUL    DS H                                                          00540000
+DDNTUNM   DS CL8                                                        00550000
+DSNTU     DS F                                                          00560000
+DSNTUL    DS H                                                          00570000
+DSNTUNM   DS CL44                                                       00580000
+MEMBTU    DS F             FOR MEMBER                                   00581000
+MEMBTUL   DS H                                                          00582000
+MEMBTUNM  DS CL8           FOR MEMBER                                   00583000
+RBDATA    DS CL60                                                       00590000
+          BPRDATA                                                       00600000
+          IEFZB4D0                                                      00610000
+          IEFZB4D2                                                      00620000
+          YREGS                                                         00630000
+          END                                                           00640000

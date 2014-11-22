@@ -1,0 +1,32 @@
+*********************************************************               00002001
+* PROGRAM PROLOG                                                        00003001
+*********************************************************               00009101
+             MACRO                                                      00010000
+&LAB         PROLOG &TYPE=GLOBAL,&AMODE=24,&MODESET=,&CSECT=YES         00020009
+             GBLC  &PRCSFX                                              00030002
+&PRCSFX      SETC  ''                                                   00040002
+             AIF   ('&TYPE' EQ 'GLOBAL').GLOBAL                         00041002
+&PRCSFX       SETC  '&SYSNDX'                                           00041109
+.GLOBAL      ANOP                                                       00042002
+&DYNLEN      SETC  'DYNLEN'.'&PRCSFX'                                   00043003
+             AIF   ('&CSECT' NE 'YES').SKIPCSECT                        00044009
+&LAB          CSECT                                                     00050009
+.SKIPCSECT   ANOP                                                       00050109
+             AIF   ('&AMODE' EQ '24').AMODE24                           00051006
+&LAB          AMODE 31                                                  00051109
+.AMODE24     ANOP                                                       00052006
+             SAVE  (14,12)        SAVING REGISTERS                      00060009
+             LR    R5,R1          STORE PARM ADDR                       00061009
+             BALR  R12,0          ESTABLISH ADRESSABILITY               00070009
+             USING *,R12                                                00080002
+*===============================                                        00090002
+             AIF   ('&MODESET' NE 'KEYZERO').NOMODEST                   00090106
+             MODESET KEY=ZERO                                           00091006
+.NOMODEST    ANOP                                                       00092006
+             GETMAIN R,LV=&DYNLEN                                       00100003
+             ST    R13,4(,R1)                                           00120010
+             ST    R1,8(,R13)                                           00130010
+             LR    R13,R1                                               00140010
+             LR    R1,R5                                                00141005
+             USING DYNMEM&PRCSFX,R13                                    00150003
+             MEND                                                       00160002

@@ -1,0 +1,107 @@
+PUTONLY  CSECT                                                          00010001
+         STM   14,12,12(13)                                             00020001
+         BALR  RBASE,0                                                  00030001
+         USING *,RBASE                                                  00040001
+*===============================                                        00050001
+         ST    13,SAVEAREA+4                                            00060001
+         LR    2,13                                                     00070001
+         LA    13,SAVEAREA                                              00080001
+         ST    13,8(2)                                                  00090001
+*===============================                                        00100001
+         OPEN  (PRINTER,OUTPUT)                                         00110001
+         OPEN  (INFILE,INPUT)                                           00120001
+*===============================                                        00130001
+         GETMAIN R,LV=DYNLEN                                            00131006
+         LR    R2,R1                                                    00132006
+         USING DYNMEM,R2                                                00133006
+         WTO   'BEGIN'                                                  00140001
+         PUT   PRINTER,TOPLINE                                          00150001
+         LA    R4,0                                                     00151002
+         LA    R5,ARNUMS                                                00152002
+INPLOOP  GET   INFILE,INAREA                                            00160001
+         LA    R4,1(0,R4)                                               00161002
+         PUT   PRINTER,INAREA                                           00170001
+*        WTO   'HERE'                                                   00200002
+         NI    INAREA+7,X'CF'                                           00210002
+         PACK  INAREA(8),INAREA(8)                                      00211001
+         CVB   R6,INAREA                                                00212002
+         ST    R6,0(R5)                                                 00213002
+         LA    R5,4(0,R5)                                               00213102
+         B     INPLOOP                                                  00370001
+*LOOP     EQU   *                                                       00380001
+*===============================                                        00390001
+*         MYMAC RCOUNT                                                  00400001
+*         BCT   RCOUNT,LOOP                                             00410001
+INEOF    WTO   'INEOF'                                                  00420001
+         CLOSE (INFILE)                                                 00420102
+         PUT   PRINTER,ARNUMS                                           00421002
+*        ST    R4,INAREA                                                00421104
+*        PUT   PRINTER,INAREA                                           00421204
+         LR    R6,R4                                                    00422002
+*        LA    R7,1                                                     00423005
+*        SR    R6,R7                                                    00423105
+         LAY   R6,MIN1OFF(0,R6)                                         00423205
+         WTO   'HERE2'                                                  00423302
+BUBBLE1  EQU   *                                                        00424002
+         WTO   'BUBBLE1'                                                00424102
+         XR    R7,R7                                                    00424202
+         LR    R9,R6                                                    00424402
+         MHI   R9,4                                                     00424502
+         LA    R8,1                                                     00424604
+         SR    R9,R8                                                    00424704
+         LA    R8,4                                                     00424804
+BUBBLE2  EQU   *                                                        00424902
+         WTO   'BUBBLE2'                                                00425002
+         L     R10,ARNUMS(R7)                                           00425102
+         L     R11,ARNUMS+4(R7)                                         00425202
+         CR    R10,R11                                                  00425302
+         BC    12,SKIPSWAP         //IF                                 00425402
+         WTO   'SWAP'                                                   00425502
+         ST    R11,ARNUMS(R7)                                           00425602
+         ST    R10,ARNUMS+4(R7)                                         00425702
+SKIPSWAP EQU   *                                                        00425802
+         BXLE  R7,R8,BUBBLE2       //BUBBLE2                            00425902
+         BCT   R6,BUBBLE1          //BUBBLE1                            00426002
+         WTO   'BUBBLE FINISH'                                          00426102
+         PUT   PRINTER,ARNUMS                                           00426202
+FINISH   EQU   *                                                        00427002
+         ST    R4,INAREA                                                00427104
+         PUT   PRINTER,INAREA                                           00427204
+         XR    R7,R7                                                    00428002
+         LR    R9,R4                                                    00429104
+         MHI   R9,4                                                     00429202
+         LA    R8,1                                                     00429304
+         SR    R9,R8                                                    00429504
+         LA    R8,4                                                     00429604
+OUTLOOP  EQU   *                                                        00429702
+         L     R10,ARNUMS(R7)                                           00429803
+         CVD   R10,DBLFLD                                               00429904
+         UNPK  INAREA(8),DBLFLD                                         00430004
+         OI    INAREA+7,X'F0'                                           00430104
+         PUT   PRINTER,INAREA                                           00430204
+         BXLE  R7,R8,OUTLOOP                                            00430302
+                                                                        00431004
+         CLOSE (PRINTER)                                                00440001
+         L     13,SAVEAREA+4                                            00450001
+         LM    14,12,12(13)                                             00460001
+         XR    15,15                                                    00470001
+         BR    14                                                       00480001
+*===================================                                    00480106
+         YREGS                                                          00481006
+RBASE    EQU   12                                                       00490001
+MIN1OFF  EQU   -1                                                       00501006
+TOPLINE  DC    CL133'===== SIMPLE SORT ====='                           00510001
+WRDSIZE  DC    X'0004'                                                  00521002
+INFILE   DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),                       X00530007
+               LRECL=80,DSORG=PS                                        00540001
+PRINTER  DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                      X00550001
+               LRECL=133,DSORG=PS                                       00560001
+SAVEAREA DS    18F                                                      00570001
+INAREA   DS    133F                                                     00580001
+CMDSTR   DS    64F                                                      00600001
+DYNMEM   DSECT                                                          00600106
+ARNUMS   DS    CL512                                                    00601006
+DBLFLD   DS    XL8                                                      00601106
+PLINE    DS    CL133                                                    00601206
+DYNLEN   EQU   (*-DYNMEM)                                               00601306
+         END                                                            00780001

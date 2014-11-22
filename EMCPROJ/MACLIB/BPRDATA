@@ -1,0 +1,6 @@
+             MACRO                                                      00010000
+             BPRDATA                                                    00020000
+             GBLC  &PRCSFX                                              00020102
+&DYNMEM      SETC  'DYNMEM'.'&PRCSFX'                                   00020202
+DYNLEN&PRCSFX EQU   (*-&DYNMEM)                                         00030002
+             MEND                                                       00040000

@@ -1,0 +1,6 @@
+          PROLOG                                                        00001001
+          EPILOG                                                        00002001
+          APRDATA                                                       00010001
+          BPRDATA                                                       00020001
+          YREGS                                                         00030001
+          END                                                           00040001

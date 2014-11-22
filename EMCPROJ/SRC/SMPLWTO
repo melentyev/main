@@ -1,0 +1,54 @@
+SMPLWTO      CSECT                                                      00001003
+             SAVE  (14,12)                                              00002002
+             BALR  R12,0                                                00010004
+             USING *,R12                                                00020002
+*===============================                                        00020106
+             GETMAIN R,LV=DYNLEN                                        00021006
+             ST    R13,4(,R1)                                           00023006
+             LR    R2,R13                                               00023106
+             LR    R13,R1                                               00023306
+             ST    R13,8(,R2)                                           00023406
+             USING DYNMEM,R13                                           00024006
+*===============================                                        00030002
+*            ST    13,SAVEAREA+4                                        00040006
+*            LR    2,13                                                 00050006
+*            LA    13,SAVEAREA                                          00060006
+*            ST    13,8(,2)                                             00070006
+*===============================                                        00080002
+             WTO   'HERE'                                               00080107
+             LA    R8,50(0,0)                                           00080207
+             STH   R8,TXT                                               00080307
+             LA    R7,0(0,0)                                            00081006
+             L     R6,NID                                               00081106
+             LA    R6,1(,R6)                                            00081206
+             ST    R6,NID                                               00081306
+             ST    R6,TXTMSG+4                                          00081406
+              WTO  TEXT=TXT                                             00081506
+*            ST    R7,MYDS                                              00081606
+             ST    R6,MYDS                                              00081706
+             WTO   'HERE'                                               00081807
+LOOP         EQU   *                                                    00082005
+*            IF    (R6),EQ,MYDS                                         00083006
+*             X    R7,=F'1'                                             00084006
+*             ST   R7,MYDS                                              00085006
+*             ST   R6,MYDS                                              00085106
+             C     R6,TXTMSG+4                                          00085206
+             BNE   ABND                                                 00085306
+              ST    R6,TXTMSG+4                                         00085406
+              WTO  TEXT=TXT                                             00085506
+              B    LOOP                                                 00086006
+*            ELSE                                                       00087006
+ABND          ABEND 777,,STEP                                           00087106
+*            ENDIF                                                      00088006
+*===============================                                        00089005
+             L     13,SAVEAREA+4                                        00960002
+             RETURN (14,12)                                             00970004
+NID          DC    X'000000F0'                                          00980007
+             YREGS                                                      01000002
+DYNMEM       DSECT                                                      01000106
+SAVEAREA     DS    18F                                                  01000207
+TXT          DS    H                                                    01001007
+TXTMSG       DS    CL100                                                01002007
+MYDS         DS    F                                                    01020006
+DYNLEN       EQU   (*-DYNMEM)                                           01030006
+             END                                                        01260002

@@ -1,0 +1,26 @@
+* OUTPUT REGISTER TO PRINTER                                            00001000
+             MACRO                                                      00010000
+&LBL         DEBR     &REGS,&TYPE                                       00020001
+&NDX         SETA     &SYSNDX                                           00020101
+&CNT         SETA     N'&REGS                                           00021001
+&MEMSIZE     SETA     &CNT*8+16                                         00022001
+             GETMAIN  R,LV=&MEMSIZE                                     00023001
+             LA       14,10(0,0)                                        00023101
+&I           SETA     1                                                 00023201
+.LOOP1       ANOP                                                       00023301
+&R           SETC     &REGS(&I)                                         00023401
+             LR       15,&R                                             00023501
+             N        15,=X'0000000F'                                   00023601
+             CR       15,=F'10'                                         00023701
+             BL       &DIGITLBL                                         00023801
+             A        15,=X'000000B5'                                   00023901
+&DIGITLBL    EQU      *                                                 00024101
+             A        15,=X'000000F0'                                   00024201
+&CONT        EQU      *                                                 00024301
+             STC      15,&OFFSET(,1)                                    00024401
+&I           SETA     &I+1                                              00024501
+             AIF      (&I LE &CNT).LOOP                                 00025001
+&LBL         ST       '&R'(2,K'&R-2),DEBAREA                            00030000
+             WTO      TEXT=(R1)                                         00040001
+             FREEMAIN R,LV=&MEMSIZE,A=(1)                               00041001
+             MEND                                                       00050000

@@ -1,0 +1,90 @@
+TRYPERN3  CSECT                                                         00010000
+TRYPERN3  AMODE    31                                                   00011001
+PROLOG    EQU      *                                                    00020000
+          STM      R14,R12,12(R13)                                      00030000
+          LR       R12,R15                                              00040000
+          USING    PROLOG,R12                                           00050000
+          GETMAIN  R,LV=DFRAMELEN                                       00060000
+          ST       R1,8(,R13)                                           00070000
+          ST       R13,4(,R1)                                           00080000
+          LR       R13,R1                                               00090000
+          USING    DYNFRAME,R13                                         00100000
+********  MAIN PART *********                                           00110000
+          WTO      'BEGIN'                                              00120000
+          ESTAEX   RECOV,CT                                             00130000
+          WTO      'ESTAE ACTIVATED'                                    00140000
+          BR       0                    PLACE FOR PER                   00150000
+          LOAD     EP=TRYPERT1                                          00150100
+          LR       R3,R0                                                00150200
+*         ST       R3,MSGTXT                                            00150300
+*         WTO      TEXT=MSG                                             00150400
+          ST       R3,LOADADDR                                          00150600
+          WTO      'HERE'                                               00150700
+          LR       R15,R3                                               00150800
+          LA       R14,0                                                00150901
+*         ABEND    333,DUMP                                             00151101
+          BALR     R14,R15                                              00151200
+*         LINK     EP=TRYPERT1                                          00152000
+*         WTO      'AFTER POSSIBLE LINK'                                00160000
+          B        EPILOG                                               00170001
+*         ABEND    544,DUMP                                             00180000
+RECOV     EQU      *                                                    00240000
+*         ABEND    999,DUMP                                             00241001
+          DROP     R12                                                  00250000
+          USING    RECOV,R15                                            00260000
+*         LR       R9,R12                                               00261001
+          L        R12,#BASE                                            00270000
+          DROP     R15                                                  00280000
+          USING    PROLOG,R12                                           00290000
+          LR       R6,R1                                                00300001
+          WTO      MF=(E,MSGRECOV)                                      00310001
+          LR       R8,R6                                                00320101
+          USING    SDWA,R8                                              00320201
+*         ST       R9,TMPF1                                             00320301
+*         CALTOSTR BIN,INP=LOADADDR,OUT=MESSAGE+4,LEN=4,WE=MESSAGE      00320401
+*         CALTOSTR BIN,INP=SDWANXT1,OUT=MESSAGE+4,LEN=4,WE=MESSAGE      00320501
+*         MVC      MSGTXT(1),SDWAPMKA-SDWA(R1)                          00320601
+*         MVC      MSGTXT+1(8),SDWANXT1-SDWA(R1)                        00320701
+*         MVC      MSGTXT+9(4),LOADADDR                                 00320801
+*         MVC      MSGTXT+13(1),SDWAILC1-SDWA(R1)                       00320901
+*         WTO      TEXT=MSG                                             00323001
+          L        R9,LOADADDR                                          00323101
+          MVC      X'88'(4,R9),=X'AABBAABB'                             00323201
+          L        R10,SDWANXT1                                         00323501
+          LR       R1,R6                                                00324001
+*         ABEND    777,DUMP                                             00325001
+          SETRP    RETREGS=YES,RC=4,RETADDR=(R10),FRESDWA=YES           00330001
+*         LR       R6,R14                                               00330101
+*         ABEND    777,DUMP                                             00331001
+          BR       R14                                                  00340000
+RETRY1    EQU      *                                                    00341000
+*         ABEND    777,DUMP                                             00343000
+          WTO      'IN RETRY1'                                          00344001
+          B        EPILOG                                               00346000
+EPILOG    EQU      *                                                    00350000
+          ESTAEX   0                                                    00351001
+          WTO      'IN EPILOG'                                          00360000
+          LR       R1,R13                                               00361001
+          L        R13,4(,R13)                                          00370000
+          FREEMAIN R,LV=DFRAMELEN,A=(R1)                                00380001
+          LM       R14,R12,12(R13)                                      00390000
+          XR       R15,R15                                              00400000
+          BR       R14                                                  00410000
+********* STATIC DATA **********                                        00420000
+#BASE     DC       A(PROLOG)                                            00430000
+LOADADDR  DS       F                                                    00430100
+TMPF1     DS       4F                                                   00430201
+MSG       DS       0F                                                   00430300
+MSGLEN    DC       H'40'                                                00430400
+MSGTXT    DC       CL40''                                               00430500
+MSGRECOV  WTO      'IN RECOVERY',MF=L                                   00430601
+MESSAGE   WTO      '                                                   X00430701
+                                                                       X00430801
+                     ',MF=L                                             00430901
+********* STATIC DATA **********                                        00431000
+DYNFRAME  DSECT                                                         00440000
+SAVEAREA  DS       18F                                                  00450000
+DFRAMELEN EQU      *-DYNFRAME                                           00460000
+          IHASDWA                                                       00470000
+          YREGS                                                         00480000
+          END                                                           00490000

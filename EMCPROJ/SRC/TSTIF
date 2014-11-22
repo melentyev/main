@@ -1,0 +1,54 @@
+PGMBEGIN     AMODE 31                                                   00001009
+PGMBEGIN     CSECT                                                      00010005
+             SAVE  (14,12)                                              00020005
+             BALR  R12,0                                                00030005
+             USING *,R12                                                00040005
+*===============================                                        00050005
+             GETMAIN R,LV=DYNLEN                                        00060005
+             LR    R11,R1                                               00070005
+             ST    R13,4(,R11)                                          00080005
+             ST    R11,8(,R13)                                          00090005
+             LR    R13,R11                                              00100005
+             USING DYNMEM,R13                                           00110005
+*===============================                                        00131005
+             WTO   'HERE'                                               00132010
+             LR    R1,R13                                               00760005
+             L     R13,SAVEAREA+4                                       00770005
+             FREEMAIN R,LV=DYNLEN,A=(R1)                                00780005
+             RETURN (14,12),RC=0                                        00790005
+*===============================                                        00800005
+TESTINP      DC    XL2'A134'                                            00801009
+MSG     WTO   'RES:                                             ',MF=L  00802009
+INFILE       DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),                   X00810006
+               LRECL=80,DSORG=PS                                        00820005
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00830005
+               LRECL=133,DSORG=PS                                       00840005
+             YREGS                                                      00850005
+*===============================                                        00860005
+DYNMEM       DSECT                                                      00870005
+SAVEAREA     DS    18F                                                  00880005
+INAREA       DS    CL80                                                 00890005
+DEBAREA      DS    CL133                                                00900005
+DYNLEN       EQU   (*-DYNMEM)                                           00910005
+*===============================                                        00920005
+LISTITEM     DSECT                                                      00930005
+ITVAL        DS    F                                                    00940005
+ITNEXT       DS    F                                                    00950005
+ITEMSIZE     EQU   (*-LISTITEM)                                         00960005
+*===============================                                        00970005
+             END                                                        00980005
+*            OPEN  (PRINTER,OUTPUT)                                     00990010
+*            OPEN  (INFILE,INPUT)                                       01000010
+*===============================                                        01010010
+*            GET   INFILE,INAREA                                        01020010
+*            STRTOINT (R3),INAREA                                       01030010
+*            LA    R2,TESTINP                                           01040010
+*            LA    R3,MSG+8                                             01050010
+*            LA    R4,2                                                 01060010
+*            LA    R5,1                                                 01070010
+*            LINK  EP=TOSTRING                                          01080010
+*            CALTOSTR BIN,INP=TESTINP,OUT=MSG+8,LEN=2                   01090010
+*            WTO   MF=(E,MSG)                                           01100010
+*            WTO   'FINISH'                                             01110010
+*            CLOSE (INFILE)                                             01120010
+*            CLOSE (PRINTER)                                            01130010

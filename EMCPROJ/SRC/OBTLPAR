@@ -1,0 +1,15 @@
+OBTLPAR   PROLOG                                                        00010000
+          WTO    'BEGIN'                                                00010101
+          L      R3,16(0,0)                                             00011000
+          L      R4,196(,R3)                                            00012000
+          MVC    WORKAREA(4),16(R4)                                     00014001
+          WTO    TEXT=MSGLEN                                            00015000
+          WTO    'END'                                                  00016001
+          EPILOG                                                        00020000
+MSGLEN    DC     H'40'                                                  00021001
+          DC     CL6'LPAR: '                                            00022001
+WORKAREA  DC     CL127''                                                00023001
+          APRDATA                                                       00030000
+          BPRDATA                                                       00040000
+          YREGS                                                         00041000
+          END                                                           00050000

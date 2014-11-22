@@ -1,0 +1,156 @@
+             MACRO                                                      00010000
+&LBL         DEBR     &R                                                00020006
+&LBL         ST       &R,DEBAREA                                        00030006
+             PUT      PRINTER,DEBAREA                                   00040005
+             MEND                                                       00050000
+*========================================                               00050106
+             MACRO                                                      00050205
+&LBL         WRDTOREG &R,&SRC                                           00050306
+             AIF   ('&SRC'(1,1) EQ '(' AND                             X00050406
+                   '&SRC'(K'&SRC,1) EQ ')').FREG                        00050506
+&LBL         L        &R,&SRC                                           00050706
+             MEXIT                                                      00050809
+.FREG        ANOP                                                       00050906
+&SRCR        SETC     '&SRC'(2,K'&SRC-2)                                00051109
+&LBL         LR       &R,&SRCR                                          00051206
+             MEND                                                       00051305
+*========================================                               00051406
+             MACRO                                                      00051506
+&LBL         MINVAL   &A,&B                                             00051609
+&LBL         WRDTOREG 1,&A                                              00051709
+             WRDTOREG 14,&B                                             00051809
+             CR       1,14                                              00051906
+             BL       MNVLND&SYSNDX                                     00052009
+             LR      1,14                                               00052209
+MNVLND&SYSNDX EQU     *                                                 00052306
+             MEND                                                       00052406
+*========================================                               00052506
+*===============================                                        00060000
+PUTONLY      CSECT                                                      00070000
+             STM   14,12,12(13)                                         00080000
+             BALR  R12,0                                                00090000
+             USING *,R12                                                00100000
+*===============================                                        00110000
+             ST    13,SAVEAREA+4                                        00120000
+             LR    2,13                                                 00130000
+             LA    13,SAVEAREA                                          00140000
+             ST    13,8(2)                                              00150000
+*===============================                                        00160000
+             OPEN  (PRINTER,OUTPUT)                                     00170000
+             OPEN  (INFILE,INPUT)                                       00180000
+*===============================                                        00190000
+             WTO   'HERE'                                               00191000
+             GET   INFILE,INAREA                                        00431202
+             STRTOINT (R4),INAREA                                       00432002
+             DEBR  R4                   //R4-NEED SUM                   00434005
+             GET   INFILE,INAREA                                        00434103
+             STRTOINT (R5),INAREA                                       00434203
+             DEBR  R5                                                   00434303
+             LR    R6,R5                //R5-COINS CNT                  00434505
+             LR    R8,R5                                                00434603
+             MHI   R6,4                                                 00434703
+             LA    R6,8(,R6)                                            00434803
+             GETMAIN R,LV=(R6)                                          00434903
+             LR    R6,R1                                                00435003
+             LR    R7,R1                                                00435103
+INPLOOP      EQU   *                                                    00435303
+             GET   INFILE,INAREA                                        00435403
+             STRTOINT (R9),INAREA                                       00435503
+             ST    R9,0(,R7)                                            00435803
+             LA    R7,4(,R7)                                            00435903
+             BCT   R8,INPLOOP                                           00436003
+*===============================                                        00450000
+INEOF        EQU   *                                                    00460002
+*            MVC   DEBAREA(133),0(R6)   //R6-COINS ARRAY                00460309
+*            PUT   PRINTER,DEBAREA                                      00460409
+             LR    R3,R4                                                00460505
+             MHI   R3,4                                                 00460605
+             LA    R3,8(,R3)                                            00460705
+             GETMAIN R,LV=(R3)                                          00460805
+             LR    R7,R1                //R7  - DP ARRAY                00460905
+             ST    R7,DEBAREA                                           00461009
+             PUT   PRINTER,DEBAREA                                      00461109
+             LA    R8,0                                                 00461205
+             ST    R8,0(,R7)                                            00461305
+             LR    R8,R4                //R8 -LOOP ON SUM               00461405
+             LA    R9,0(,R7)                                            00461505
+DPLOOP       EQU   *                                                    00461605
+             WTO   'DPLOOP'                                             00461706
+             LA    R9,4(,R9)                                            00461805
+             L     R10,=X'000FFFFF'                                     00461909
+*            INTTOSTR DEBAREA,(R10)                                     00462009
+*            PUT   PRINTER,DEBAREA                                      00462109
+             STM   R7,R8,MYSVAR78                                       00462206
+             LR    R11,R5                                               00462305
+             LR    R7,R6                                                00462406
+             STM   R3,R6,MYSVAR36                                       00462506
+MINLOOP      EQU   *                                                    00462605
+*            WTO   'MINLOOP'                                            00462710
+             LR    R8,R9                                                00462806
+             L     R3,0(,R7)                                            00462906
+             MHI   R3,4                                                 00463006
+             SR    R8,R3                                                00463106
+*            PUT   PRINTER,MYSVAR78                                     00463209
+             C     R8,MYSVAR78+0                                        00463309
+             BL    DPMNCONT        //DPLOOP MINLOOP ADRESS OK           00463409
+*            B     DPMNCONT                                             00463509
+*PMNADOK     EQU   *                                                    00463609
+*            WTO   'OK'                                                 00463709
+             L     R4,0(,R8)                                            00463806
+*            MVC   DEBAREA(4),=X'AAAA'                                  00463910
+*            PUT   PRINTER,DEBAREA                                      00464010
+*            ST    R4,DEBAREA                                           00464110
+*            PUT   PRINTER,DEBAREA                                      00464210
+*            ST    R10,DEBAREA                                          00464310
+*            PUT   PRINTER,DEBAREA                                      00464410
+             MINVAL (R4),(R10)                                          00464506
+             LR    R10,R1                                               00464606
+*            ST    R10,DEBAREA                                          00464710
+*            PUT   PRINTER,DEBAREA                                      00464810
+DPMNCONT     EQU   *                                                    00464909
+             LA    R7,4(,R7)                                            00465009
+             BCT   R11,MINLOOP      //MINLOOP                           00465109
+             LM    R3,R6,MYSVAR36                                       00465206
+             LM    R7,R8,MYSVAR78                                       00465306
+             LA    R10,1(,R10)                                          00465409
+             ST    R10,0(,R9)                                           00465505
+             BCT   R8,DPLOOP         //DPLOOP                           00465609
+             WTO   'FINISH'                                             00465703
+             MVC   DEBAREA(133),0(R7)                                   00465809
+             PUT   PRINTER,DEBAREA                                      00465909
+             INTTOSTR DEBAREA,(R10)                                     00466006
+             PUT   PRINTER,DEBAREA                                      00466106
+*            FREEMAIN R,LV=(R7),A                                       00466203
+             CLOSE (INFILE)                                             00467002
+             CLOSE (PRINTER)                                            00470002
+             L     13,SAVEAREA+4                                        00480002
+             LM    14,12,12(13)                                         00490002
+             XR    15,15                                                00500002
+             BR    14                                                   00510002
+*===============================                                        00520000
+MYSVAR78     DS    4F                                                   00530006
+MYSVAR36     DS    8F                                                   00540006
+TMPWRD1      DS    F'0'                                                 00560003
+TMPWRD2      DS    F'0'                                                 00561003
+TMPWRD3      DS    F'0'                                                 00562003
+INFILE   DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),EODAD=INEOF,           X00570008
+               LRECL=80,DSORG=PS                                        00580008
+INAREA       DS    CL80' '                                              00590002
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00600006
+               LRECL=133,DSORG=PS                                       00610008
+DEBAREA      DS    CL133' '                                             00620002
+SAVEAREA     DS    18F                                                  00630002
+*===============================                                        00640000
+NEG1         EQU   -1                                                   00650005
+             MACRO                                                      00651005
+             GENREGS                                                    00652005
+&NUM         SETA  0                                                    00652105
+.LOOP        AIF   (&NUM LT 16).CONT                                    00652205
+             MEXIT                                                      00652305
+.CONT        ANOP                                                       00652405
+R&NUM        EQU   &NUM                                                 00652505
+&NUM         SETA  &NUM+1                                               00652605
+             AGO   .LOOP                                                00652705
+             MEND                                                       00653005
+             GENREGS                                                    00654005
+             END                                                        00810005

@@ -1,0 +1,59 @@
+*********************************************************               00001008
+* PARSES NUMBER FROM STRING START                                       00002008
+* ACCEPT MINUS SIGN                                                     00003008
+*********************************************************               00009008
+             MACRO                                                      00010001
+             STRTOINT  &REGP,&SRC                                       00020001
+           AIF ('&REGP'(1,1) EQ '(' AND '&REGP'(K'&REGP,1) EQ ')').ROK  00030001
+             MNOTE 'BAD FORMAT'                                         00040001
+             MEXIT                                                      00050001
+.ROK         ANOP                                                       00060001
+             LCLA  &STILCNTR                                            00061003
+&REG         SETC  '&REGP'(2,K'&REGP-2)                                 00080003
+&STILCNTR    SETA  &SYSNDX                                              00100003
+&PPACK       SETC  'STIPPACK'.'&STILCNTR'                               00100403
+&NPACK       SETC  'STINPACK'.'&STILCNTR'                               00100503
+             B     STISKIP&STILCNTR                                     00101103
+STIPPACK&STILCNTR PACK 0(8,4),&SRC.(0)                                  00102007
+STINPACK&STILCNTR PACK 0(8,4),&SRC+1(0)                                 00103007
+STISKIP&STILCNTR EQU *                                                  00106007
+             GETMAIN R,LV=16                                            00106107
+             ST    4,12(,1)                                             00106207
+             LR    4,1                                                  00106307
+             XR    &REG,&REG                                            00106507
+             LLGC  1,&SRC                                               00107007
+             C     1,=X'00000060'                                       00108006
+             BNE   STIPOSP1&SYSNDX                                      00109006
+             LA    &REG,1(,&REG)                                        00110006
+STIPOSP1&SYSNDX EQU   *                                                 00111006
+             LA    R14,1                                                00120006
+             LA    R15,79                                               00130006
+LENLOOP&STILCNTR EQU   *                                                00140006
+             LLGC  1,&SRC.(&REG)                                        00150006
+             CHI   1,X'F0'                                              00160006
+             BL    FOUND&STILCNTR                                       00170006
+             CHI   1,X'F9'                                              00180006
+             BH    FOUND&STILCNTR                                       00190006
+             BXLE  &REG,R14,LENLOOP&STILCNTR                            00200006
+FOUND&STILCNTR EQU   *                                                  00210006
+             LA    R14,&SRC.(&REG)                                      00211006
+             BCTR  &REG,0                                               00212006
+             BCTR  R14,0                                                00213006
+             LLGC  1,&SRC                                               00220006
+             C     1,=X'00000060'                                       00221006
+             BNE   STIPOSP2&SYSNDX                                      00222006
+             BCTR  &REG,0                                               00222106
+             NI    0(R14),X'DF'         //NEGATIVE                      00222306
+             EX    &REG,&NPACK.(0)                                      00222606
+             B     STICVB&SYSNDX                                        00222806
+STIPOSP2&SYSNDX EQU *                                                   00223006
+             NI    0(R14),X'AF'                                         00250006
+*            ST    R4,INAREA                                            00251009
+*            PUT   PRINTER,INAREA                                       00260009
+             EX    &REG,&PPACK                                          00290009
+STICVB&SYSNDX EQU  *                                                    00300006
+             CVB   &REG,0(,4)                                           00310007
+             LR    1,4                                                  00311007
+             L     4,12(,1)                                             00312007
+             FREEMAIN R,LV=16,A=(1)                                     00313007
+             MEND                                                       00320002

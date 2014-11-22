@@ -1,0 +1,19 @@
+)attr
+ @  area(dynamic) scroll(on) extend(on)
+ 01 type(dataout) color(red)
+ 02 type(dataout) color(blue)
+ 03 type(dataout) color(green)
+ 04 type(dataout) color(white)
+ $  type(text)    color(yellow)
+)body expand(||)
+%-|-|- Example for using a dynamic area -|-|-
+%Command ===>_zcmd                                            %Scroll ===>_AMT +
+%
++ This area is fixed.   Size: &size
++
++ This is an input field%===>_somevar +
++
++This#@dynarea                     @H
+
+       $This should be at the bottom of the screen when in full screen.
+)end

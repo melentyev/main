@@ -1,0 +1,16 @@
+*********                                                               00001000
+             MACRO                                                      00010000
+             PRRET &VAL=NONE                                            00011000
+             GBLC  &PRCSFX                                              00020000
+&EPLGSTART   SETC  'PREPSTR'.'&PRCSFX'                                  00040000
+             AIF   ('&VAL' EQ 'NONE').BRANCH                            00040100
+             AIF   ('&VAL'(1,1) EQ '(').REG                             00040200
+             LA    R1,&VAL                                              00040300
+             AGO   .BRANCH                                              00040400
+.REG         ANOP                                                       00040500
+&REG         SETC   '&VAL'(2,K'&VAL)                                    00040604
+             LR    R1,&REG                                              00040700
+             AGO   .BRANCH                                              00040800
+.BRANCH      ANOP                                                       00041000
+             B     &EPLGSTART                                           00050000
+             MEND                                                       00060001

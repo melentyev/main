@@ -1,0 +1,139 @@
+DD2DSN   TITLE '- RETRIEVE DSN GIVEN A DD NAME'
+***********************************************************************
+*
+*       THIS MODULE ACCEPTS A DDNAME AND THE ASSOCIATED DATASET NAME.
+*
+*       THIS PROGRAM ACCEPTS THREE PARAMETERS AS FOLLOWS
+*
+*             CALL 'DD2DSN' USING DD-NAME DS-NAME MEMBER
+*
+*       WHERE
+*
+*             01  DD-NAME   PIC X(8).     (INPUT)
+*             01  DS-NAME   PIC X(44).    (OUTPUT)
+*             01  MEMBER    PIC X(8).     (OUTPUT)
+*
+*        THE MEMBER NAME MAY ALSO CONTAIN A RELATIVE GDG NUMBER.
+*
+*       THE RETURN CODE IS PASSED UP FROM THE RDJFCB MACRO.
+*
+*  ATTRIBUTES: REENTRANT
+*
+***********************************************************************
+*
+DD2DSN   RMODE 31
+DD2DSN   AMODE 31
+DD2DSN   CSECT
+*
+***********************************************************************
+*              LINKAGE
+***********************************************************************
+*
+         STM   R14,R12,12(R13)         SAVE REGISTERS IN CALLER AREA
+
+         LR    R11,R15
+         USING DD2DSN,R11              USE ENTRY POINT AS BASE
+
+         L     R2,0(R1)           GET DDNAME ADDRESS
+         L     R3,4(R1)           GET DSNAME ADDRESS
+         L     R4,8(R1)           GET MEMBER ADDRESS
+
+         GETMAIN RU,LV=DATALEN,LOC=BELOW  GET SOME STORAGE FOR WORKAREA
+         LR    R10,R1                     SAVE ADDR OF RETURNED STORAGE
+         USING WORKAREA,R10               AND USE IT FOR OUR WORKAREA
+*
+***********************************************************************
+*              PROCESS REQUEST
+***********************************************************************
+*
+
+         LA    R12,DCB                 ADDRESS DCB
+         USING IHADCB,R12              ESTABLISH BASE FOR DCB
+*
+         MVC   0(DCBLEN,R12),DCBMODEL  INITIALISE DCB
+         MVC   DCBDDNAM,0(R2)          SET DDNAME IN DCB
+         LA    R5,JFCBXLST             GET EXITLIST ADDRESS
+         STCM  R5,7,DCBEXLSA           STORE IT IN DCB
+         MVI   JFCBCODE,X'87'          SET EXIT CODE
+         LA    R5,JFCBAREA             GET JFCB AREA ADDRS
+         STCM  R5,7,JFCBADDR           AND STORE IT IN EXIT LIST
+         USING INFMJFCB,R5             ESTABLISH  ADRESSABILITY OF AREA
+
+         MVC   XRDJFCB,LRDJFCB         INITIALISE RDJFCB PARAM LIST
+         RDJFCB ((R12)),MF=(E,XRDJFCB) GET JFCB
+
+         LTR   R15,R15                 OK?
+         BNZ   RETURN                  NOPE
+         MVC   0(44,R3),JFCBDSNM       RETURN DSN
+         MVC   0(8,R4),JFCBELNM        RETURN MEMBER OR RELATIVE GDG
+***********************************************************************
+*              RETURN TO CALLER
+***********************************************************************
+*
+RETURN   LR    R5,R15
+         FREEMAIN RU,LV=DATALEN,A=(R10) FREE OUR STORAGE
+         LR    R15,R5                   SET RETURN CODE
+         LM    R0,R12,20(R13)           RESTORE REGISTERS  0-12
+         L     R14,12(R13)              RESTORE LINK REGISTER
+         BSM   R0,R14                   GO BACK
+*
+***********************************************************************
+*              WORK AREA
+***********************************************************************
+*
+         DS    0D
+DCBSTART EQU   *
+* TEMPLATE DCB USED TO INITIALISE DCB BELOW THE LINE
+DCBMODEL DCB   DDNAME=TEMPLTE,DSORG=PS,MACRF=(R,W)
+DCBEND   EQU   *
+DCBLEN   EQU   (DCBEND-DCBSTART)
+*
+RDJFSTRT EQU   *
+* TEMPLATE RDJFCB LIST
+LRDJFCB  RDJFCB DCBMODEL,MF=L
+RDJFEND  EQU   *
+RDJFLEN  EQU   (RDJFEND-RDJFSTRT)
+WTOL     WTO   TEXT=,ROUTCDE=11,MF=L
+*
+WORKAREA DSECT
+* THIS AREA IS MAPPED TO THE GETMAINED STORAGE
+DATA     EQU   *
+*
+JFCBXLST DS    0F                            THE RDJFCB MACRO EXIT LIST
+JFCBCODE DS    X
+JFCBADDR DS    XL3
+JFCBAREA DS    0D
+* MACRO TO MAP JFCB SO WE CAN READ IT
+         IEFJFCBN
+*
+         DS    0D
+DCB      DS    (DCBLEN)C
+         DS    0D
+XRDJFCB  DS    (RDJFLEN)C
+ENDDATA  EQU   *
+DATALEN  EQU   (ENDDATA-DATA)
+* DSECT MACRO TO MAP DCB SO WE CAN ALTER IT
+         DCBD
+*
+***********************************************************************
+*              DEFINE SYMBOLS
+***********************************************************************
+*
+R0       EQU   0                        R0-R15 ARE THE NORMAL
+R1       EQU   1                         EQUATES.
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
+R11      EQU   11
+R12      EQU   12
+R13      EQU   13
+R14      EQU   14
+R15      EQU   15
+*
+         END   DD2DSN

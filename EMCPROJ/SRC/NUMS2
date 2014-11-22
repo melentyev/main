@@ -1,0 +1,65 @@
+PUTONLY  CSECT                                                          00010000
+         STM   14,12,12(13)                                             00020000
+         LR    R5,R1                                                    00021003
+         BALR  RBASE,0                                                  00030000
+         USING *,RBASE                                                  00040000
+*===============================                                        00050000
+         ST    13,SAVEAREA+4                                            00060000
+         LR    2,13                                                     00070000
+         LA    13,SAVEAREA                                              00080000
+         ST    13,8(2)                                                  00090000
+*===============================                                        00100000
+         OPEN  (PRINTER,OUTPUT)                                         00110000
+*===============================                                        00111000
+         LR    R1,R5                                                    00111303
+         L     R5,0(,R1)                                                00112003
+         N     R5,=X'7FFFFFFF'                                          00112708
+         LH    R6,0(,R5)                                                00113008
+         LA    R7,2(,R5)                                                00113808
+         LA    R8,DBLFLD+8                                              00114008
+         SR    R8,R6                                                    00114108
+         MVC   DBLFLD(8),=X'F0F0F0F0F0F0F0F0'                           00114208
+         EX    R6,MVCR8R7                                               00114608
+         NI    DBLFLD+7,X'CF'                                           00115706
+         PACK  DBLFLD(8),DBLFLD(8)                                      00115806
+         CVB   RCOUNT,DBLFLD                                            00116004
+*===============================                                        00130008
+LOOP     EQU   *                                                        00210000
+         INTTOSTR PLINE,(RCOUNT)                                        00220008
+         PUT   PRINTER,PLINE                                            00234007
+         BCT   RCOUNT,LOOP                                              00240000
+*===============================                                        00241008
+         CLOSE (PRINTER)                                                00250000
+         L     13,SAVEAREA+4                                            00260000
+         RETURN (14,12),RC=0                                            00270008
+*===============================                                        00290108
+MVCR8R7  MVC   0(0,R8),0(R7)                                            00291008
+RBASE    EQU   12                                                       00300000
+RCOUNT   EQU   2                                                        00310000
+TOPLINE  DC    CL133'===== SIMPLE LOOOP ====='                          00320000
+PLINE    DC    CL133' '                                                 00330000
+PRINTER  DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                      *00340000
+               LRECL=133,DSORG=PS                                       00350000
+SAVEAREA DS    18F                                                      00360000
+DBLFLD   DS    2F                                                       00370005
+CMDSTR   DS    64F                                                      00370100
+EFFF     DS    10F                                                      00370203
+MIN1OFF  EQU   -1                                                       00370305
+********************************                                        00370400
+R0       EQU   0                                                        00371000
+R1       EQU   1                                                        00372000
+R2       EQU   2                                                        00373000
+R3       EQU   3                                                        00374000
+R4       EQU   4                                                        00375000
+R5       EQU   5                                                        00376000
+R6       EQU   6                                                        00377000
+R7       EQU   7                                                        00378000
+R8       EQU   8                                                        00379000
+R9       EQU   9                                                        00379100
+R10      EQU   10                                                       00379200
+R11      EQU   11                                                       00379300
+R12      EQU   12                                                       00379400
+R13      EQU   13                                                       00379500
+R14      EQU   14                                                       00379600
+R15      EQU   15                                                       00379700
+         END                                                            00380000

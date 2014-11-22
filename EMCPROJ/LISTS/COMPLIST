@@ -1,0 +1,921 @@
+¯
+                                         High Level Assembler Option Summary                   (PTF UK37157)   Page    1
+                                                                                            HLASM R6.0  2014/07/24 23.58
+²  No Overriding ASMAOPT Parameters
+²  No Overriding Parameters
+²  No Process Statements
+
+
+  Options for this Assembly
+²  NOADATA
+²    ALIGN
+²  NOASA
+²    BATCH
+²    CODEPAGE(047C)
+²  NOCOMPAT
+²  NODBCS
+²  NODECK
+²    DXREF
+²    ESD
+²  NOEXIT
+²    FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)
+²  NOFOLD
+²  NOGOFF
+²  NOINFO
+²    LANGUAGE(EN)
+²  NOLIBMAC
+²    LINECOUNT(60)
+²    LIST(121)
+²    MACHINE(,NOLIST)
+²    MXREF(SOURCE)
+²    OBJECT
+²    OPTABLE(UNI,NOLIST)
+²  NOPCONTROL
+²  NOPESTOP
+²  NOPROFILE
+²  NORA2
+²  NORENT
+²    RLD
+²    RXREF
+²    SECTALGN(8)
+²    SIZE(MAX)
+²  NOSUPRWARN
+²    SYSPARM()
+²  NOTERM
+²  NOTEST
+²    THREAD
+²  NOTRANSLATE
+²    TYPECHECK(MAGNITUDE,REGISTER)
+²    USING(NOLIMIT,MAP,WARN(15))
+²  NOWORKFILE
+²    XREF(SHORT,UNREFS)
+
+²  No Overriding DD Names
+¯
+                                              External Symbol Dictionary                                       Page    2
+Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                            HLASM R6.0  2014/07/24 23.58
+²VSAMKST   SD 00000001 00000000 00000754             00
+¯
+²                                                                                                               Page    3
+  Active Usings: None
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²                                      1 VSAMKST   PROLOG                                                        00010000
+²000000                00000 00754     2+VSAMKST      CSECT                                                      01-PROLO
+²000000                                5+         DS    0H                                                       02-SAVE
+²000000 90EC D00C            0000C     6+         STM   14,12,12(13)                      SAVE REGISTERS         02-SAVE
+²000004 1851                           7+             LR    R5,R1                                                01-PROLO
+²000006 05C0                           8+             BALR  R12,0                                                01-PROLO
+²                 R:C  00008           9+             USING *,R12                                                01-PROLO
+²                                     10+*===============================
+²000008                               13+         CNOP  0,4                     ALIGN PARAMETER                  02-GETMA
+²000008 4510 C008            00010    14+         BAL   1,*+8                   BRANCH AROUND LENGTH             02-GETMA
+²00000C 00000048                      15+         DC    A(DYNLEN)               LENGTH                           02-GETMA
+²000010 5800 1000            00000    16+         L     0,0(0,1)                LOAD LENGTH                      02-GETMA
+²000014 0A0A                          17+         SVC   10                      ISSUE GETMAIN SVC                02-GETMA
+²000016 18B1                          18+             LR    R11,R1                                               01-PROLO
+²000018 50D0 B004            00004    19+             ST    R13,4(,R11)                                          01-PROLO
+²00001C 50B0 D008            00008    20+             ST    R11,8(,R13)                                          01-PROLO
+²000020 18DB                          21+             LR    R13,R11                                              01-PROLO
+²000022 1815                          22+             LR    R1,R5                                                01-PROLO
+²                 R:D  00000          23+             USING DYNMEM,R13                                           01-PROLO
+²000024 5820 1000            00000    24           L      R2,0(,R1)                                              00010104
+²000028 4830 2000            00000    25           LH     R3,0(,R2)                                              00010204
+²00002C 4140 2002            00002    26           LA     R4,2(,R2)                                              00010304
+²                                     27           IF    (((R3),EQ,=F'3'),AND,((R4),CLCEQ,ADDSTR))               00010504
+²000030 5930 C740            00748    30+                 C      R3,=F'3'                                        03-RESLV
+²000034 4770 C03E            00046    31+             BNE    ILSLB#6                                             03-RESLV
+²000038 D502 C5AA 4000 005B2 00000    33+                   CLC   ADDSTR,0(R4)                                   03-RESLV
+²00003E 4770 C03E            00046    34+                   BNE   ILSLB#6                                        03-RESLV
+²000042 47F0 C1A6            001AE    35             B    CMDADD                                                 00010604
+²                                     36           ENDIF                                                         00010804
+²                      00046          37+ILSLB#6      EQU    *                                                   01-ENDIF
+²                      00046          38+IENDILB#6    EQU    *                                                   01-ENDIF
+²                                     39           IF    (((R3),EQ,=F'4'),AND,((R4),CLCEQ#4,LISTSTR))            00011504
+²000046 5930 C744            0074C    42+                 C      R3,=F'4'                                        03-RESLV
+²00004A 4770 C054            0005C    43+             BNE    ILSLB#11                                            03-RESLV
+²00004E D503 C5AD 4000 005B5 00000    45+                   CLC   LISTSTR(4),0(R4)                               03-RESLV
+²000054 4770 C054            0005C    46+                   BNE   ILSLB#11                                       03-RESLV
+²000058 47F0 C06E            00076    47             B    CMDLIST                                                00011604
+²                                     48           ENDIF                                                         00011704
+²                      0005C          49+ILSLB#11     EQU    *                                                   01-ENDIF
+²                      0005C          50+IENDILB#11   EQU    *                                                   01-ENDIF
+²                                     51           IF    (((R3),EQ,=F'6'),AND,((R4),CLCEQ,DELETESTR))            00011904
+²00005C 5930 C748            00750    54+                 C      R3,=F'6'                                        03-RESLV
+²000060 4770 C06A            00072    55+             BNE    ILSLB#16                                            03-RESLV
+²000064 D505 C5A4 4000 005AC 00000    57+                   CLC   DELETESTR,0(R4)                                03-RESLV
+²00006A 4770 C06A            00072    58+                   BNE   ILSLB#16                                       03-RESLV
+²00006E 47F0 C13C            00144    59             B    CMDDEL                                                 00012004
+²                                     60           ENDIF                                                         00012104
+²                      00072          61+ILSLB#16     EQU    *                                                   01-ENDIF
+²                      00072          62+IENDILB#16   EQU    *                                                   01-ENDIF
+²000072 47F0 C21C            00224    63           B      ERRCMD                                                 00012304
+²                                     64 *         OPEN   (INFILE,INPUT)                                         00012403
+²                                     65 *         OPEN   (OUTFILE,OUTPUT)                                       00012503
+²                                     66 *         CLOSE  (INFILE)                                               00012603
+²                                     67 *         CLOSE  (OUTFILE)                                              00012703
+i                      00076          68 CMDLIST   EQU    *                                                      00012804
+²                                                                                                               Page    4
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²                                     69           WTO    'CMDLIST'                                              00012904
+²000076 0700                          71+         CNOP  0,4                                                      01-WTO
+²000078 A715 0008            00088    72+         BRAS  1,IHB0021A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²00007C 000B                          73+         DC    AL2(11)                  TEXT LENGTH            @YA17152 01-WTO
+²00007E 0000                          74+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²000080 C3D4C4D3C9E2E3                75+         DC    C'CMDLIST'               MESSAGE TEXT               @L6C 01-WTO
+²000088                               76+IHB0021A DS    0H                                                       01-WTO
+²000088 0A23                          77+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                     78           OPEN   (LSTACB)                                               00013004
+²00008A 0700                          79+         CNOP  0,4                          ALIGN LIST TO FULLWORD      01-OPEN
+²00008C 4510 C08C            00094    80+         BAL   1,*+8                        LOAD REG1 W/LIST ADDR. @L2A 01-OPEN
+²000090 80                            81+         DC    AL1(128)                     OPTION BYTE                 01-OPEN
+²000091 000500                        82+         DC    AL3(LSTACB)                  DCB ADDRESS                 01-OPEN
+²000094 0A13                          83+         SVC   19                           ISSUE OPEN SVC              01-OPEN
+²                                     84 INLOOP    GET    RPL=LSTRPL                                             00013104
+²000096                               85+INLOOP   DS    0H                                                       01-GET
+²000096 4110 C398            003A0    86+         LA    1,LSTRPL                 LOAD RPL ADDR                   01-GET
+²00009A 4100 0000            00000    87+         LA    0,X'00'                  INDICATE GET IN REG             01-GET
+²00009E 58F1 0018            00018    88+         L     15,24(1)                 LOAD ACB ADDR FROM RPL          01-GET
+²0000A2 58FF 0008            00008    89+         L     15,8(15)                 LOAD JES INTERFACE MOD ADDR     01-GET
+²0000A6 05EF                          90+         BALR  14,15                    LINK TO INTERFACE ROUTINE       01-GET
+²0000A8 12FF                          91           LTR    R15,R15                                                00013204
+²0000AA 4770 C24E            00256    92           BNZ    LSTERROR                                               00013304
+²0000AE D24F C6B8 C5B1 006C0 005B9    93           MVC    DEBAREA(80),WORKAREA                                   00013404
+²                                     94           WTO    TEXT=DEB                                               00013504
+²0000B4                               96+         CNOP  0,4                                                      01-WTO
+²0000B4 A715 003A            00128    97+         BRAS  1,IHB0025A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²0000B8 0008                          98+         DC    AL2(8)                   TEXT LENGTH            @YA17152 01-WTO
+²0000BA 0010                          99+         DC    B'0000000000010000'      MCSFLAGS                        01-WTO
+²0000BC 00000000                     100+         DC    AL4(0)                   MESSAGE TEXT ADDRESS       @L5A 01-WTO
+²0000C0 02                           101+         DC    AL1(2)                   VERSION LEVEL              @PJC 01-WTO
+²0000C1 00                           102+         DC    B'00000000'              MISCELLANEOUS FLAGS        @L2A 01-WTO
+²0000C2 00                           103+         DC    AL1(0)                   REPLY LENGTH               @L2A 01-WTO
+²0000C3 68                           104+         DC    AL1(104)                 LENGTH OF WPX              @L5C 01-WTO
+²0000C4 0080                         105+         DC    B'0000000010000000'      EXTENDED MCS FLAGS         @L2A 01-WTO
+²0000C6 0000                         106+         DC    AL2(0)                   RESERVED                   @L2A 01-WTO
+²0000C8 00000000                     107+         DC    AL4(0)                   REPLY BUFFER ADDRESS       @P7C 01-WTO
+²0000CC 00000000                     108+         DC    AL4(0)                   REPLY ECB ADDRESS          @P7C 01-WTO
+²0000D0 00000000                     109+         DC    AL4(0)                   CONNECT ID                 @01C 01-WTO
+²0000D4 0000                         110+         DC    B'0000000000000000'      DESCRIPTOR CODES           @L2A 01-WTO
+²0000D6 0000                         111+         DC    AL2(0)                   RESERVED                   @L2A 01-WTO
+²0000D8 0000000000000000             112+         DC    XL16'00000000000000000000000000000000'                  X01-WTO
+²0000E0 0000000000000000                +                                        EXTENDED ROUTING CODES     @L2A
+²0000E8 0000                         113+         DC    B'0000000000000000'      MESSAGE TYPE               @L2A 01-WTO
+²0000EA 0000                         114+         DC    AL2(0)                   MESSAGE'S PRIORITY         @L2A 01-WTO
+²0000EC 4040404040404040             115+         DC    CL8'        '            JOB ID                     @L2A 01-WTO
+²0000F4 4040404040404040             116+         DC    CL8'        '            JOB NAME                   @L2A 01-WTO
+²0000FC 4040404040404040             117+         DC    CL8'        '            RETRIEVAL KEY              @L2A 01-WTO
+²000104 00000000                     118+         DC    AL4(0)                   TOKEN FOR DOM              @P1C 01-WTO
+²000108 00000000                     119+         DC    AL4(0)                   CONSOLE ID                 @P1C 01-WTO
+²00010C 4040404040404040             120+         DC    CL8'        '            SYSTEM NAME                @L2A 01-WTO
+²000114 4040404040404040             121+         DC    CL8'        '            CONSOLE NAME               @L3A 01-WTO
+²00011C 00000000                     122+         DC    AL4(0)                   REPLY CONSOLE NAME/ID ADDR @L3A 01-WTO
+²000120 00000000                     123+         DC    AL4(0)                   CART ADDRESS               @L4C 01-WTO
+i000124 00000000                     124+         DC    AL4(0)                   WSPARM ADDRESS             @L6C 01-WTO
+²                                                                                                               Page    5
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²000128                              125+IHB0025A DS    0H                                                       01-WTO
+²000128 18E1                         126+         LR    14,1                     FIRST BYTE OF PARM LIST    @L2A 01-WTO
+²00012A 1BFF                         127+         SR    15,15                    CLEAR REGISTER 15          @L2A 01-WTO
+²00012C 4AF1 0000            00000   128+         AH    15,0(1,0)                ADD LENGTH OF TEXT + 4     @L2A 01-WTO
+²000130 1AEF                         129+         AR    14,15                    FIRST BYTE AFTER TEXT      @L2A 01-WTO
+²000132 41F0 C6B4            006BC   130+         LA    15,DEB                   LOAD TEXT VALUE            @L5A 01-WTO
+²000136 50F0 1004            00004   131+         ST    15,4(0,1)                STORE TEXT ADDR INTO PLIST @L5A 01-WTO
+²00013A 0A23                         132+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²00013C 47F0 C08E            00096   133           B      INLOOP                                                 00013704
+²                                    134           PRRET                                                         00013804
+²000140 47F0 C370            00378   135+             B     PREPSTR                                              01-PRRET
+²                      00144         136 CMDDEL    EQU    *                                                      00013904
+²                                    137           OPEN   (MODACB)                                               00014006
+²000144                              138+         CNOP  0,4                          ALIGN LIST TO FULLWORD      01-OPEN
+²000144 4510 C144            0014C   139+         BAL   1,*+8                        LOAD REG1 W/LIST ADDR. @L2A 01-OPEN
+²000148 80                           140+         DC    AL1(128)                     OPTION BYTE                 01-OPEN
+²000149 0004B4                       141+         DC    AL3(MODACB)                  DCB ADDRESS                 01-OPEN
+²00014C 0A13                         142+         SVC   19                           ISSUE OPEN SVC              01-OPEN
+²                                    143           OPEN   (CMDDCB,INPUT)                                         00014106
+²00014E 0700                         144+         CNOP  0,4                          ALIGN LIST TO FULLWORD      01-OPEN
+²000150 4510 C150            00158   145+         BAL   1,*+8                        LOAD REG1 W/LIST ADDR. @L2A 01-OPEN
+²000154 80                           146+         DC    AL1(128)                     OPTION BYTE                 01-OPEN
+²000155 00054C                       147+         DC    AL3(CMDDCB)                  DCB ADDRESS                 01-OPEN
+²000158 0A13                         148+         SVC   19                           ISSUE OPEN SVC              01-OPEN
+²                                    149           GET    CMDDCB,WORKAREA                                        00014306
+²00015A 4110 C544            0054C   151+         LA    1,CMDDCB                          LOAD PARAMETER REG 1   02-IHBIN
+²00015E 4100 C5B1            005B9   152+         LA    0,WORKAREA                        LOAD PARAMETER REG 0   02-IHBIN
+²000162 1FFF                         153+         SLR   15,15                    CLEAR REGISTER             @L1A 01-GET
+²000164 BFF7 1031            00031   154+         ICM   15,7,49(1)               LOAD GET ROUTINE ADDR      @L1C 01-GET
+²000168 05EF                         155+         BALR  14,15                    LINK TO GET ROUTINE             01-GET
+²00016A D207 C6AB C5B1 006B3 005B9   156           MVC    KEYFIELD(8),WORKAREA                                   00014406
+²                                    157           GET    RPL=DELRPL                                             00014504
+²000170                              158+         DS    0H                                                       01-GET
+²000170 4110 C430            00438   159+         LA    1,DELRPL                 LOAD RPL ADDR                   01-GET
+²000174 4100 0000            00000   160+         LA    0,X'00'                  INDICATE GET IN REG             01-GET
+²000178 58F1 0018            00018   161+         L     15,24(1)                 LOAD ACB ADDR FROM RPL          01-GET
+²00017C 58FF 0008            00008   162+         L     15,8(15)                 LOAD JES INTERFACE MOD ADDR     01-GET
+²000180 05EF                         163+         BALR  14,15                    LINK TO INTERFACE ROUTINE       01-GET
+²000182 12FF                         164           LTR    R15,R15                                                00014604
+²000184 4770 C266            0026E   165           BNZ    GETERROR                                               00014704
+²                                    166           ERASE  RPL=DELRPL                                             00014804
+²000188                              167+         DS    0H                                                       01-ERASE
+²000188 4110 C430            00438   168+         LA    1,DELRPL                 LOAD RPL ADDR                   01-ERASE
+²00018C 4100 0005            00005   169+         LA    0,X'05'                  INDICATE ERASE IN REG           01-ERASE
+²000190 58F1 0018            00018   170+         L     15,24(1)                 LOAD ACB ADDR FROM RPL          01-ERASE
+²000194 58FF 0008            00008   171+         L     15,8(15)                 LOAD AM/0 INTERFACE RTN ADDR    01-ERASE
+²000198 05EF                         172+         BALR  14,15                    LINK TO INTERFACE ROUTINE       01-ERASE
+²00019A 12FF                         173           LTR    R15,R15                                                00014904
+²00019C 4770 C290            00298   174           BNZ    DELERROR                                               00015004
+²                                    175           CLOSE  (CMDDCB)                                               00015106
+²0001A0                              176+         CNOP  0,4                               ALIGN LIST TO FULLWORD 01-CLOSE
+²0001A0 4510 C1A0            001A8   177+         BAL   1,*+8                        LOAD REG1 W/LIST ADDR. @L2A 01-CLOSE
+²0001A4 80                           178+         DC    AL1(128)                          OPTION BYTE            01-CLOSE
+²0001A5 00054C                       179+         DC    AL3(CMDDCB)                       DCB ADDRESS            01-CLOSE
+i0001A8 0A14                         180+         SVC   20                                ISSUE CLOSE SVC        01-CLOSE
+²                                                                                                               Page    6
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²                                    181           PRRET                                                         00015204
+²0001AA 47F0 C370            00378   182+             B     PREPSTR                                              01-PRRET
+²                      001AE         183 CMDADD    EQU    *                                                      00015304
+²                                    184           OPEN   (MODACB)                                               00015406
+²0001AE 0700                         185+         CNOP  0,4                          ALIGN LIST TO FULLWORD      01-OPEN
+²0001B0 4510 C1B0            001B8   186+         BAL   1,*+8                        LOAD REG1 W/LIST ADDR. @L2A 01-OPEN
+²0001B4 80                           187+         DC    AL1(128)                     OPTION BYTE                 01-OPEN
+²0001B5 0004B4                       188+         DC    AL3(MODACB)                  DCB ADDRESS                 01-OPEN
+²0001B8 0A13                         189+         SVC   19                           ISSUE OPEN SVC              01-OPEN
+²                                    190           OPEN   (CMDDCB,INPUT)                                         00015506
+²0001BA 0700                         191+         CNOP  0,4                          ALIGN LIST TO FULLWORD      01-OPEN
+²0001BC 4510 C1BC            001C4   192+         BAL   1,*+8                        LOAD REG1 W/LIST ADDR. @L2A 01-OPEN
+²0001C0 80                           193+         DC    AL1(128)                     OPTION BYTE                 01-OPEN
+²0001C1 00054C                       194+         DC    AL3(CMDDCB)                  DCB ADDRESS                 01-OPEN
+²0001C4 0A13                         195+         SVC   19                           ISSUE OPEN SVC              01-OPEN
+²                                    196           GET    CMDDCB,WORKAREA                                        00015606
+²0001C6 4110 C544            0054C   198+         LA    1,CMDDCB                          LOAD PARAMETER REG 1   02-IHBIN
+²0001CA 4100 C5B1            005B9   199+         LA    0,WORKAREA                        LOAD PARAMETER REG 0   02-IHBIN
+²0001CE 1FFF                         200+         SLR   15,15                    CLEAR REGISTER             @L1A 01-GET
+²0001D0 BFF7 1031            00031   201+         ICM   15,7,49(1)               LOAD GET ROUTINE ADDR      @L1C 01-GET
+²0001D4 05EF                         202+         BALR  14,15                    LINK TO GET ROUTINE             01-GET
+²0001D6 4120 0050            00050   203           LA     R2,80(0,0)                                             00015704
+²                                    204           MODCB  RPL=PUTRPL,RECLEN=(R2)                                 00015804
+²0001DA 4110 C3E4            003EC   236+         LA    1,PUTRPL                POINT TO RPL            @ZA10884 02-IDACB
+²0001DE 1802                         238+         LR    0,R2                    LOAD RECLEN             @Z40BHCJ 02-IDACB
+²0001E0 58F0 0010            00010   239+         L     15,16                   POINT TO CVT            @Z40BHCJ 02-IDACB
+²0001E4 58F0 F100            00100   240+         L     15,256(,15)             POINT TO AMCBS          @Z40BHCJ 02-IDACB
+²0001E8 58F0 F00C            0000C   241+         L     15,12(,15)              POINT TO ROUTINE        @Z40BHCJ 02-IDACB
+²0001EC 45E0 F050            00050   242+         BAL   14,80(,15)              BRANCH TO ROUTINE       @Z40BHCJ 02-IDACB
+²0001F0 12FF                         243           LTR    R15,R15                                                00016004
+²0001F2 4770 C360            00368   244           BNZ    CHECKO                                                 00017003
+²                                    245           PUT    RPL=PUTRPL                                             00018004
+²0001F6                              246+         DS    0H                                                       01-PUT
+²0001F6 4110 C3E4            003EC   247+         LA    1,PUTRPL                 LOAD RPL ADDR                   01-PUT
+²0001FA 4100 0001            00001   248+         LA    0,X'01'                  INDICATE PUT IN REG             01-PUT
+²0001FE 58F1 0018            00018   249+         L     15,24(1)                 LOAD ACB ADDR FROM RPL          01-PUT
+²000202 58FF 0008            00008   250+         L     15,8(15)                 LOAD JES INTERFACE MOD ADDR     01-PUT
+²000206 05EF                         251+         BALR  14,15                    LINK TO INTERFACE ROUTINE       01-PUT
+²000208 12FF                         252           LTR    R15,R15                                                00018104
+²00020A 4770 C2BA            002C2   253           BNZ    PUTERROR                                               00018204
+²                                    254           WTO    'AFTPUT'                                               00018303
+²00020E 0700                         256+         CNOP  0,4                                                      01-WTO
+²000210 A715 0007            0021E   257+         BRAS  1,IHB0074A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²000214 000A                         258+         DC    AL2(10)                  TEXT LENGTH            @YA17152 01-WTO
+²000216 0000                         259+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²000218 C1C6E3D7E4E3                 260+         DC    C'AFTPUT'                MESSAGE TEXT               @L6C 01-WTO
+²00021E                              261+IHB0074A DS    0H                                                       01-WTO
+²00021E 0A23                         262+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                    263           PRRET                                                         00018404
+²000220 47F0 C370            00378   264+             B     PREPSTR                                              01-PRRET
+²                      00224         265 ERRCMD    EQU    *                                                      00020104
+²                                    266           WTO    'ERROR IN REQUEST'                                     00020204
+²000224                              268+         CNOP  0,4                                                      01-WTO
+²000224 A715 000C            0023C   269+         BRAS  1,IHB0077A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+i000228 0014                         270+         DC    AL2(20)                  TEXT LENGTH            @YA17152 01-WTO
+²                                                                                                               Page    7
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²00022A 0000                         271+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²00022C C5D9D9D6D940C9D5             272+         DC    C'ERROR IN REQUEST'      MESSAGE TEXT               @L6C 01-WTO
+²00023C                              273+IHB0077A DS    0H                                                       01-WTO
+²00023C 0A23                         274+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                    275           PRRET                                                         00020304
+²00023E 47F0 C370            00378   276+             B     PREPSTR                                              01-PRRET
+²                      00242         277 EOD       EQU    *                                                      00020404
+²                                    278           WTO    'EOD'                                                  00020504
+²000242 0700                         280+         CNOP  0,4                                                      01-WTO
+²000244 A715 0006            00250   281+         BRAS  1,IHB0080A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²000248 0007                         282+         DC    AL2(7)                   TEXT LENGTH            @YA17152 01-WTO
+²00024A 0000                         283+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²00024C C5D6C4                       284+         DC    C'EOD'                   MESSAGE TEXT               @L6C 01-WTO
+²000250                              285+IHB0080A DS    0H                                                       01-WTO
+²000250 0A23                         286+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                    287           PRRET                                                         00020604
+²000252 47F0 C370            00378   288+             B     PREPSTR                                              01-PRRET
+²                      00256         289 LSTERROR  EQU    *                                                      00020704
+²                                    290           WTO    'LSTERROR'                                             00020804
+²000256 0700                         292+         CNOP  0,4                                                      01-WTO
+²000258 A715 0008            00268   293+         BRAS  1,IHB0083A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²00025C 000C                         294+         DC    AL2(12)                  TEXT LENGTH            @YA17152 01-WTO
+²00025E 0000                         295+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²000260 D3E2E3C5D9D9D6D9             296+         DC    C'LSTERROR'              MESSAGE TEXT               @L6C 01-WTO
+²000268                              297+IHB0083A DS    0H                                                       01-WTO
+²000268 0A23                         298+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                    299           PRRET                                                         00020904
+²00026A 47F0 C370            00378   300+             B     PREPSTR                                              01-PRRET
+²                      0026E         301 GETERROR  EQU    *                                                      00021004
+²                                    302           WTO    'GET ERROR'                                            00021106
+²00026E 0700                         304+         CNOP  0,4                                                      01-WTO
+²000270 A715 0009            00282   305+         BRAS  1,IHB0086A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²000274 000D                         306+         DC    AL2(13)                  TEXT LENGTH            @YA17152 01-WTO
+²000276 0000                         307+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²000278 C7C5E340C5D9D9D6             308+         DC    C'GET ERROR'             MESSAGE TEXT               @L6C 01-WTO
+²000282                              309+IHB0086A DS    0H                                                       01-WTO
+²000282 0A23                         310+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                    311           ABEND  755,DUMP                                               00021204
+²000284                              313+         DS    0H                                                       01-ABEND
+²000284 4110 02F3            002F3   316+         LA    1,755                             LOAD PARAMETER REG 1   02-IHBIN
+²000288 4100 0080            00080   317+         LA    0,128(0,0)         DUMP/STEP/DUMPOPTS/REASON    @G860P1F 01-ABEND
+²00028C 8900 0018            00018   318+         SLL   0,24(0)            SHIFT TO HIGH ORDER                   01-ABEND
+²000290 1610                         319+         OR    1,0                OR IN WITH COMPCODE                   01-ABEND
+²000292 0A0D                         320+         SVC   13                 LINK TO ABEND ROUTINE                 01-ABEND
+²                                    321           PRRET                                                         00021304
+²000294 47F0 C370            00378   322+             B     PREPSTR                                              01-PRRET
+²                      00298         323 DELERROR  EQU    *                                                      00021404
+²                                    324           WTO    'DELETE ERROR'                                         00021506
+²000298                              326+         CNOP  0,4                                                      01-WTO
+²000298 A715 000A            002AC   327+         BRAS  1,IHB0093A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²00029C 0010                         328+         DC    AL2(16)                  TEXT LENGTH            @YA17152 01-WTO
+²00029E 0000                         329+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²0002A0 C4C5D3C5E3C540C5             330+         DC    C'DELETE ERROR'          MESSAGE TEXT               @L6C 01-WTO
+²0002AC                              331+IHB0093A DS    0H                                                       01-WTO
+i0002AC 0A23                         332+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                                                                                               Page    8
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²                                    333           ABEND  755,DUMP                                               00021604
+²0002AE                              335+         DS    0H                                                       01-ABEND
+²0002AE 4110 02F3            002F3   338+         LA    1,755                             LOAD PARAMETER REG 1   02-IHBIN
+²0002B2 4100 0080            00080   339+         LA    0,128(0,0)         DUMP/STEP/DUMPOPTS/REASON    @G860P1F 01-ABEND
+²0002B6 8900 0018            00018   340+         SLL   0,24(0)            SHIFT TO HIGH ORDER                   01-ABEND
+²0002BA 1610                         341+         OR    1,0                OR IN WITH COMPCODE                   01-ABEND
+²0002BC 0A0D                         342+         SVC   13                 LINK TO ABEND ROUTINE                 01-ABEND
+²                                    343           PRRET                                                         00021704
+²0002BE 47F0 C370            00378   344+             B     PREPSTR                                              01-PRRET
+²                      002C2         345 PUTERROR  EQU    *                                                      00021804
+²0002C2 185F                         346           LR     R5,R15                                                 00021906
+²                                    347           WTO    'PUT ERROR'                                            00022006
+²0002C4                              349+         CNOP  0,4                                                      01-WTO
+²0002C4 A715 0009            002D6   350+         BRAS  1,IHB0100A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²0002C8 000D                         351+         DC    AL2(13)                  TEXT LENGTH            @YA17152 01-WTO
+²0002CA 0000                         352+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²0002CC D7E4E340C5D9D9D6             353+         DC    C'PUT ERROR'             MESSAGE TEXT               @L6C 01-WTO
+²0002D6                              354+IHB0100A DS    0H                                                       01-WTO
+²0002D6 0A23                         355+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²0002D8 5050 C6B8            006C0   356           ST     R5,DEBAREA                                             00022206
+²                                    357           WTO    TEXT=DEB                                               00022303
+²0002DC                              359+         CNOP  0,4                                                      01-WTO
+²0002DC A715 003A            00350   360+         BRAS  1,IHB0102A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²0002E0 0008                         361+         DC    AL2(8)                   TEXT LENGTH            @YA17152 01-WTO
+²0002E2 0010                         362+         DC    B'0000000000010000'      MCSFLAGS                        01-WTO
+²0002E4 00000000                     363+         DC    AL4(0)                   MESSAGE TEXT ADDRESS       @L5A 01-WTO
+²0002E8 02                           364+         DC    AL1(2)                   VERSION LEVEL              @PJC 01-WTO
+²0002E9 00                           365+         DC    B'00000000'              MISCELLANEOUS FLAGS        @L2A 01-WTO
+²0002EA 00                           366+         DC    AL1(0)                   REPLY LENGTH               @L2A 01-WTO
+²0002EB 68                           367+         DC    AL1(104)                 LENGTH OF WPX              @L5C 01-WTO
+²0002EC 0080                         368+         DC    B'0000000010000000'      EXTENDED MCS FLAGS         @L2A 01-WTO
+²0002EE 0000                         369+         DC    AL2(0)                   RESERVED                   @L2A 01-WTO
+²0002F0 00000000                     370+         DC    AL4(0)                   REPLY BUFFER ADDRESS       @P7C 01-WTO
+²0002F4 00000000                     371+         DC    AL4(0)                   REPLY ECB ADDRESS          @P7C 01-WTO
+²0002F8 00000000                     372+         DC    AL4(0)                   CONNECT ID                 @01C 01-WTO
+²0002FC 0000                         373+         DC    B'0000000000000000'      DESCRIPTOR CODES           @L2A 01-WTO
+²0002FE 0000                         374+         DC    AL2(0)                   RESERVED                   @L2A 01-WTO
+²000300 0000000000000000             375+         DC    XL16'00000000000000000000000000000000'                  X01-WTO
+²000308 0000000000000000                +                                        EXTENDED ROUTING CODES     @L2A
+²000310 0000                         376+         DC    B'0000000000000000'      MESSAGE TYPE               @L2A 01-WTO
+²000312 0000                         377+         DC    AL2(0)                   MESSAGE'S PRIORITY         @L2A 01-WTO
+²000314 4040404040404040             378+         DC    CL8'        '            JOB ID                     @L2A 01-WTO
+²00031C 4040404040404040             379+         DC    CL8'        '            JOB NAME                   @L2A 01-WTO
+²000324 4040404040404040             380+         DC    CL8'        '            RETRIEVAL KEY              @L2A 01-WTO
+²00032C 00000000                     381+         DC    AL4(0)                   TOKEN FOR DOM              @P1C 01-WTO
+²000330 00000000                     382+         DC    AL4(0)                   CONSOLE ID                 @P1C 01-WTO
+²000334 4040404040404040             383+         DC    CL8'        '            SYSTEM NAME                @L2A 01-WTO
+²00033C 4040404040404040             384+         DC    CL8'        '            CONSOLE NAME               @L3A 01-WTO
+²000344 00000000                     385+         DC    AL4(0)                   REPLY CONSOLE NAME/ID ADDR @L3A 01-WTO
+²000348 00000000                     386+         DC    AL4(0)                   CART ADDRESS               @L4C 01-WTO
+²00034C 00000000                     387+         DC    AL4(0)                   WSPARM ADDRESS             @L6C 01-WTO
+²000350                              388+IHB0102A DS    0H                                                       01-WTO
+²000350 18E1                         389+         LR    14,1                     FIRST BYTE OF PARM LIST    @L2A 01-WTO
+²000352 1BFF                         390+         SR    15,15                    CLEAR REGISTER 15          @L2A 01-WTO
+i000354 4AF1 0000            00000   391+         AH    15,0(1,0)                ADD LENGTH OF TEXT + 4     @L2A 01-WTO
+²                                                                                                               Page    9
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²000358 1AEF                         392+         AR    14,15                    FIRST BYTE AFTER TEXT      @L2A 01-WTO
+²00035A 41F0 C6B4            006BC   393+         LA    15,DEB                   LOAD TEXT VALUE            @L5A 01-WTO
+²00035E 50F0 1004            00004   394+         ST    15,4(0,1)                STORE TEXT ADDR INTO PLIST @L5A 01-WTO
+²000362 0A23                         395+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                    396           PRRET                                                         00022404
+²000364 47F0 C370            00378   397+             B     PREPSTR                                              01-PRRET
+²                      00368         398 CHECKO    EQU    *                                                      00022503
+²                                    399           WTO    'CHECKO'                                               00022603
+²000368                              401+         CNOP  0,4                                                      01-WTO
+²000368 A715 0007            00376   402+         BRAS  1,IHB0105A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²00036C 000A                         403+         DC    AL2(10)                  TEXT LENGTH            @YA17152 01-WTO
+²00036E 0000                         404+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²000370 C3C8C5C3D2D6                 405+         DC    C'CHECKO'                MESSAGE TEXT               @L6C 01-WTO
+²000376                              406+IHB0105A DS    0H                                                       01-WTO
+²000376 0A23                         407+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²                                    408           EPILOG                                                        00022704
+²                      00378         409+PREPSTR      EQU   *                                                    01-EPILO
+²000378 181D                         410+             LR    R1,R13                                               01-EPILO
+²00037A 58D0 D004            00004   411+             L     R13,4(,13)                                           01-EPILO
+²00037E 0700                         414+         CNOP  0,4                                                      02-FREEM
+²000380 47F0 C380            00388   415+         B     *+8                               BRANCH AROUND LENGTH   02-FREEM
+²000384 00000048                     416+         DC    A(DYNLEN)                         LENGTH                 02-FREEM
+²000388 5800 C37C            00384   417+         L     0,*-4                             LOAD SP AND LV         02-FREEM
+²00038C 4110 1000            00000   418+         LA    1,0(0,R1)                         LOAD AREA ADDRESS      02-FREEM
+²000390 0A0A                         419+         SVC   10                                ISSUE FREEMAIN SVC     02-FREEM
+²000392 58E0 D00C            0000C   420+             L     R14,12(,R13)                                         01-EPILO
+²000396 980C D014            00014   421+             LM    R0,R12,20(R13)                                       01-EPILO
+²00039A 17FF                         422+             XR    R15,R15                                              01-EPILO
+²00039C 07FE                         423+             BR    R14                                                  01-EPILO
+²                                    424 LSTRPL    RPL  ACB=LSTACB,AREA=WORKAREA,AREALEN=250,                   X00022804
+²                                                       OPTCD=(KEY,SEQ,SYN,NUP,MVE)                              00022904
+²0003A0                              426+LSTRPL   DS    0F                                                       02-RPLVS
+²0003A0 00                           427+         DC    AL1(0)                   RPL IDENTIFICATION              02-RPLVS
+²0003A1 10                           428+         DC    AL1(16)                  RPL SUBTYPE             X04SVHS 02-RPLVS
+²0003A2 00                           429+         DC    AL1(0)                   RPL REQUEST TYPE                02-RPLVS
+²0003A3 4C                           430+         DC    AL1(76)                  RPL LENGTH               X03004 02-RPLVS
+²0003A4 00000000                     456+         DC    A(0) .                   POINTER TO PLACEHOLDER          02-RPLVS
+²0003A8 00000000                     457+         DC    A(0) .                   ECB                             02-RPLVS
+²0003AC 00                           458+         DC    BL1'0' .                 STATUS BYTE                     02-RPLVS
+²0003AD 000000                       459+         DC    XL3'0'                   FEEDBACK CODES                  02-RPLVS
+²0003B0 0000                         460+         DC    AL2(0)       .           KEY LENGTH                      02-RPLVS
+²0003B2 0000                         461+         DC    AL2(0)        .          TRANSID                    @LAC 02-RPLVS
+²0003B4 00000000                     462+         DC    A(0)                     POINTER TO CONTROL CHARACTER    02-RPLVS
+²0003B8 00000500                     463+         DC    A(LSTACB)                                               X02-RPLVS
+²                                       +                       .                POINTER TO ACB
+²0003BC 00000000                     464+         DC    A(0) .                   POINTER TO TCB                  02-RPLVS
+²0003C0 000005B9                     465+         DC    A(WORKAREA)                                             X02-RPLVS
+²                                       +                        .               POINTER TO RECORD AREA
+²0003C4 00000000                     466+         DC    A(0)    .                POINTER TO ARGUMENT             02-RPLVS
+²0003C8 20                           467+         DC    B'00100000'     .        OPTCD BYTE 1                    02-RPLVS
+²0003C9 80                           468+         DC    B'10000000'                                             X02-RPLVS
+²                                       +                          .            OPTCD BYTE 2
+²0003CA 00                           469+         DC    B'00000000'              OPTCD BYTE 3               @LAC 02-RPLVS
+²0003CB 00                           470+         DC    B'00000000'              OPTCD BYTE 4               @EAC 02-RPLVS
+i0003CC 00000000                     471+         DC    A(0)       .             POINTER TO NEXT RPL             02-RPLVS
+²                                                                                                               Page   10
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²0003D0 00000000                     472+         DC    A(0) .                   RESERVED FOR LOGICAL REC LEN    02-RPLVS
+²0003D4 000000FA                     473+         DC    A(250)      .            BUFFER LENGTH                   02-RPLVS
+²                                    474+*                                       OPTCD BYTES 5-8          X03004
+²0003D8 00                           475+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 5                  X04SVHS
+²0003D9 00                           476+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 6                  X04SVHS
+²0003DA 00                           477+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 7                  X04SVHS
+²0003DB 00                           478+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 8                  X04SVHS
+²0003DC 0000000000000000             479+         DC    XL8'0' .                 RBA                             02-RPLVS
+²0003E4 40                           480+         DC    B'01000000'                                     @G40AKSL 02-RPLVS
+²0003E5 00                           481+         DC    AL1(0)                   ACTIVE INDICATOR                02-RPLVS
+²0003E6 0000                         482+         DC    AL2(0)       .           MAXIMUM ERROR MSG LENGTH        02-RPLVS
+²0003E8 00000000                     483+         DC    A(0) .                   RESERVED FOR MESSAGE AREA PTR   02-RPLVS
+²                                    484 PUTRPL    RPL  ACB=MODACB,AREA=WORKAREA,AREALEN=250,                   X00023006
+²                                                       OPTCD=(KEY,SEQ,SYN,NUP,MVE)                              00026002
+²0003EC                              486+PUTRPL   DS    0F                                                       02-RPLVS
+²0003EC 00                           487+         DC    AL1(0)                   RPL IDENTIFICATION              02-RPLVS
+²0003ED 10                           488+         DC    AL1(16)                  RPL SUBTYPE             X04SVHS 02-RPLVS
+²0003EE 00                           489+         DC    AL1(0)                   RPL REQUEST TYPE                02-RPLVS
+²0003EF 4C                           490+         DC    AL1(76)                  RPL LENGTH               X03004 02-RPLVS
+²0003F0 00000000                     516+         DC    A(0) .                   POINTER TO PLACEHOLDER          02-RPLVS
+²0003F4 00000000                     517+         DC    A(0) .                   ECB                             02-RPLVS
+²0003F8 00                           518+         DC    BL1'0' .                 STATUS BYTE                     02-RPLVS
+²0003F9 000000                       519+         DC    XL3'0'                   FEEDBACK CODES                  02-RPLVS
+²0003FC 0000                         520+         DC    AL2(0)       .           KEY LENGTH                      02-RPLVS
+²0003FE 0000                         521+         DC    AL2(0)        .          TRANSID                    @LAC 02-RPLVS
+²000400 00000000                     522+         DC    A(0)                     POINTER TO CONTROL CHARACTER    02-RPLVS
+²000404 000004B4                     523+         DC    A(MODACB)                                               X02-RPLVS
+²                                       +                       .                POINTER TO ACB
+²000408 00000000                     524+         DC    A(0) .                   POINTER TO TCB                  02-RPLVS
+²00040C 000005B9                     525+         DC    A(WORKAREA)                                             X02-RPLVS
+²                                       +                        .               POINTER TO RECORD AREA
+²000410 00000000                     526+         DC    A(0)    .                POINTER TO ARGUMENT             02-RPLVS
+²000414 20                           527+         DC    B'00100000'     .        OPTCD BYTE 1                    02-RPLVS
+²000415 80                           528+         DC    B'10000000'                                             X02-RPLVS
+²                                       +                          .            OPTCD BYTE 2
+²000416 00                           529+         DC    B'00000000'              OPTCD BYTE 3               @LAC 02-RPLVS
+²000417 00                           530+         DC    B'00000000'              OPTCD BYTE 4               @EAC 02-RPLVS
+²000418 00000000                     531+         DC    A(0)       .             POINTER TO NEXT RPL             02-RPLVS
+²00041C 00000000                     532+         DC    A(0) .                   RESERVED FOR LOGICAL REC LEN    02-RPLVS
+²000420 000000FA                     533+         DC    A(250)      .            BUFFER LENGTH                   02-RPLVS
+²                                    534+*                                       OPTCD BYTES 5-8          X03004
+²000424 00                           535+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 5                  X04SVHS
+²000425 00                           536+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 6                  X04SVHS
+²000426 00                           537+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 7                  X04SVHS
+²000427 00                           538+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 8                  X04SVHS
+²000428 0000000000000000             539+         DC    XL8'0' .                 RBA                             02-RPLVS
+i000430 40                           540+         DC    B'01000000'                                     @G40AKSL 02-RPLVS
+²                                                                                                               Page   11
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²000431 00                           541+         DC    AL1(0)                   ACTIVE INDICATOR                02-RPLVS
+²000432 0000                         542+         DC    AL2(0)       .           MAXIMUM ERROR MSG LENGTH        02-RPLVS
+²000434 00000000                     543+         DC    A(0) .                   RESERVED FOR MESSAGE AREA PTR   02-RPLVS
+²                                    544 DELRPL    RPL  ACB=MODACB,AREA=WORKAREA,AREALEN=250,                   X00027006
+²                                                       ARG=KEYFIELD,OPTCD=(KEY,DIR,SYN,UPD,MVE,FKS,KEQ)         00027303
+²000438                              546+DELRPL   DS    0F                                                       02-RPLVS
+²000438 00                           547+         DC    AL1(0)                   RPL IDENTIFICATION              02-RPLVS
+²000439 10                           548+         DC    AL1(16)                  RPL SUBTYPE             X04SVHS 02-RPLVS
+²00043A 00                           549+         DC    AL1(0)                   RPL REQUEST TYPE                02-RPLVS
+²00043B 4C                           550+         DC    AL1(76)                  RPL LENGTH               X03004 02-RPLVS
+²00043C 00000000                     576+         DC    A(0) .                   POINTER TO PLACEHOLDER          02-RPLVS
+²000440 00000000                     577+         DC    A(0) .                   ECB                             02-RPLVS
+²000444 00                           578+         DC    BL1'0' .                 STATUS BYTE                     02-RPLVS
+²000445 000000                       579+         DC    XL3'0'                   FEEDBACK CODES                  02-RPLVS
+²000448 0000                         580+         DC    AL2(0)       .           KEY LENGTH                      02-RPLVS
+²00044A 0000                         581+         DC    AL2(0)        .          TRANSID                    @LAC 02-RPLVS
+²00044C 00000000                     582+         DC    A(0)                     POINTER TO CONTROL CHARACTER    02-RPLVS
+²000450 000004B4                     583+         DC    A(MODACB)                                               X02-RPLVS
+²                                       +                       .                POINTER TO ACB
+²000454 00000000                     584+         DC    A(0) .                   POINTER TO TCB                  02-RPLVS
+²000458 000005B9                     585+         DC    A(WORKAREA)                                             X02-RPLVS
+²                                       +                        .               POINTER TO RECORD AREA
+²00045C 000006B3                     586+         DC    A(KEYFIELD)                                             X02-RPLVS
+²                                       +                       .                POINTER TO ARGUMENT
+²000460 40                           587+         DC    B'01000000'     .        OPTCD BYTE 1                    02-RPLVS
+²000461 82                           588+         DC    B'10000010'                                             X02-RPLVS
+²                                       +                          .            OPTCD BYTE 2
+²000462 00                           589+         DC    B'00000000'              OPTCD BYTE 3               @LAC 02-RPLVS
+²000463 00                           590+         DC    B'00000000'              OPTCD BYTE 4               @EAC 02-RPLVS
+²000464 00000000                     591+         DC    A(0)       .             POINTER TO NEXT RPL             02-RPLVS
+²000468 00000000                     592+         DC    A(0) .                   RESERVED FOR LOGICAL REC LEN    02-RPLVS
+²00046C 000000FA                     593+         DC    A(250)      .            BUFFER LENGTH                   02-RPLVS
+²                                    594+*                                       OPTCD BYTES 5-8          X03004
+²000470 00                           595+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 5                  X04SVHS
+²000471 00                           596+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 6                  X04SVHS
+²000472 00                           597+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 7                  X04SVHS
+²000473 00                           598+         DC    B'00000000'                                             X02-RPLVS
+²                                       +                          .            BYTE 8                  X04SVHS
+²000474 0000000000000000             599+         DC    XL8'0' .                 RBA                             02-RPLVS
+²00047C 40                           600+         DC    B'01000000'                                     @G40AKSL 02-RPLVS
+²00047D 00                           601+         DC    AL1(0)                   ACTIVE INDICATOR                02-RPLVS
+²00047E 0000                         602+         DC    AL2(0)       .           MAXIMUM ERROR MSG LENGTH        02-RPLVS
+²000480 00000000                     603+         DC    A(0) .                   RESERVED FOR MESSAGE AREA PTR   02-RPLVS
+²                                    604 EXLST1    EXLST  EODAD=EOD                                              00027504
+²000484                              606+EXLST1   DS    0F                                                       02-EXLVS
+²000484 81                           607+         DC    X'81'                    EXLIST IDENTIFICATION           02-EXLVS
+²000485 10                           608+         DC    AL1(16)                  EXLST SUBTYPE              @LHC 02-EXLVS
+²000486 0030                         609+         DC    H'48'                    EXLST LIST LENGTH     @WA24364  02-EXLVS
+²000488 00                           610+         DC    X'00'                    EXLST FLAGS                     02-EXLVS
+²000489 C0                           611+         DC    AL1(192)                 EODAD ENTRY DESCRIPTION         02-EXLVS
+²00048A 00000242                     612+         DC    AL4(EOD)                 POINTER TO EODAD EXIT           02-EXLVS
+i00048E 00                           613+         DC    AL1(0)                   SYNAD ENTRY NOT PRESENT         02-EXLVS
+²                                                                                                               Page   12
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²00048F 00000000                     614+         DC    AL4(0)                   ZERO SYNAD ENTRY POINTER        02-EXLVS
+²000493 00                           615+         DC    AL1(0)                   LERAD ENTRY NOT PRESENT         02-EXLVS
+²000494 00000000                     616+         DC    AL4(0)                   ZERO LERAD ENTRY POINTER        02-EXLVS
+²000498 00                           617+         DC    AL1(0)                   UPAD  ENTRY NOT PRESENT@ZA07549 02-EXLVS
+²000499 00000000                     618+         DC    AL4(0)                   ZERO UPAD  ENTRY PNTR  @ZA07549 02-EXLVS
+²00049D 00                           619+         DC    AL1(0)                   IOPID ENTRY NOT PRESENT    @LHA 02-EXLVS
+²00049E 00000000                     620+         DC    AL4(0)                   ADDRESS OF IOPID           @LHA 02-EXLVS
+²0004A2 00                           621+         DC    AL1(0)                   JRNAD ENTRY NOT PRESENT         02-EXLVS
+²0004A3 00000000                     622+         DC    AL4(0)                   ZERO JRNAD ENTRY POINTER        02-EXLVS
+²0004A7 00                           623+         DC    AL1(0)                   RLSW  ENTRY NOT PRESENT@L1C     02-EXLVS
+²0004A8 00000000                     624+         DC    AL4(0)                   ZERO RLSW  ENTRY PNTR  @L1C     02-EXLVS
+²0004AC 00                           625+         DC    AL1(0)                   QUIESCE ENTRY NOT PRESENT  @LIA 02-EXLVS
+²0004AD 00000000                     626+         DC    AL4(0)                   ZERO QUIESCE ENTRY POINTER @LIA 02-EXLVS
+²0004B1 000000                       627+         DC    XL3'00'                  PAD TO WORD BOUNDARY   @WA23308 02-EXLVS
+²0004B4                              628+         DS    0X                       END OF THE EXLST           @LIA 02-EXLVS
+²                                    629 MODACB    ACB    DDNAME=FILE,MACRF=(KEY,DIR,OUT)                        00028004
+²0004B4                              639+MODACB   DS    0F                                                       02-ACBVS
+²0004B4 A0                           640+         DC    X'A0' .                  ACB IDENTIFICATION              02-ACBVS
+²0004B5 10                           641+         DC    AL1(16)                  ACB SUBTYPE             X04SVHS 02-ACBVS
+²0004B6 004C                         642+         DC    AL2(76+0)         .      ACB LENGTH             X03004HS 02-ACBVS
+²0004B8 00000000                     643+         DC    A(0) .                   AMB LIST POINTER                02-ACBVS
+²0004BC 00000000                     644+         DC    A(0) .                   INTERFACE ROUTINE POINTER       02-ACBVS
+²0004C0 8A                           645+         DC    B'10001010'              MACRF(1)                X04SVHS 02-ACBVS
+²0004C1 00                           646+         DC    B'00000000'              MACRF(2)                X04SVHS 02-ACBVS
+²                                    647+*                                       FOR NUMERIC IN PARENS  @YA41534
+²0004C2 00                           648+         DC    AL1(0)       .           NO OF CONCURRENT        X04SVHS 02-ACBVS
+²                                    649+*                                       STRINGS FOR AIX PATH    X04SVHS
+²                                    650+*                                       FOR NUMERIC IN PARENS  @YA41534
+²0004C3 01                           651+         DC    AL1(1)      .            NUMBER OF STRINGS       X04SVHS 02-ACBVS
+²                                    652+*                                       FOR NUMERIC IN PARENS  @YA41534
+²0004C4 0000                         653+         DC    AL2(0)      .            NUMBER OF DATA BUFFERS          02-ACBVS
+²                                    654+*                                       FOR NUMERIC IN PARENS  @YA41534
+²0004C6 0000                         655+         DC    AL2(0)      .            NUMBER OF INDEX BUFFERS         02-ACBVS
+²0004C8 00                           656+         DC    B'00000000'              MACRF(3)                X04SVHS 02-ACBVS
+²                                    657+*                                       FOR NUMERIC IN PARENS  @YA41534
+²0004C9 00                           658+         DC    AL1(0)                   SHARED RESOURCE POOL ID    @L1C 02-ACBVS
+²0004CA 0000                         659+         DC    AL2(0) .                 JES BUFFER POOL/NUMBER  X04SVHS 02-ACBVS
+²                                    660+*                                       OF JOURNAL BUFFERS
+²0004CC 80                           661+         DC    X'80' .                  RECFM=A                         02-ACBVS
+²0004CD 00                           662+         DC    B'00000000'              READ INTEGRITY OPTIONS     @L2C 02-ACBVS
+²0004CE 0008                         663+         DC    X'0008' .                DSORG=ACB                       02-ACBVS
+²0004D0 00000000                     664+         DC    A(0)                                             X04SVHS 02-ACBVS
+²0004D4 00000000                     665+         DC    A(0)       .             PASSWORD POINTER                02-ACBVS
+²0004D8 00000000                     666+         DC    A(0)      .              EXIT LIST POINTER               02-ACBVS
+²0004DC C6C9D3C540404040             667+         DC    CL8'FILE'    .           DDNAME                          02-ACBVS
+²0004E4 02                           668+         DC    B'00000010'              OFLAGS                     @LPC 02-ACBVS
+²0004E5 00                           669+         DC    AL1(0) .                 ERFLAGS                         02-ACBVS
+²0004E6 00                           670+         DC    B'00000000'              INFLGS(1)               X04SVHS 02-ACBVS
+²0004E7 00                           671+         DC    B'00000000'              INFLGS(2)               X04SVHS 02-ACBVS
+²0004E8 00000000                     672+         DC    A(0)     .               OPENJ JFCB POINTER              02-ACBVS
+²0004EC 00000000                     673+         DC    A(0)                     BUFFER SPACE                    02-ACBVS
+²0004F0 0000                         674+         DC    AL2(0)        .          BLOCK SIZE                      02-ACBVS
+²0004F2 0000                         675+         DC    AL2(0)      .            RECORD SIZE                     02-ACBVS
+²0004F4 00000000                     676+         DC    A(0) .                   USER WORKAREA POINTER           02-ACBVS
+i0004F8 00000000                     677+         DC    A(0)                     CONTROL BLOCK MANIPULATION      02-ACBVS
+²                                                                                                               Page   13
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²                                    678+*                                       WORKAREA POINTER
+²0004FC 00000000                     679+         DC    A(0) .                   PTR TO APPLICATION NAME  X03004 02-ACBVS
+²                                    680 LSTACB    ACB    DDNAME=FILE,EXLST=EXLST1,MACRF=(KEY,SEQ,IN)            00028104
+²000500                              690+LSTACB   DS    0F                                                       02-ACBVS
+²000500 A0                           691+         DC    X'A0' .                  ACB IDENTIFICATION              02-ACBVS
+²000501 10                           692+         DC    AL1(16)                  ACB SUBTYPE             X04SVHS 02-ACBVS
+²000502 004C                         693+         DC    AL2(76+0)         .      ACB LENGTH             X03004HS 02-ACBVS
+²000504 00000000                     694+         DC    A(0) .                   AMB LIST POINTER                02-ACBVS
+²000508 00000000                     695+         DC    A(0) .                   INTERFACE ROUTINE POINTER       02-ACBVS
+²00050C 94                           696+         DC    B'10010100'              MACRF(1)                X04SVHS 02-ACBVS
+²00050D 00                           697+         DC    B'00000000'              MACRF(2)                X04SVHS 02-ACBVS
+²                                    698+*                                       FOR NUMERIC IN PARENS  @YA41534
+²00050E 00                           699+         DC    AL1(0)       .           NO OF CONCURRENT        X04SVHS 02-ACBVS
+²                                    700+*                                       STRINGS FOR AIX PATH    X04SVHS
+²                                    701+*                                       FOR NUMERIC IN PARENS  @YA41534
+²00050F 01                           702+         DC    AL1(1)      .            NUMBER OF STRINGS       X04SVHS 02-ACBVS
+²                                    703+*                                       FOR NUMERIC IN PARENS  @YA41534
+²000510 0000                         704+         DC    AL2(0)      .            NUMBER OF DATA BUFFERS          02-ACBVS
+²                                    705+*                                       FOR NUMERIC IN PARENS  @YA41534
+²000512 0000                         706+         DC    AL2(0)      .            NUMBER OF INDEX BUFFERS         02-ACBVS
+²000514 00                           707+         DC    B'00000000'              MACRF(3)                X04SVHS 02-ACBVS
+²                                    708+*                                       FOR NUMERIC IN PARENS  @YA41534
+²000515 00                           709+         DC    AL1(0)                   SHARED RESOURCE POOL ID    @L1C 02-ACBVS
+²000516 0000                         710+         DC    AL2(0) .                 JES BUFFER POOL/NUMBER  X04SVHS 02-ACBVS
+²                                    711+*                                       OF JOURNAL BUFFERS
+²000518 80                           712+         DC    X'80' .                  RECFM=A                         02-ACBVS
+²000519 00                           713+         DC    B'00000000'              READ INTEGRITY OPTIONS     @L2C 02-ACBVS
+²00051A 0008                         714+         DC    X'0008' .                DSORG=ACB                       02-ACBVS
+²00051C 00000000                     715+         DC    A(0)                                             X04SVHS 02-ACBVS
+²000520 00000000                     716+         DC    A(0)       .             PASSWORD POINTER                02-ACBVS
+²000524 00000484                     717+         DC    A(EXLST1) .              EXIT LIST POINTER               02-ACBVS
+²000528 C6C9D3C540404040             718+         DC    CL8'FILE'    .           DDNAME                          02-ACBVS
+²000530 02                           719+         DC    B'00000010'              OFLAGS                     @LPC 02-ACBVS
+²000531 00                           720+         DC    AL1(0) .                 ERFLAGS                         02-ACBVS
+²000532 00                           721+         DC    B'00000000'              INFLGS(1)               X04SVHS 02-ACBVS
+²000533 00                           722+         DC    B'00000000'              INFLGS(2)               X04SVHS 02-ACBVS
+²000534 00000000                     723+         DC    A(0)     .               OPENJ JFCB POINTER              02-ACBVS
+²000538 00000000                     724+         DC    A(0)                     BUFFER SPACE                    02-ACBVS
+²00053C 0000                         725+         DC    AL2(0)        .          BLOCK SIZE                      02-ACBVS
+²00053E 0000                         726+         DC    AL2(0)      .            RECORD SIZE                     02-ACBVS
+²000540 00000000                     727+         DC    A(0) .                   USER WORKAREA POINTER           02-ACBVS
+²000544 00000000                     728+         DC    A(0)                     CONTROL BLOCK MANIPULATION      02-ACBVS
+²                                    729+*                                       WORKAREA POINTER
+²000548 00000000                     730+         DC    A(0) .                   PTR TO APPLICATION NAME  X03004 02-ACBVS
+                                    731 CMDDCB    DCB    DDNAME=INPARM,MACRF=(GM),DEVD=DA,LRECL=80,DSORG=PS     00028206
+²                                    734+*                       DATA CONTROL BLOCK
+²                                    735+*
+²00054C                              736+CMDDCB   DC    0F'0'          ORIGIN ON WORD BOUNDARY                   01-DCB
+²                                    737+*                       DIRECT ACCESS DEVICE INTERFACE
+²00054C 0000000000000000             738+         DC    BL16'0'        FDAD, DVTBL                               01-DCB
+²00055C 00000000                     739+         DC    A(0)           KEYLEN, DEVT, TRBAL                       01-DCB
+²                                    740+*                       COMMON ACCESS METHOD INTERFACE
+²000560 00                           741+         DC    AL1(0)         BUFNO, NUMBER OF BUFFERS                  01-DCB
+i000561 000001                       742+         DC    AL3(1)         BUFCB, BUFFER POOL CONTROL BLOCK          01-DCB
+²                                                                                                               Page   14
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²000564 0000                         743+         DC    AL2(0)         BUFL, BUFFER LENGTH                       01-DCB
+²000566 4000                         744+         DC    BL2'0100000000000000' DSORG, DATA SET ORGANIZATION       01-DCB
+²000568 00000001                     745+         DC    A(1)           IOBAD FOR EXCP OR RESERVED                01-DCB
+²                                    746+*                       FOUNDATION EXTENSION
+²00056C 00                           747+         DC    BL1'00000000'  BFTEK, BFALN, DCBE INDICATORS             01-DCB
+²00056D 000001                       748+         DC    AL3(1)         EODAD (END OF DATA ROUTINE ADDRESS)       01-DCB
+²000570 00                           749+         DC    BL1'00000000'  RECFM (RECORD FORMAT)                     01-DCB
+²000571 000000                       750+         DC    AL3(0)         EXLST (EXIT LIST ADDRESS)                 01-DCB
+²                                    751+*                       FOUNDATION BLOCK
+²000574 C9D5D7C1D9D44040             752+         DC    CL8'INPARM'    DDNAME                                    01-DCB
+²00057C 02                           753+         DC    BL1'00000010'  OFLGS (OPEN FLAGS)                        01-DCB
+²00057D 00                           754+         DC    BL1'00000000'  IFLGS (IOS FLAGS)                         01-DCB
+²00057E 5000                         755+         DC    BL2'0101000000000000' MACR (MACRO FORMAT)                01-DCB
+²                                    756+*                       BSAM-BPAM-QSAM INTERFACE
+²000580 00                           757+         DC    BL1'00000000'  OPTCD, OPTION CODES                       01-DCB
+²000581 000001                       758+         DC    AL3(1)         CHECK OR INTERNAL QSAM SYNCHRONIZING RTN. 01-DCB
+²000584 00000001                     759+         DC    A(1)           SYNAD, SYNCHRONOUS ERROR RTN. (3 BYTES)   01-DCB
+²000588 0000                         760+         DC    H'0'           INTERNAL ACCESS METHOD FLAGS              01-DCB
+²00058A 0000                         761+         DC    AL2(0)         BLKSIZE, BLOCK SIZE                       01-DCB
+²00058C 00000000                     762+         DC    F'0'           INTERNAL ACCESS METHOD FLAGS              01-DCB
+²000590 00000001                     763+         DC    A(1)           INTERNAL ACCESS METHOD USE                01-DCB
+²                                    764+*                            QSAM INTERFACE
+²000594 00000001                     765+         DC    A(1)           EOBAD                                     01-DCB
+²000598 00000001                     766+         DC    A(1)           RECAD                                     01-DCB
+²00059C 0000                         767+         DC    H'0'           QSWS (FLAGS) AND EITHER DIRCT OR BUFOFF   01-DCB
+²00059E 0050                         768+         DC    AL2(80)        LRECL                                     01-DCB
+²0005A0 00                           769+         DC    BL1'00000000'  EROPT, ERROR OPTION                       01-DCB
+²0005A1 000001                       770+         DC    AL3(1)         CNTRL                                     01-DCB
+²0005A4 00000000                     771+         DC    H'0,0'         RESERVED AND PRECL                        01-DCB
+²0005A8 00000001                     772+         DC    A(1)           EOB, INTERNAL ACCESS METHOD FIELD         01-DCB
+²0005AC C4C5D3C5E3C5                 773 DELETESTR DC     CL6'DELETE'                                            00028504
+²0005B2 C1C4C4                       774 ADDSTR    DC     CL3'ADD'                                               00028604
+²0005B5 D3C9E2E3                     775 LISTSTR   DC     CL4'LIST'                                              00028704
+²0005B9 D9D9D9D9D9D9D9D9             776 WORKAREA  DC     CL250'RRRRRRRRAAAAAA'                                  00029004
+²0006B3 D9D9D9D9D9D9D9D9             777 KEYFIELD  DC     CL8'RRRRRRRR'                                          00029104
+²0006BB 00
+²0006BC 005A                         778 DEB       DC     H'90'                                                  00029204
+²0006BE C47A                         779           DC     CL2'D:'                                                00029304
+²0006C0 4040404040404040             780 DEBAREA   DC     CL133''                                                00029403
+²                                    781           APRDATA                                                       00030000
+²000000                00000 00048   782+DYNMEM        DSECT                                                     01-APRDA
+²000000                              783+             DS    18F                                                  01-APRDA
+²                                    784           BPRDATA                                                       00040000
+²                      00048         785+DYNLEN        EQU   (*-DYNMEM)                                          01-BPRDA
+                                    786           YREGS                                                         00041003
+²                      00000         788+R0       EQU   0                                                        01-YREGS
+²                      00001         789+R1       EQU   1                                                        01-YREGS
+²                      00002         790+R2       EQU   2                                                        01-YREGS
+²                      00003         791+R3       EQU   3                                                        01-YREGS
+²                      00004         792+R4       EQU   4                                                        01-YREGS
+²                      00005         793+R5       EQU   5                                                        01-YREGS
+²                      00006         794+R6       EQU   6                                                        01-YREGS
+²                      00007         795+R7       EQU   7                                                        01-YREGS
+i                      00008         796+R8       EQU   8                                                        01-YREGS
+²                                                                                                               Page   15
+  Active Usings: VSAMKST+X'8',R12  DYNMEM,R13
+D-Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/07/24 23.58
+²                      00009         797+R9       EQU   9                                                        01-YREGS
+²                      0000A         798+R10      EQU   10                                                       01-YREGS
+²                      0000B         799+R11      EQU   11                                                       01-YREGS
+²                      0000C         800+R12      EQU   12                                                       01-YREGS
+²                      0000D         801+R13      EQU   13                                                       01-YREGS
+²                      0000E         802+R14      EQU   14                                                       01-YREGS
+                      0000F         803+R15      EQU   15                                                       01-YREGS
+²                                    805           END                                                           00050000
+²000748 00000003                     806                =F'3'
+²00074C 00000004                     807                =F'4'
+²000750 00000006                     808                =F'6'
+¯
+                                                 Relocation Dictionary                                         Page   16
+   Pos.Id   Rel.Id   Address  Type  Action                                                  HLASM R6.0  2014/07/24 23.58
+²  00000001 00000001 00000091   A 3     +
+²  00000001 00000001 00000149   A 3     +
+²  00000001 00000001 00000155   A 3     +
+²  00000001 00000001 000001A5   A 3     +
+²  00000001 00000001 000001B5   A 3     +
+²  00000001 00000001 000001C1   A 3     +
+²  00000001 00000001 000003B8   A 4     +
+²  00000001 00000001 000003C0   A 4     +
+²  00000001 00000001 00000404   A 4     +
+²  00000001 00000001 0000040C   A 4     +
+²  00000001 00000001 00000450   A 4     +
+²  00000001 00000001 00000458   A 4     +
+²  00000001 00000001 0000045C   A 4     +
+²  00000001 00000001 0000048A   A 4     +
+²  00000001 00000001 00000524   A 4     +
+¯
+                               Ordinary Symbol and Literal Cross Reference                                     Page   17
+Symbol   Length   Value     Id    R Type Asm  Program   Defn References                     HLASM R6.0  2014/07/24 23.58
+²ADDSTR        3 000005B2 00000001     C  C               774   33
+²CHECKO        1 00000368 00000001     U                  398  244B
+²CMDADD        1 000001AE 00000001     U                  183   35B
+²CMDDCB        4 0000054C 00000001     F  F               736  147   151   179   194   198
+²CMDDEL        1 00000144 00000001     U                  136   59B
+²CMDLIST       1 00000076 00000001     U                   68   47B
+²DEB           2 000006BC 00000001     H  H               778  130   393
+²DEBAREA     133 000006C0 00000001     C  C               780   93M  356M
+²DELERROR      1 00000298 00000001     U                  323  174B
+²DELETESTR
+²              6 000005AC 00000001     C  C               773   57
+²DELRPL        4 00000438 00000001     F  F               546  159   168
+²DYNLEN        1 00000048 FFFFFFFF A   U                  785   15   416
+²DYNMEM        1 00000000 FFFFFFFF     J                  782   23U  785
+²EOD           1 00000242 00000001     U                  277  612
+²ERRCMD        1 00000224 00000001     U                  265   63B
+²EXLST1        4 00000484 00000001     F  F               606  717
+²GETERROR      1 0000026E 00000001     U                  301  165B
+²IHB0021A      2 00000088 00000001     H  H                76   72B
+²IHB0025A      2 00000128 00000001     H  H               125   97B
+²IHB0074A      2 0000021E 00000001     H  H               261  257B
+²IHB0077A      2 0000023C 00000001     H  H               273  269B
+²IHB0080A      2 00000250 00000001     H  H               285  281B
+²IHB0083A      2 00000268 00000001     H  H               297  293B
+²IHB0086A      2 00000282 00000001     H  H               309  305B
+²IHB0093A      2 000002AC 00000001     H  H               331  327B
+²IHB0100A      2 000002D6 00000001     H  H               354  350B
+²IHB0102A      2 00000350 00000001     H  H               388  360B
+²IHB0105A      2 00000376 00000001     H  H               406  402B
+²ILSLB#11      1 0000005C 00000001     U                   49   43B   46B
+²ILSLB#16      1 00000072 00000001     U                   61   55B   58B
+²ILSLB#6       1 00000046 00000001     U                   37   31B   34B
+²INLOOP        2 00000096 00000001     H  H                85  133B
+²KEYFIELD      8 000006B3 00000001     C  C               777  156M  586
+²LISTSTR       4 000005B5 00000001     C  C               775   45
+²LSTACB        4 00000500 00000001     F  F               690   82   463
+²LSTERROR      1 00000256 00000001     U                  289   92B
+²LSTRPL        4 000003A0 00000001     F  F               426   86
+²MODACB        4 000004B4 00000001     F  F               639  141   188   523   583
+²PREPSTR       1 00000378 00000001     U                  409  135B  182B  264B  276B  288B  300B  322B  344B  397B
+²PUTERROR      1 000002C2 00000001     U                  345  253B
+²PUTRPL        4 000003EC 00000001     F  F               486  236   247
+²R0            1 00000000 FFFFFFFF A   U                  788  421M
+²R1            1 00000001 FFFFFFFF A   U                  789    7    18    22M   24   410M  418
+²R11           1 0000000B FFFFFFFF A   U                  799   18M   19    20    21
+²R12           1 0000000C FFFFFFFF A   U                  800    8M    9U  421M
+²R13           1 0000000D FFFFFFFF A   U                  801   19    20    21M   23U  410   411M  420   421
+²R14           1 0000000E FFFFFFFF A   U                  802  420M  423B
+²R15           1 0000000F FFFFFFFF A   U                  803   91M   91   164M  164   173M  173   243M  243   252M  252
+²                                                              346   422M  422
+²R2            1 00000002 FFFFFFFF A   U                  790   24M   25    26   203M  238
+²R3            1 00000003 FFFFFFFF A   U                  791   25M   30    42    54
+²R4            1 00000004 FFFFFFFF A   U                  792   26M   33    45    57
+²R5            1 00000005 FFFFFFFF A   U                  793    7M   22   346M  356
+²WORKAREA    250 000005B9 00000001     C  C               776   93   152   156   199   465   525   585
+¯
+                               Ordinary Symbol and Literal Cross Reference                                     Page   18
+Symbol   Length   Value     Id    R Type Asm  Program   Defn References                     HLASM R6.0  2014/07/24 23.58
+²=F'3'         4 00000748 00000001     F                  806   30
+²=F'4'         4 0000074C 00000001     F                  807   42
+²=F'6'         4 00000750 00000001     F                  808   54
+¯
+                                  Unreferenced Symbols Defined in CSECTs                                       Page   19
+  Defn  Symbol                                                                              HLASM R6.0  2014/07/24 23.58
+²    50  IENDILB#11
+²    62  IENDILB#16
+²    38  IENDILB#6
+²     2  VSAMKST
+¯
+                                          Macro and Copy Code Source Summary                                   Page   20
+ Con Source                                        Volume    Members                        HLASM R6.0  2014/07/24 23.58
+²  L1 SYS1.MACLIB                                   ZARES1    ABEND    ACB      ACBVS    CLOSE    DCB      ERASE
+²                                                             EXLST    EXLVS    FREEMAIN GET      GETMAIN  IDACBOPT
+²                                                             IDACBRPL IDACB1   IDACB2   IDACB3   IDAVSACB IDAVSCB3
+²                                                             IDAVSOPT IDAVSRPL IHBINNRA IHBINNRR IHB01    MODCB    OPEN
+²                                                             PUT      RPL      RPLVS    SAVE     SYSSTATE WTO
+²                                                             YREGS
+²  L2 MELEN.MACLIB                                  ZAIMS1    APRDATA  BPRDATA  ENDIF    EPILOG   IF       PROLOG
+²                                                             PRRET    RESLVLGC
+¯
+                                                Dsect Cross Reference                                          Page   21
+Dsect     Length      Id       Defn                                                         HLASM R6.0  2014/07/24 23.58
+²DYNMEM   00000048  FFFFFFFF     782
+¯
+                                                      Using Map                                                Page   22
+²                                                                                            HLASM R6.0  2014/07/24 23.58
+²  Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text
+          Count      Id           Type          Value    Range     Id        Disp    Stmt
+²     9  00000008  00000001 USING  ORDINARY    00000008 00001000 00000001  12 00748    417 *,R12
+²    23  00000024  00000001 USING  ORDINARY    00000000 00001000 FFFFFFFF  13 00000        DYNMEM,R13
+¯
+                                   General Purpose Register Cross Reference                                    Page   23
+ Register  References (M=modified, B=branch, U=USING, D=DROP, N=index)                      HLASM R6.0  2014/07/24 23.58
+²    0(0)       6    16M   87M  152M  160M  169M  199M  238M  248M  317M  318M  319   339M  340M  341   417M  421M
+²    1(1)       6     7    14M   16    18    22M   24    72M   80M   86M   88N   97M  126   128N  131   139M  145M  151M
+²             154   159M  161N  168M  170N  177M  186M  192M  198M  201   236M  247M  249N  257M  269M  281M  293M  305M
+²             316M  319M  327M  338M  341M  350M  360M  389   391N  394   402M  410M  418M  418   421M
+²    2(2)       6    24M   25    26   203M  238   421M
+²    3(3)       6    25M   30    42    54   421M
+²    4(4)       6    26M   33    45    57   421M
+²    5(5)       6     7M   22   346M  356   421M
+²    6(6)       6   421M
+²    7(7)       6   421M
+²    8(8)       6   421M
+²    9(9)       6   421M
+²   10(A)       6   421M
+²   11(B)       6    18M   19    20    21   421M
+²   12(C)       6     8M    9U  421M
+²   13(D)       6    19    20    21M   23U  410   411M  411   420   421
+²   14(E)       6    90M  126M  129M  155M  163M  172M  202M  242M  251M  389M  392M  420M  423B
+²   15(F)       6    88M   89M   89N   90B   91M   91   127M  127   128M  129   130M  131   153M  153   154M  155B  161M
+²             162M  162N  163B  164M  164   170M  171M  171N  172B  173M  173   200M  200   201M  202B  239M  240M  240
+²             241M  241   242   243M  243   249M  250M  250N  251B  252M  252   346   390M  390   391M  392   393M  394
+²             422M  422
+¯
+                                  Diagnostic Cross Reference and Assembler Summary                             Page   24
+                                                                                            HLASM R6.0  2014/07/24 23.58
+²     No Statements Flagged in this Assembly
+HIGH LEVEL ASSEMBLER, 5696-234, RELEASE 6.0, PTF UK37157
+SYSTEM: z/OS 01.10.00              JOBNAME: VSAMKST     STEPNAME: STEP1      PROCSTEP: C
+²Data Sets Allocated for this Assembly
+² Con DDname   Data Set Name                                Volume  Member
+²  P1 SYSIN    MELEN.SRC                                    ZAIMS1  VSAMKST
+²  L1 SYSLIB   SYS1.MACLIB                                  ZARES1
+²  L2          MELEN.MACLIB                                 ZAIMS1
+²     SYSLIN   SYS14205.T235843.RA000.VSAMKST.OBJ.H01       ZASYS1
+²     SYSPRINT MELEN.LISTS                                  ZAIMS1  COMPLIST
+²
+²  32128K allocated to Buffer Pool       Storage required    1744K
+²    102 Primary Input Records Read        18432 Library Records Read                  0 Work File Reads
+²      0 ASMAOPT Records Read                921 Primary Print Records Written         0 Work File Writes
+     41 Object Records Written                0 ADATA Records Written
+²Assembly Start Time: 23.58.44 Stop Time: 23.58.46 Processor Time: 00.00.01.4799
+²Return Code 000

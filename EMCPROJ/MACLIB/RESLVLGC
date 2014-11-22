@@ -1,0 +1,60 @@
+             MACRO                                                      00010001
+             RESLVLGC   &PARMS                                          00020002
+&APARM       SETC   '&PARMS(1)'                                         00021001
+&OP          SETC   '&PARMS(2)'                                         00022001
+&BPARM       SETC   '&PARMS(3)'                                         00023001
+             GBLA   &IFSTC#ID(100)                                      00024001
+             GBLA   &IFSTC#SZ                                           00026001
+&ELSE        SETC   'ILSLB#'.'&IFSTC#ID(&IFSTC#SZ)'                     00029101
+&A           SETC   '&APARM'(2,K'&APARM-2)                              00029301
+&B           SETC   '&BPARM'(2,K'&BPARM-2)                              00029401
+             AIF    ('&OP' EQ 'AND').OPAND                              00029601
+             AIF    ('&BPARM'(1,1) EQ '(').CMPCR                        00029701
+               AIF  ('&OP'(1,5) EQ 'CLCEQ').OPCLCEQ1                    00029802
+                 C      &A,&BPARM                                       00029901
+                 AGO    .COMMON1                                        00030001
+.OPCLCEQ1      ANOP                                                     00030101
+                 AIF   (K'&OP LT 6).AUTOCLCL                            00030202
+&CLCLEN            SETC  '&OP'(7,K'&OP-7+1)                             00030302
+                   CLC   &BPARM.(&CLCLEN),0(&A)                         00030402
+                   BNE   &ELSE                                          00030501
+                   AGO   .COMMON2                                       00030601
+.AUTOCLCL        ANOP                                                   00030701
+                   CLC   &BPARM,0(&A)                                   00030801
+                   BNE   &ELSE                                          00030901
+                   AGO   .COMMON2                                       00031001
+.CMPCR       ANOP                                                       00031101
+               CR     &A,&B                                             00031201
+.COMMON1     ANOP                                                       00031301
+             AIF    ('&OP' EQ 'LT').OPLT                                00031401
+             AIF    ('&OP' EQ 'NE').OPNE                                00031501
+             AIF    ('&OP' EQ 'GT').OPGT                                00031601
+             AIF    ('&OP' EQ 'LE').OPLE                                00031701
+             AIF    ('&OP' EQ 'GE').OPGE                                00031801
+             AIF    ('&OP' EQ 'EQ').OPEQ                                00031901
+             MNOTE '------ NO SUCH OPERATION ------'                    00032001
+             MEXIT                                                      00032101
+.OPEQ        ANOP                                                       00032201
+             BNE    &ELSE                                               00032301
+             AGO    .COMMON2                                            00032401
+.OPNE        ANOP                                                       00032501
+             BE     &ELSE                                               00032601
+             AGO    .COMMON2                                            00032701
+.OPLT        ANOP                                                       00032801
+             BNL    &ELSE                                               00032901
+             AGO    .COMMON2                                            00033001
+.OPGT        ANOP                                                       00033101
+             BNH    &ELSE                                               00033201
+             AGO    .COMMON2                                            00033301
+.OPLE        ANOP                                                       00033401
+             BH     &ELSE                                               00033501
+             AGO    .COMMON2                                            00033601
+.OPGE        ANOP                                                       00033701
+             BL     &ELSE                                               00033801
+             AGO    .COMMON2                                            00033901
+.OPAND       ANOP                                                       00034001
+             RESLVLGC &APARM                                            00034101
+             RESLVLGC &BPARM                                            00034201
+             AGO    .COMMON2                                            00034301
+.COMMON2     ANOP                                                       00035001
+             MEND                                                       00040001

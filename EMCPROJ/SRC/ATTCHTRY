@@ -1,0 +1,51 @@
+ATTCHTRY     CSECT                                                      00010011
+             SAVE  (14,12)                                              00020011
+             BALR  R12,0                                                00030011
+             USING *,R12                                                00040011
+*===============================                                        00050011
+             GETMAIN R,LV=DYNLEN                                        00060011
+             LR    R11,R1                                               00070011
+             ST    R13,4(,R11)                                          00080011
+             ST    R11,8(,R13)                                          00090011
+             LR    R13,R11                                              00100011
+             USING DYNMEM,R13                                           00110011
+*===============================                                        00120011
+             OPEN  (PRINTER,OUTPUT)                                     00130011
+             OPEN  (INFILE,INPUT)                                       00140011
+*===============================                                        00150011
+             ATTACH EP=SMPLWTO                                          00150113
+             ATTACH EP=SMPLWTO                                          00150213
+             ATTACH EP=SMPLWTO                                          00150313
+*            ATTACH EP=SMPLNOR                                          00150413
+*            ATTACH EP=SMPLNOR                                          00150513
+             WAIT  ECB=WAITECB                                          00151312
+*            LA    R5,0(0,0)                                            00152012
+*OOP         EQU   *                                                    00160012
+*            IF    (R5),LT,=F'20'                                       00170012
+*             LA   R5,1(,R5)                                            00171012
+*             WTO  'PGM11111'                                           00172012
+*             B    LOOP                                                 00173012
+*            ELSE                                                       00180012
+*            ENDIF                                                      00190012
+             WTO   'FINISH'                                             00200012
+             CLOSE (INFILE)                                             00282011
+             CLOSE (PRINTER)                                            00283011
+             LR    R1,R13                                               00284011
+             L     R13,SAVEAREA+4                                       00285011
+             FREEMAIN R,LV=DYNLEN,A=(R1)                                00286011
+             RETURN (14,12),RC=0                                        00287011
+*===============================                                        00288011
+INFILE       DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),                   X00289011
+               LRECL=80,DSORG=PS                                        00289111
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00289211
+               LRECL=133,DSORG=PS                                       00289311
+WAITECB      DC    F'0'                                                 00289412
+             YREGS                                                      00289511
+*===============================                                        00289611
+DYNMEM       DSECT                                                      00289711
+SAVEAREA     DS    18F                                                  00289811
+INAREA       DS    CL80                                                 00289911
+DEBAREA      DS    CL133                                                00290011
+DYNLEN       EQU   (*-DYNMEM)                                           00290111
+*===============================                                        00290611
+             END                                                        00290711

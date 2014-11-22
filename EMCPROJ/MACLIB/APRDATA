@@ -1,0 +1,6 @@
+             MACRO                                                      00010001
+             APRDATA                                                    00020002
+             GBLC  &PRCSFX                                              00020102
+DYNMEM&PRCSFX DSECT                                                     00050002
+             DS    18F                                                  00060002
+             MEND                                                       00070002

@@ -1,0 +1,17 @@
+HASHTABL  PROLOG                                                        00010000
+          LA   R1,64                                                    00011000
+          GETMEM R,LV=(R1)                                              00012000
+          LA   R4,                                                      00013000
+          MACRO                                                         00014100
+          HTFIND &KEYLEN=8,&KEYVAL=,&HTAB=,&HFUNC=                      00014200
+          REGORLBL 1,&KEYLEN                                            00014300
+          REGORLBL 15,&KEYVAL                                           00014400
+          BAL    14,&HFUNC                                              00014500
+          MEND                                                          00014600
+          LH   R2,0(,R1)                                                00015100
+LETE    EQU  *                                                          00016000
+          EPILOG                                                        00020000
+          APRDATA                                                       00030000
+          BPRDATA                                                       00040000
+          YREGS                                                         00041000
+          END                                                           00050000

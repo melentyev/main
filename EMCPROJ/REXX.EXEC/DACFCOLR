@@ -1,0 +1,395 @@
+/* REXX */
+call Initialize
+call ProcessSelectListing
+ADDRESS ISPEXEC
+"LIBDEF ISPPLIB"
+EXIT
+call ProcessShowListing(2)
+Initialize:
+  Modules.0 = 0
+  T=AppendStem(Modules, 'S1')
+  T=AppendStem(Modules, 'S2')
+  T=AppendStem(Modules, 'S3')
+  T=AppendStem(Modules, 'S4')
+  ModADATA.0 = Modules.0
+  ddpanel           = "DACFCOLR"
+  ShowPanelMember   = "DACFCSHW"
+  SelectPanelMember = "DACFCSEL"
+  ADATADD           = "MODADATA"
+  DynAreaLineLen    = 40
+  red      = '01'x
+  blue     = '02'x
+  green    = '03'x
+  white    = '04'x
+  inputFld = '05'x
+  /* Read ADATA */
+  Do I = 1 to Modules.0 by 1
+    RawADATA.0 = 0
+    "Alloc F("ADATADD") old ds('EMCPROJ.ADATAS."Modules.I"') reuse"
+    'EXECIO * DISKR 'ADATADD' (Finis STEM RawADATA.'
+    'EXECIO 0 DISKR 'ADATADD' (Finis'
+    "Free F("ADATADD")"
+    call ParseADATA
+    ModADATA.I.SrcAnalysisRecord.0 = ADATA.SrcAnalysisRecord.0
+    T=StemCopyField(,
+         'ModADATA.'I'.SrcAnalysisRecord', 'ADATA.SrcAnalysisRecord','LineText')
+    T=StemCopyField(,
+         'ModADATA.'I'.SrcAnalysisRecord', 'ADATA.SrcAnalysisRecord','SARLoctr')
+  End
+  /*  Write Panel */
+  "Alloc F("ddpanel") old ds('MELEN.ISPF.PANELS("ShowPanelMember")') reuse"
+  call MakeListingPanelDs
+  "Free F("ddpanel")"
+  "Alloc F("ddpanel") old ds('MELEN.ISPF.PANELS("SelectPanelMember")') reuse"
+  call MakeSelectListingPanelDs
+  "Free F("ddpanel")"
+  call ParseTable
+  /*
+  Do i = 1 to ADATA.SrcAnalysisRecord.0 by 1
+    say 'L#'ADATA.SrcAnalysisRecord.i.LineText'$'||,
+            ADATA.SrcAnalysisRecord.i.SARESDID'#'||,
+            ADATA.SrcAnalysisRecord.i.RecOrigin'%'||,
+            ADATA.SrcAnalysisRecord.i.SARLoctr'%'
+  End  */
+  call CreateModulesTable
+  ADDRESS ISPEXEC
+  "LIBDEF ISPPLIB dataset id('MELEN.ISPF.PANELS')"
+  return ''
+ProcessSelectListing:
+  ADDRESS ISPEXEC
+  dyndata  = ''
+  maxlines = Modules.0
+  size = 15000
+  Do i = 1 to Modules.0 by 1
+  /*say 'dyndata'dyndata'#'*/
+    dyndata = dyndata || inputFld || COPIES(' ',6) || white ||,
+      Left(Modules.i, DynAreaLineLen - 8, ' ')
+  End
+  disprc = 0
+  do until disprc > 0
+    dynarea = dyndata
+    size = length(dynarea)
+    "display panel("SelectPanelMember")"
+    disprc = rc
+    dynres = dynarea
+    Do SelPanLI = 1 to Modules.0 by 1
+      PInd = POS(inputFld,dynres)
+      SelPanData = Substr(dynres, PInd+1, 6)
+      dynres  = Substr(dynres, PInd+7)
+      if TRANSLATE(STRIP(SelPanData,'B','_'))  = 'S'then Do
+        call ProcessShowListing(SelPanLI)
+        call ProcessSelectListing
+      End
+    end
+  end
+  Return
+
+ProcessShowListing:
+  Arg ModNum
+  ADDRESS ISPEXEC
+  dyndata  = ''
+  maxlines = ModADATA.ModNum.SrcAnalysisRecord.0
+  Do i = 1 to maxlines by 1
+ /* say '#'ModLines.ModNum.i.Visited'#'*/
+    Select
+      When ModLines.ModNum.i.Visited == 1 then LnCol = green
+      When ModLines.ModNum.i.Jumped == 1 then LnCol = red
+      Otherwise LnCol=white
+    End
+    dyndata = dyndata || LnCol ||,
+     left(ModADATA.ModNum.SrcAnalysisRecord.i.LineText, DynAreaLineLen - 1, ' ')
+  End
+  dyndata   = dyndata || blue ||,
+              center(green || 'BOTTOM' || blue, DynAreaLineLen - 1, '*')
+  curline = 1
+  disprc = 0
+  do until disprc > 0
+    dynarea = substr(dyndata,1+(curline-1)*DynAreaLineLen)
+    size = length(dynarea)
+    "display panel("ShowPanelMember")"
+    disprc = rc
+    "vget (zverb,zscrolla,zscrolln)"
+    Select
+      When zverb = 'UP' then
+        if zscrolla = 'MAX' then
+         curline = 1
+        else
+         curline = max(1, curline - zscrolln)
+      When zverb = 'DOWN' then
+        if zscrolla = 'MAX' then
+         curline = maxlines
+        else
+         curline = min(maxlines, curline + zscrolln)
+      otherwise
+    end
+  end
+  return ''
+CreateModulesTable: Procedure Expose Modules.
+  ISPTABLDS = 'MELEN.ISPF.TABLES'
+  ADDRESS ISPEXEC
+  "LIBDEF ISPTABL DATASET ID('"ISPTABLDS"')"
+  "TBCREATE TABLE1 KEYS(MIND) NAMES(MODNAME) WRITE"
+  Do I = 1 to Modules.0 by 1
+    MIND = I
+    MODNAME = Modules.I
+    "ISPEXEC TBADD TABLE1"
+  End
+  "TBCLOSE TABLE1"
+  "LIBDEF ISPTABL"
+  return ''
+MakeListingPanelDs:
+  call PanelCommonHeader
+  queue '%-|-|- Example for using a dynamic area -|-|-'
+  queue '%Command ===>_zcmd                                        ' ||,
+        '    %Scroll ===>_AMT +'
+  queue '%'
+  queue '+ This area is fixed.   Size: &size'
+  queue '+'
+  queue '+ This is an input field%===>_somevar +'
+  queue '+'
+  queue '+This#@dynarea'||COPIES(' ', DynAreaLineLen - 9)||'@H'
+  call PanelCommonFooter
+  return
+
+MakeSelectListingPanelDs:
+  call PanelCommonHeader
+  queue '%-|-|- Example for using a dynamic area -|-|-'
+  queue '%Command ===>_zcmd                                        ' ||,
+        '    %Scroll ===>_AMT +'
+  queue '%'
+  queue '+ This is select    .   Size: &size'
+  queue '+'
+  queue '+ This is an input field%===>_somevar +'
+  queue '+'
+  queue '+X#@dynarea'||COPIES(' ', DynAreaLineLen - 9)||'@X'
+/*queue '+This#@dynarea                     @H'  */
+  call PanelCommonFooter
+  return
+PanelCommonHeader:
+  "newstack"
+  queue ')attr'
+  queue ' @  area(dynamic) scroll(on) extend(on)'
+  queue ' 01 type(dataout) color(red)'
+  queue ' 02 type(dataout) color(blue)'
+  queue ' 03 type(dataout) color(green)'
+  queue ' 04 type(dataout) color(white)'
+  queue ' 05 type(datain)  INTENS(LOW) color(green) pad(_)'
+  queue ' $  type(text)    color(yellow)'
+  queue ')body expand(||)'
+  return
+PanelCommonFooter:
+  queue ' '
+  queue '       $This should be at the bottom of the screen when in' ||,
+        ' full screen.'
+  queue ')end'
+  "execio" queued() "diskw "ddpanel" (finis"
+  "delstack"
+  return
+ParseListing: Procedure Expose ParsedListing.
+  arg fname
+  ParsedListing.0 = 0
+  DoCopy = 0
+  ddname="LISTING"
+  "Alloc F("ddname") old ds('"fname"') reuse"
+  "Execio * diskr "ddname" (Finis stem INPUT."
+  Do i = 1 to INPUT.0 by 1
+    If (WORDPOS("Loc  Object Code    Addr1 Addr2  Stmt",Line) \= 0) Then Do
+      DoCopy = 1
+      Iterate
+    End
+    If (DoCopy) Then Do
+      Ind = AppendStem(ParsedListing,'')
+      ParsedListing.Ind.StmtNum   = Substr(Line,36,4)
+      ParsedListing.Ind.StmtText  = Substr(Line,41,40)
+      ParsedListing.Ind.StmtLoctr = Substr(Line,1,6)
+      say '#'ParsedListing.Ind.StmtNum'#'ParsedListing.Ind.StmtText'#'||,
+          '#'ParsedListing.Ind.StmtLoctr
+    End
+  End
+  "Free F("ddname")"
+  return ''
+ParseADATA: Procedure Expose RawADATA. ADATA.
+  ADATA.USING.0              = 0
+  ADATA.SrcAnalysisRecord.0  = 0
+  ADATA.SymbolRecord.0       = 0
+  ADATA.ESDRecord.0          = 0
+  ADATA.MachineInstruction.0 = 0
+  Do ParseADATAI=1 to RawADATA.0 by 1
+    Line=RawADATA.ParseADATAI
+    Code=Substr(Line,2,2)
+    Select
+      When Code=='0020'X Then Do      /* ESDID Record */
+        Parse Var Line . 13 RT 14 . 17 pESDID 21 . 49 NOFF 53 NLEN 57 .
+        ESDInd=AppendStem(ADATA.ESDRecord,'')
+        NOFF=C2D(NOFF)
+        ADATA.ESDRecord.ESDInd.RecordType=RT
+        ADATA.ESDRecord.ESDInd.RecordESDID=pESDID
+        ADATA.ESDRecord.ESDInd.RecordESDIDName=Substr(Line,NOFF+1,C2D(NLEN))
+        End
+      When Code=='0030'X Then Do
+        Tmp = ADATA.SrcAnalysisRecord.0 + 1
+        ADATA.SrcAnalysisRecord.0 = Tmp
+        TxtOffset = C2D(Substr(Line,121,4))
+        TxtLen = C2D(Substr(Line,125,4))
+        ADATA.SrcAnalysisRecord.Tmp.LineText = Substr(Line,TxtOffset+1,72)
+        ADATA.SrcAnalysisRecord.Tmp.SARESDID = Substr(Line,13,4)
+        ADATA.SrcAnalysisRecord.Tmp.RecOrigin = C2D(Substr(Line,41,1))
+        ADATA.SrcAnalysisRecord.Tmp.SARLoctr = C2D(Substr(Line,37,4))
+        End
+      When Code=='0036'X Then Do
+        Tmp=AppendStem(ADATA.MachineInstruction,'')
+        Len=C2D(Substr(Line,37,4))
+        ADATA.MachineInstruction.Tmp.InstrLoctr=C2D(Substr(Line,21,4))
+        ADATA.MachineInstruction.Tmp.InstrValue=Substr(Line,41,Len)
+        End
+      When Code=='0042'X Then Do       /* Symbol Record */
+        Tmp = AppendStem(ADATA.SymbolRecord,'')
+        Parse Var Line . 13 SectionESDID 17 StmtN 21 Loctr 25 . 59 Len 63 Lab
+        Lab=Left(Lab,C2D(Len))
+        Loctr=C2D(Loctr)
+        StmtN=C2D(StmtN)
+        ADATA.SymbolRecord.Tmp.SymbolName = Lab
+        ADATA.SymbolRecord.Tmp.SymbolLoctr = Loctr
+        ADATA.SymbolRecord.Tmp.SymbolStmtNumber = StmtN
+        ADATA.SymbolRecord.Tmp.SymbolSectionESDID = SectionESDID
+        End
+      When Code=='0080'X Then Do      /* USING Map Record */
+        Parse Var Line 57 TmpLab','.
+        Tmp=AppendStem(ADATA.USING,'')
+        ADATA.USING.Tmp.Register=C2D(Substr(Line,39,1))
+        ADATA.USING.Tmp.StmtNumber=C2D(Substr(Line,19,4))
+        ADATA.USING.Tmp.LeftOp=TmpLab
+        End
+      Otherwise Do
+        End
+    End
+  End
+  Return ''
+ParseTable: Procedure Expose JmpTbl. ModADATA. Modules. ModLines.
+  "Alloc F(JMPTAB) old ds('EMCPROJ.OUTPUT(SPYM)') reuse"
+  'EXECIO * DISKR JMPTAB (Finis STEM INPUT.'
+  'EXECIO 0 DISKR JMPTAB (Finis'
+  "Free F(JMPTAB)"
+  JmpTbl.0 = 0
+  Ind=AppendStem(JmpTbl,'')
+  JmpTbl.Ind.FromOff='U'
+  JmpTbl.Ind.FromMod='U'
+  JmpTbl.Ind.DestOff=0
+  JmpTbl.Ind.DestMod=Modules.1
+  Do I = 4 to 100500 by 2 while I <= INPUT.0
+    parse var INPUT.I M1 '|' OFF1 '|' M2 '|' OFF2
+    M1=STRIP(M1)
+    M2=STRIP(M2)
+    OFF1 = STRIP(STRIP(OFF1),'L',0)
+    OFF1 = X2D(OFF1)
+    OFF2 = STRIP(STRIP(OFF2),'L',0)
+    OFF2 = X2D(OFF2)
+    Ind=AppendStem(JmpTbl,'')
+    JmpTbl.Ind.FromOff=OFF1
+    JmpTbl.Ind.FromMod=M1
+    JmpTbl.Ind.DestOff=OFF2
+    JmpTbl.Ind.DestMod=M2
+  End
+  call ProcessTable
+  return ''
+ProcessTable: Procedure Expose JmpTbl. ModADATA. Modules. ModLines.
+  CurMod = 1
+  CurOff = JmpTbl.1.OFF2
+  SrcRec = 1
+  JR = 2
+  Done = 0
+  Do PI = 1 to 200 by 1 while Done == 0
+    CurModName = Modules.CurMod
+    say 'CurModName'CurModName'*'CurOff
+    If JmpTbl.JR.FromMod == CurModName & JmpTbl.JR.FromOff == CurOff then Do
+      ModLines.CurMod.SrcRec.Jumped = 1
+      say 'Jumped:'CurOff
+      CurMod = StemFind(Modules,JmpTbl.JR.DestMod)
+      CurOff = JmpTbl.JR.DestOff
+      AI = FindRecordInd(ModADATA.CurMod.SrcAnalysisRecord,'SARLoctr',CurOff)
+      SrcRec = AI
+      JR = JR + 1
+      say JR'%'CurMod'^'CurOff'&'SrcRec'*'
+    End
+    Else Do
+      ModLines.CurMod.SrcRec.Visited = 1
+      SrcRec = SrcRec + 1
+      If (ModADATA.CurMod.SrcAnalysisRecord.0 < SrcRec) then Do
+        say 'over('CurMod')'
+        Done=1
+      End
+      CurOff = ModADATA.CurMod.SrcAnalysisRecord.SrcRec.SARLoctr
+    /*say CurOff*/
+    End
+  End
+  say 'ProcessTable done'
+  return ''
+FindJmpRecord: Procedure Expose JmpTbl. ModADATA. Modules.
+  arg CurMod,CurOff
+  CurModName = Modules.CurMod
+  Do I = 1 to JmpTbl.0 by 1
+    If JmpTbl.I.FromMod == CurModName & JmpTbl.I.FromOff == CurOff then Do
+      return I
+    End
+  End
+  return 0
+EXIT
+NewStem:
+  arg NewStemName
+  NewStemName'.0'=0
+  arg NSCurArg
+  Do While NSCurArg \= ''
+    T=AppendStem(NewStemName,NSCurArg)
+    arg NSCurArg
+  End
+  return ''
+WriteStem:
+  arg WriteStemStem
+  WriteStemN=value(WriteStemStem'.0')
+  Do WriteStemI=1 to 100500 by 1 while WriteStemI <= WriteStemN
+    say value(WriteStemStem'.'WriteStemI)
+    End
+  return
+StemCopyField:
+  arg StemCFDest,StemCFSrc,StemCFField
+  Do SCpFldI=1 to 100500 by 1 while SCpFldI <= value(StemCFSrc'.0')
+    oldval=value(StemCFSrc'.'SCpFldI'.'StemCFField)
+    T=value(StemCFDest'.'SCpFldI'.'StemCFField,oldval)
+  End
+  return ''
+ConcatStem:
+  arg CtStem1,CtStem2
+  CtStem2N=value(CtStem2'.0')
+  Do CtStI = 1 to 100500 by 1 while CtStI <= CtStem2N
+    Tmp = value(CtStem1'.0') + 1
+    T=value(CtStem1'.0',Tmp)
+    T=value(CtStem1'.'Tmp,value(CtStem2'.'CtStI))
+  End
+  return ''
+AppendStem:
+  arg AppendStemStem,AppendStemValue
+  ASNewInd=VALUE(AppendStemStem'.0') + 1
+  Tmp=VALUE(AppendStemStem'.0',ASNewInd)
+  Tmp=VALUE(AppendStemStem'.'ASNewInd,AppendStemValue)
+  return ASNewInd
+PushBackStem:
+  arg PushBackStemStem
+  PBNewInd=VALUE(PushBackStemStem'.0') + 1
+  Tmp=VALUE(PushBackStemStem'.0',PBNewInd)
+  return PBNewInd
+FindRecordInd:
+  arg FRIStNm,FRIKF,FRINeedle
+  FRII = 1
+  FRIN = VALUE(FRIStNm'.0')
+  Do While FRII <= FRIN & VALUE(FRIStNm'.'FRII'.'FRIKF) \= FRINeedle
+    FRII = FRII + 1
+  End
+  return FRII
+StemFind:
+  arg SFindNm,SFindNeedle
+  SFindI = 1
+  SFindN = VALUE(SFindNm'.0')
+  Do While SFindI <= SFindN& VALUE(SFindNm'.'SFindI) \= SFindNeedle
+    SFindI = SFindI + 1
+  End
+  return SFindI

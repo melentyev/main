@@ -1,0 +1,68 @@
+*********************************************************               00001001
+* IF (REG),OP,<(REG) | MEM>                                             00001101
+* ...                                                                   00001201
+* ELSE                                                                  00001301
+* ...                                                                   00001401
+* ENDIF                                                                 00001501
+*********************************************************               00001601
+* CAN BE NESTED                                                         00001801
+*********************************************************               00002001
+             MACRO                                                      00010000
+             IF     &PARMS,&CLCLEN=AUTO                                 00020007
+&APARM       SETC   '&PARMS(1)'                                         00021006
+&OP          SETC   '&PARMS(2)'                                         00022006
+&BPARM       SETC   '&PARMS(3)'                                         00023006
+             GBLA   &IFSTC#ID(100)                                      00030006
+             GBLC   &IFSTC#ST(100)                                      00040006
+             GBLA   &IFSTC#SZ                                           00050006
+&IFSTC#SZ    SETA   &IFSTC#SZ+1                                         00060000
+&IFSTC#ID(&IFSTC#SZ) SETA &SYSNDX                                       00070007
+&IFSTC#ST(&IFSTC#SZ) SETC '0'                                           00080007
+&ELSE        SETC   'ILSLB#'.'&IFSTC#ID(&IFSTC#SZ)'                     00090007
+.*           &IFSTC#ID(1) &IFSTC#ID(2),&IFSTC#ID(3)                     00100007
+&A           SETC   '&APARM'(2,K'&APARM-2)                              00110007
+&B           SETC   '&BPARM'(2,K'&BPARM-2)                              00120007
+             AIF    ('&BPARM'(1,1) EQ '(').CMPCR                        00130007
+               AIF  ('&OP' EQ 'CLCEQ').OPCLCEQ1                         00131007
+                 C      &A,&BPARM                                       00140007
+                 AGO    .COMMON1                                        00150007
+.OPCLCEQ1      ANOP                                                     00151007
+                 AIF   ('&CLCLEN' EQ 'AUTO').AUTOCLCL                   00151107
+                   CLC   &BPARM.('&CLCLEN'),0.(&A)                      00152008
+                   BNE   &ELSE                                          00153007
+                   AGO   .COMMON2                                       00153107
+.AUTOCLCL        ANOP                                                   00153207
+                   CLC   &BPARM,0(&A)                                   00153307
+                   BNE   &ELSE                                          00153407
+                   AGO   .COMMON2                                       00154007
+.CMPCR       ANOP                                                       00160007
+               CR     &A,&B                                             00161007
+.COMMON1     ANOP                                                       00170007
+             AIF    ('&OP' EQ 'LT').OPLT                                00172007
+             AIF    ('&OP' EQ 'NE').OPNE                                00180007
+             AIF    ('&OP' EQ 'GT').OPGT                                00200007
+             AIF    ('&OP' EQ 'LE').OPLE                                00210007
+             AIF    ('&OP' EQ 'GE').OPGE                                00211007
+             AIF    ('&OP' EQ 'EQ').OPEQ                                00212007
+             MNOTE '------ NO SUCH OPERATION ------'                    00220007
+             MEXIT                                                      00221007
+.OPEQ        ANOP                                                       00230007
+             BNE    &ELSE                                               00240000
+             AGO    .COMMON2                                            00250000
+.OPNE        ANOP                                                       00260000
+             BE     &ELSE                                               00270000
+             AGO    .COMMON2                                            00280000
+.OPLT        ANOP                                                       00290000
+             BNL    &ELSE                                               00300000
+             AGO    .COMMON2                                            00310000
+.OPGT        ANOP                                                       00320000
+             BNH    &ELSE                                               00330000
+             AGO    .COMMON2                                            00340000
+.OPLE        ANOP                                                       00341004
+             BH     &ELSE                                               00342004
+             AGO    .COMMON2                                            00343004
+.OPGE        ANOP                                                       00344004
+             BL     &ELSE                                               00345004
+             AGO    .COMMON2                                            00346004
+.COMMON2     ANOP                                                       00350000
+             MEND                                                       00360000

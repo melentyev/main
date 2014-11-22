@@ -1,0 +1,9 @@
+/* rexx ispexec */
+ADDRESS ISPEXEC
+"LIBDEF ISPPLIB dataset id('MELEN.ISPF.PANELS')"
+XCTY='NOVOSIB'
+'VPUT (XCTY) SHARED';
+"display panel(MYPANEL1)"
+AAA=XCTY
+say 'a:'XCTY'#'
+"LIBDEF ISPPLIB"

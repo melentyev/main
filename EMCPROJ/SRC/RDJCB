@@ -1,0 +1,44 @@
+DLIST5    CSECT                                                         00010005
+          SAVE   (14,12)                                                00020005
+          BALR   R12,0                                                  00030005
+          USING  *,R12                                                  00040005
+*===============================                                        00050005
+          ST     13,SAVEAREA+4                                          00060005
+          LR     2,13                                                   00070005
+          LA     13,SAVEAREA                                            00080005
+          ST     13,8(,2)                                               00090005
+          LR     13,2                                                   00100005
+*===============================                                        00110005
+             OPEN  (INFILE,INPUT)                                       00111008
+             OPEN  (PRINTER,OUTPUT)                                     00120005
+*===============================                                        00130005
+          L      R4,=F'123'                                             00140005
+          LA    R5,JFCBAREA                                             00141006
+          USING INFMJFCB,R5                                             00143006
+          WTO    'HERE'                                                 00150005
+          RDJFCB (INFILE)                                               00151005
+          WTO    'HERE2'                                                00160005
+          PUT   PRINTER,JFCLRECL                                        00170007
+          L      13,SAVEAREA+4                                          00260005
+          RETURN (14,12)                                                00270005
+*===============================                                        00280005
+          YREGS                                                         00290005
+INFILE   DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),                       X00291005
+               DSORG=PS,EXLST=LSTA                                      00292008
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00300005
+               LRECL=133,DSORG=PS                                       00310005
+SAVEAREA  DS    18F                                                     00320005
+MSG       DC    H'50'                                                   00330005
+MSGCONT   DS    CL133                                                   00340005
+LSTA      DS       0F                                                   00342005
+          DC       AL1(EXLLASTE+EXLRJFCB)                               00343005
+          DC       AL3(JFCBAREA)                                        00344005
+JFCBAREA  DS       0F,176C                                              00344106
+          IHAEXLST ,      DCB EXIT LIST MAPPING                         00345006
+          IEFJFCBN  LIST=YES                                            00346306
+***===========================***                                       00346606
+***===========================***                                       00346706
+***===========================***                                       00346806
+***===========================***                                       00346906
+          DCBD                                                          00347005
+          END                                                           00348005

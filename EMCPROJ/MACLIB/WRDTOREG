@@ -1,0 +1,11 @@
+* PUT SMTH FROM SRC TO REGISTER R                                       00001001
+             MACRO                                                      00010001
+&LBL         WRDTOREG &R,&SRC                                           00020001
+             AIF   ('&SRC'(1,1) EQ '(' AND                             X00030001
+                   '&SRC'(K'&SRC,1) EQ ')').FREG                        00040001
+&LBL         L        &R,&SRC                                           00050001
+             MEXIT                                                      00060001
+.FREG        ANOP                                                       00070001
+&SRCR        SETC     '&SRC'(2,K'&SRC-2)                                00080001
+&LBL         LR       &R,&SRCR                                          00090001
+             MEND                                                       00100001

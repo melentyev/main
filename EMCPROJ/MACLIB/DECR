@@ -1,0 +1,12 @@
+             MACRO                                                      00010000
+&LBL         DECR     &PARMS                                            00020002
+&PARMCNT     SETA     N'&PARMS                                          00021002
+&I           SETA     0                                                 00022002
+             AIF      (K'&LBL LT 1).LOOP                                00022103
+&LBL         EQU      *                                                 00023003
+.LOOP        ANOP                                                       00024002
+&I           SETA     &I+1                                              00026002
+&R           SETC     '&PARMS(&I)'                                      00030003
+             BCTR     &R,0                                              00040002
+             AIF      (&I LT &PARMCNT).LOOP                             00041002
+             MEND                                                       00050000

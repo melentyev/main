@@ -1,0 +1,115 @@
+             MACRO                                                      00000104
+&LAB         ITSELECT &R           // ITEMSELECT                        00000205
+&REG         SETC  '&R'(2,K'&R-2)                                       00000304
+&LAB         LR    R9,&REG                                              00000404
+             MEND                                                       00000504
+*===============================                                        00000604
+             MACRO                                                      00001004
+&LAB         ALLOCEL &DEST,&IN                                          00002004
+&DST         SETC    '&DEST'(2,K'&DEST-2)                               00003004
+&LAB         WRDTOREG 14,&IN                                            00004004
+             GETMAIN R,LV=ITEMSIZE                                      00005004
+             LR      &DST,R1                                            00006004
+             ITSELECT (&DST)                                            00006104
+             ST      14,ITVAL                                           00008004
+             MVC     ITNEXT,=X'00000000'                                00009004
+             MEND                                                       00009104
+*===============================                                        00009204
+PGMBEGIN     CSECT                                                      00010001
+             SAVE  (14,12)                                              00011001
+             BALR  R12,0                                                00030001
+             USING *,R12                                                00040004
+*===============================                                        00050001
+             GETMAIN R,LV=DYNLEN                                        00051004
+             LR    R11,R1                                               00052001
+             ST    R13,4(,R11)                                          00060001
+             ST    R11,8(,R13)                                          00090001
+             LR    R13,R11                                              00091001
+             USING DYNMEM,R13                                           00092003
+             USING LISTITEM,R9                                          00093004
+*===============================                                        00100001
+             OPEN  (PRINTER,OUTPUT)                                     00110001
+             OPEN  (INFILE,INPUT)                                       00120001
+*===============================                                        00230001
+             GET   INFILE,INAREA                                        00250001
+             STRTOINT (R3),INAREA                                       00260001
+             ALLOCEL (R2),(R3)           //R2 - HEAD                    00270001
+INLOOP       EQU   *                                                    00280001
+             WTO   'INLOOP'                                             00290001
+             GET   INFILE,INAREA                                        00300001
+             STRTOINT (R3),INAREA                                       00310001
+             ALLOCEL (R4),(R3)           //R4-NEW                       00320001
+             LR    R5,R2                 //R5-CUR                       00330001
+             LA    R6,0(0,0)             //R6-PREV                      00340001
+INSLOOP      EQU   *                                                    00360001
+             WTO   'INS'                                                00370001
+             C     R5,=X'00000000'                                      00380001
+             BE    ISMAXVL1                                             00390001
+             WTO   'NOT ISMAXVL1'                                       00400001
+             ITSELECT (R4)                                              00401004
+             L     R7,ITVAL                                             00410004
+             ITSELECT (R5)                                              00421004
+             C     R7,ITVAL                                             00430004
+             BH    GONEXT                                               00440001
+             WTO   'CMP2'                                               00450001
+             C     R6,=X'00000000'                                      00460001
+             BE    CHHEAD                                               00470001
+             ITSELECT (R6)                                              00471004
+             ST    R4,ITNEXT                                            00480004
+             B     CHNEXT                                               00490001
+CHHEAD       EQU   *                                                    00500001
+             LR    R2,R4                                                00510001
+CHNEXT       EQU   *                                                    00520001
+             ITSELECT (R4)                                              00521004
+             ST    R5,ITNEXT                                            00530004
+             B     INLOOP                                               00540001
+GONEXT       EQU   *                                                    00550001
+             WTO   'GONEXT'                                             00560001
+             LR    R6,R5                                                00570001
+             L     R5,4(,R5)                                            00580001
+             B     INSLOOP                                              00590001
+ISMAXVL1     EQU   *                                                    00591004
+             ITSELECT (R6)                                              00592004
+             ST    R4,ITNEXT                                            00600004
+             B     INLOOP                                               00610001
+*===============================                                        00620001
+INEOF        EQU   *                                                    00630001
+             WTO   'INPUT EOF'                                          00640005
+OUTLOOP      EQU   *                                                    00650001
+             C     R2,=X'00000000'                                      00660001
+             BE    OUTEND                                               00670001
+             ITSELECT (R2)                                              00670105
+             L     R3,ITVAL                                             00671005
+             INTTOSTR DEBAREA,(R3)                                      00680004
+             PUT   PRINTER,DEBAREA                                      00690001
+             L     R4,ITNEXT                                            00700005
+             FREEMAIN R,LV=ITEMSIZE,A=(R2)                              00700105
+             LR    R2,R4                                                00701005
+             B     OUTLOOP                                              00710001
+OUTEND       EQU   *                                                    00720001
+             WTO   'FINISH'                                             00730001
+             CLOSE (INFILE)                                             00740001
+             CLOSE (PRINTER)                                            00750001
+             LR    R1,R13                                               00751005
+             L     R13,SAVEAREA+4                                       00760005
+             FREEMAIN R,LV=DYNLEN,A=(R1)                                00770005
+             RETURN (14,12),RC=0                                        00791001
+*===============================                                        00800001
+INFILE       DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),EODAD=INEOF,       X00810002
+               LRECL=80,DSORG=PS                                        00820001
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00840001
+               LRECL=133,DSORG=PS                                       00850001
+             YREGS                                                      00850102
+*===============================                                        00850201
+DYNMEM       DSECT                                                      00850302
+SAVEAREA     DS    18F                                                  00850403
+INAREA       DS    CL80                                                 00851002
+DEBAREA      DS    CL133                                                00860002
+DYNLEN       EQU   (*-DYNMEM)                                           00871003
+*===============================                                        00871104
+LISTITEM     DSECT                                                      00872004
+ITVAL        DS    F                                                    00873004
+ITNEXT       DS    F                                                    00874004
+ITEMSIZE     EQU   (*-LISTITEM)                                         00875004
+*===============================                                        00880001
+             END                                                        01000001

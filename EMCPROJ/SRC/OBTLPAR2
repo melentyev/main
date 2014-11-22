@@ -1,0 +1,23 @@
+          PROLOG AMODE=31                                               00010000
+          LA     R2,0                                                   00010100
+          USING  PSA,R2                                                 00010200
+          L      R3,FLCCVT                                              00010300
+          USING  CVTMAP,R3                                              00010400
+          L      R4,CVTECVT                                             00010500
+*         USING  ECVT,R4                                                00010600
+          L      R5,392(R4)                                             00010700
+          USING  IPA,R5                                                 00010800
+          MVC    MSGCONT(8),IPALPNAM                                    00010900
+          WTO    TEXT=MSG                                               00011000
+          EPILOG                                                        00011100
+MSG       DC     H'50'                                                  00012000
+          DC     CL6'LPAR: '                                            00013000
+MSGCONT   DC     CL40''                                                 00014000
+          APRDATA                                                       00020000
+          BPRDATA                                                       00030000
+          IHAPSA                                                        00030200
+          CVT                                                           00030300
+*         IHAECVT                                                       00030400
+          IHAIPA                                                        00030500
+          YREGS                                                         00031000
+          END                                                           00040000

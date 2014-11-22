@@ -1,0 +1,20 @@
+)PANEL KEYLIST(ISRHLP2,ISR)
+)ATTR DEFAULT() FORMAT(MIX)                      /* HELP1 -  - 6.0 */
+ 05 TYPE(PT)
+ 0A TYPE(NT)
+)BODY WINDOW(50,18) CMD()
+’               	Help Panel Title’               ’
+’
+’This is a simple help panel. It should show how’’
+’to use:’                                        ’
+’
+’o   Help tag’                                   ’
+’
+’o   information area tag’                       ’
+’
+’    1.  Paragraph tag’                          ’
+)INIT
+.HHELP = ISP00006
+)END
+/* ISPDTLC Release: 6.0.  Maintenance Level: PID                      */
+/* z/OS 01.10.00.  Created - Date: 17 Nov 2014, Time: 22:24           */

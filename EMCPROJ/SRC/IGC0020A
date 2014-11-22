@@ -1,0 +1,87 @@
+IGC0020A  CSECT                                                         00010002
+IGC0020A  AMODE    31                                                   00020002
+*GC0020A  RMODE    24                                                   00030002
+          STM      R14,R7,RBEXSAVE-RBBASIC(R5)                          00040002
+          LR       R11,R5                                               00050002
+          USING    RBBASIC,R11     ADDRESSABILITY TO RB                 00060002
+          BALR     R12,0                                                00070002
+          USING    *,R12                          TO THIS ROUTINE       00080002
+          GETMAIN  R,LV=FRAMELEN                                        00090002
+          LR       R13,R1                                               00100002
+          USING    DYNFRAME,R13                   TO DYNAMIC FRAME      00110002
+          WTO      'IN SVC ROUTINE   111'                               00120002
+          MVC      LNKMFL(MESSAGE-LNKMFL),LNKTPL                        00190002
+          MVC      MESSAGE(WORKAREA-MESSAGE),MSGTMPL                    00200002
+          MVC      IEARBUML(LNKMFL-IEARBUML),IUMLTPLB                   00210002
+*         ADDR2STR CARGSTR,(R7),CONVFLD                                 00220002
+          MVC      CARGSZ(2),=H'16'                                     00230002
+          MVC      CARGSTR+16(1),=XL1'00'                               00240002
+          LA       R7,WORKAREA                                          00250002
+          CVD      R7,CONVFLD                                           00260002
+          UNPK     CARGSTR(16),CONVFLD(8)                               00270002
+          OI       CARGSTR+15,X'F0'                                     00280002
+          LA       R7,CARGSZ                                            00290002
+          O        R7,=X'80000000'                                      00300002
+          ST       R7,ARGLIST                                           00310002
+          LA       R1,ARGLIST                                           00320002
+          LINK     EP=CMHUTIL                                           00330002
+          WTO      'AFTER CUTIL'                                        00340002
+          MVC      MESSAGE+4(20),WORKAREA                               00350002
+          WTO      MF=(E,MESSAGE)                                       00360002
+          L        R4,RBLINK                        LOOKING FOR OLD PSW 00370002
+          N        R4,=X'00FFFFFF'                                      00380002
+          L        R5,RBOPSWA-RBBASIC(R4)        OLD PSW FOUND          00390002
+          S        R5,=F'2'                                             00400002
+          LA       R7,WORKAREA                                          00410002
+          MVC      0(2,R5),WORKAREA+8                                   00420002
+          MVC      EPNMFLD(8),WORKAREA                                  00430002
+          WTO      'BEFORE ACTIONS MAKE LINK'                           00440002
+          XR       R1,R1                                                00450002
+          LA       R1,RBGRSAVE                                          00460002
+          LINK     SF=(E,LNKMFL),EPLOC=EPNMFLD                          00490002
+          WTO      'SVC ACTIONS DONE'                                   00510002
+          IEARBUP  ADDRTYPE=DELTA,PSWDELTA=PSWD,MF=(E,IEARBUML),       X00530002
+               WHICHRB=PREV,PSWBYTE03=NO                                00540002
+*         LR       R6,R15                                               00550002
+*         LR       R7,R0                                                00560002
+*         ABEND    333,DUMP                                             00570002
+LFINISH   EQU      *                                                    00580002
+          WTO      'FINISHING SVC1'                                     00590002
+*         ABEND    888,DUMP                                             00600002
+          FREEMAIN R,LV=FRAMELEN,A=(R13)                                00610002
+          LM       R14,R1,RBEXSAVE                                      00620002
+          BR       R14                                                  00630002
+SCEOF     EQU      *                                                    00640002
+          WTO      'END OF COMMUNICATION DATASET'                       00650002
+          ABEND    42,DUMP                                              00660002
+********* CONST **********************                                  00670002
+          DS       0F                                                   00680002
+IUMLTPLB  EQU      *                                                    00750002
+          IEARBUP  MF=(L,IUMLTPL)                                       00760002
+IEARUMLL  EQU      *-IUMLTPLB                                           00770002
+LNKTPL    LINK     EPLOC=,SF=L                                          00780002
+MSGTMPL   WTO      '                                             ',MF=L 00790002
+MSGLEN    EQU      *-MSGTMPL                                            00800002
+PSWD      DC       F'-2'                                                00810002
+********* DYNAMIC ********************                                  00820002
+DYNFRAME  DSECT                                                         00830002
+SAVEAREA  DS       54F                                                  00840002
+          DS       0F                                                   00850002
+IEARBUML  DS       XL(IEARUMLL)                                         00920002
+LNKMFL    DS       XL(PSWD-LNKTPL)                                      00930002
+MESSAGE   WTO      '                                             ',MF=L 00940002
+WORKAREA  DS       XL256                                                00950002
+EPNMFLD   DS       CL8                                                  00960002
+CONVFLD   DS       XL8                                                  00970002
+ARGLIST   DS       F                                                    00980002
+CARGSZ    DS       H                                                    00990002
+CARGSTR   DS       CL20''                                               01000002
+RBGSCOPY  DS       16F                                                  01010002
+FRAMELEN  EQU      *-DYNFRAME                                           01020002
+********* MAPPINGS *******************                                  01030002
+          CVT      DSECT=YES                                            01040002
+          IHAECVT                                                       01050002
+          IKJRB    DSECT=YES      MAP SVRB AND PRB                      01060002
+*         IEEXSA                                                        01070002
+          YREGS                                                         01080002
+          END                                                           01090002

@@ -1,0 +1,30 @@
+*********************************************************               00000101
+* CALL WITH PLACING PARAMS TO DYNMEM                                    00000201
+*********************************************************               00000301
+             MACRO                                                      00010000
+&LBL         CALLD &TGT,&PARMS,&RETREG                                  00020001
+&PARMCNT     SETA  N'&PARMS                                             00021001
+&MEMSZ       SETA  &PARMCNT*4                                           00030000
+&LBL         GETMAIN R,LV=&MEMSZ                                        00040000
+             LR    &RETREG,R1                                           00050000
+&I           SETA  0                                                    00060000
+             LCLC  &SRC                                                 00070000
+.LOOP        ANOP                                                       00080000
+&OFFSET      SETA  &I*4                                                 00090000
+&I           SETA  &I+1                                                 00100000
+&SRC         SETC  '&PARMS(&I)'                                         00110000
+             AIF   ('&SRC'(1,1) EQ '(' AND                             X00120000
+                    '&SRC'(K'&SRC,1) EQ ')').FREG                       00130000
+             LA    R15,&SRC                                             00140000
+             AGO   .COMMON                                              00150000
+.FREG        ANOP                                                       00160000
+&SRCR        SETC  '&SRC'(2,K'&SRC-2)                                   00170000
+             LR    R15,&SRCR                                            00180000
+.COMMON      ANOP                                                       00190000
+             ST    R15,&OFFSET.(,R1)                                    00200000
+             AIF   (&I LT &PARMCNT).LOOP                                00210000
+             OI    &OFFSET.(R1),X'80'                                   00220000
+             CALL  &TGT                                                 00230000
+             FREEMAIN R,LV=&MEMSZ,A=(&RETREG)                           00240000
+             LR    &RETREG,R1                                           00250000
+             MEND                                                       00260000

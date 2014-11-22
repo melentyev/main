@@ -1,0 +1,16 @@
+GETMASTR  PROLOG                                                        00010001
+          WTO    'BEGIN'                                                00020001
+          LINK   EP=RSMDALC,MF=(E,(R2))                                 00030001
+*         WTO    TEXT=MSGLEN                                            00060001
+          WTO    'END'                                                  00070001
+          EPILOG                                                        00080001
+MSGLEN    DC     H'40'                                                  00090001
+          DC     CL6'LPAR: '                                            00100001
+WORKAREA  DC     CL127''                                                00100101
+DSNMTPL   DC     CL44'MELEN.SRC'                                        00101001
+MEMBER    DC     CL44'GETMASTR'                                         00102001
+          APRDATA                                                       00120001
+DSN       DS     CL44                                                   00121001
+          BPRDATA                                                       00130001
+          YREGS                                                         00140001
+          END                                                           00150001

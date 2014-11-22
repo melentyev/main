@@ -1,0 +1,106 @@
+QSORTLNC     PROLOG                                                     00010002
+             OPEN  (PRINTER,OUTPUT)                                     00011002
+             OPEN  (INFILE,INPUT)                                       00012002
+*===============================                                        00013002
+             GET   INFILE,INAREA                                        00014002
+             STRTOINT (R3),INAREA                                       00015002
+             LR    R8,R3                                                00015202
+             MHI   R8,4                                                 00015302
+             GETMAIN R,LV=(R8)                                          00015402
+             LR    R11,R1                                               00015502
+             USING SRCDATA,R11                                          00015702
+             LR    R5,R3                                                00016102
+             LA    R7,SRCDATA                                           00016202
+INLOOP       EQU   *                                                    00016302
+             GET   INFILE,INAREA                                        00016502
+             STRTOINT (R6),INAREA                                       00016602
+             ST    R6,0(,R7)                                            00016702
+             LA    R7,4(,R7)                                            00016802
+             BCT   R5,INLOOP                                            00016902
+INEOF        EQU   *                                                    00017002
+             WTO   'READ'                                               00017102
+             LR    R8,R3                                                00017202
+             BCTR  R8,0                                                 00017302
+             MHI   R8,4                                                 00017402
+             ST    R8,PAR1                                              00017502
+             CALLD QSORT,3,(SRCDATA,=F'0',PAR1),R9                      00017702
+             WTO   'FINISHED SORT'                                      00017802
+             LR    R5,R3                                                00017902
+             LA    R7,0                                                 00018002
+OUTLOOP      EQU   *                                                    00018102
+             WHOLE DEBCONT,6,SRCDATA(R7)                                00018202
+             WTO   TEXT=DEBSTR                                          00018302
+             LA    R7,4(,R7)                                            00018402
+             BCT   R5,OUTLOOP                                           00018502
+             CLOSE (INFILE)                                             00018602
+             CLOSE (PRINTER)                                            00018702
+             EPILOG                                                     00019002
+INFILE       DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),                   X00019202
+               LRECL=80,DSORG=PS,EODAD=INEOF                            00019302
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00019402
+               LRECL=133,DSORG=PS                                       00019502
+DEBSTR       DC    H'80'                                                00019702
+DEBCONT      DS    CL133                                                00019802
+             APRDATA                                                    00019902
+INAREA       DS    CL180                                                00020002
+PAR1         DS    F                                                    00020102
+             BPRDATA                                                    00020202
+SRCDATA      DSECT                                                      00020302
+             DS    0F                                                   00020402
+*===============================                                        00021002
+QSORT        PROLOG  TYPE=LOCAL                                         00030002
+             L     R11,0(,R1)                                           00180002
+             GTINTPAR (R2),2                                            00190002
+             GTINTPAR (R3),3                                            00191002
+             LR    R4,R2          // I                                  00230002
+             LR    R5,R3           // J                                 00240002
+             L     R6,SRCDATA(R4)    //X                                00250002
+QLOOP        EQU   *                                                    00260002
+QLOOPI       EQU   *                                                    00260502
+             C     R6,SRCDATA(R4)                                       00260702
+             BNH   ENDQLOOPI                                            00260802
+             LA    R4,4(,R4)                                            00261002
+             B     QLOOPI                                               00261102
+ENDQLOOPI    EQU   *                                                    00261202
+QLOOPJ       EQU   *                                                    00261302
+             C     R6,SRCDATA(R5)                                       00261402
+             BNL   ENDQLOOPJ                                            00261502
+             WHOLE QDEBCONT,7,(R5)                                      00261702
+             WTO   TEXT=QDEBSTR                                         00261802
+             S     R5,VAL4                                              00261902
+             B     QLOOPJ                                               00262002
+ENDQLOOPJ    EQU   *                                                    00262102
+             IF    ((R4),LE,(R5))                                       00262302
+               IF    ((R4),LT,(R5))                                     00262402
+                 L     R7,SRCDATA(R4)                                   00262602
+                 L     R8,SRCDATA(R5)                                   00262702
+                 ST    R7,SRCDATA(R5)                                   00262802
+                 ST    R8,SRCDATA(R4)                                   00262902
+               ENDIF                                                    00263002
+               LA    R4,4(,R4)                                          00263102
+               S     R5,VAL4                                            00263202
+             ENDIF                                                      00263302
+             CR    R4,R5                                                00263702
+             BNH   QLOOP                                                00263802
+             IF    ((R4),LT,(R3))                                       00264002
+               ST    R4,P1                                              00264102
+               ST    R3,P2                                              00264202
+               CALLD QSORT,3,(SRCDATA,P1,P2),R9                         00264602
+             ENDIF                                                      00265002
+             IF    ((R2),LT,(R5))                                       00266002
+               ST    R2,P1                                              00266102
+               ST    R5,P2                                              00266202
+               CALLD QSORT,3,(SRCDATA,P1,P2),R9                         00266302
+             ENDIF                                                      00267002
+             EPILOG                                                     00310102
+VAL4          DC    F'4'                                                00310202
+QDEBSTR       DC    H'80'                                               00310302
+QDEBCONT      DS    CL133                                               00310402
+*===============================                                        00310502
+             APRDATA                                                    00311002
+P1           DS    F                                                    00312002
+P2           DS    F                                                    00313002
+             BPRDATA                                                    00340002
+             YREGS                                                      00350002
+NEG4         EQU     4                                                  00360002
+             END                                                        00540001

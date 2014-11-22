@@ -1,0 +1,10 @@
+*MINIMUM RETURNED IN R1                                                 00001000
+             MACRO                                                      00010000
+&LBL         MINVAL   &A,&B                                             00020000
+&LBL         WRDTOREG 1,&A                                              00030000
+             WRDTOREG 14,&B                                             00040000
+             CR       1,14                                              00050000
+             BL       MNVLND&SYSNDX                                     00060000
+             LR      1,14                                               00070000
+MNVLND&SYSNDX EQU     *                                                 00080000
+             MEND                                                       00090000

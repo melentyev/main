@@ -1,0 +1,47 @@
+TRYPER1   CSECT                                                         00010000
+          STM      R14,R12,12(R13)                                      00020000
+          LR       R12,R15                                              00030000
+          USING    TRYPER1,R12                                          00040000
+          GETMAIN  R,LV=DFRAMELEN                                       00050000
+          ST       R1,8(,R13)                                           00060000
+          ST       R13,4(,R1)                                           00070000
+          LR       R13,R1                                               00080000
+          USING    DYNFRAME,R13                                         00090000
+          WTO      'BEGIN'                                              00100000
+          ESTAEX   RECOV,CT                                             00110000
+          WTO      'ESTAE ACTIVATED'                                    00120000
+          BR       0                    PLACE FOR PER                   00120101
+          WTO      'AFTER POSSIBLE PER'                                 00120201
+          B        RETRY1                                               00121000
+*         ABEND    544,DUMP                                             00140000
+RETRY1    EQU      *                                                    00150000
+          ESTAEX   0                                                    00160000
+*         ABEND    777,DUMP                                             00170000
+          WTO      'IN RETRY'                                           00180000
+          B        EPILOG                                               00190000
+RECOV     EQU      *                                                    00200000
+          DROP     R12                                                  00210000
+          USING    RECOV,R15                                            00220000
+          L        R12,#BASE                                            00230000
+          DROP     R15                                                  00240000
+          USING    TRYPER1,R12                                          00250000
+          LR       R5,R1                                                00260000
+          WTO      'IN RECOVERY'                                        00270001
+          LR       R1,R5                                                00280000
+          SETRP    RETREGS=YES,RC=4,RETADDR=RETRY1,FRESDWA=YES          00290000
+          BR       R14                                                  00300000
+EPILOG    EQU      *                                                    00310000
+          WTO      'IN EPILOG'                                          00320000
+          L        R13,4(,R13)                                          00330000
+          FREEMAIN R,A=(R13),LV=DFRAMELEN                               00340000
+          LM       R14,R12,12(R13)                                      00350000
+          XR       R15,R15                                              00360000
+          BR       R14                                                  00370000
+********* STATIC DATA **********                                        00380000
+#BASE     DC       A(TRYPER1)                                           00390000
+DYNFRAME  DSECT                                                         00400000
+SAVEAREA  DS       18F                                                  00410000
+DFRAMELEN EQU      *-DYNFRAME                                           00420000
+          IHASDWA                                                       00430000
+          YREGS                                                         00440000
+          END                                                           00450000

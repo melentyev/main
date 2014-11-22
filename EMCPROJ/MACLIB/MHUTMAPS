@@ -1,0 +1,22 @@
+          MACRO
+          MHUTMAPS
+****** INPUT BREAKPOINT FORMAT *******
+INPBPFMT  DSECT
+FMTOFFST  DS       F          INSTRUCTION OFFSET
+FMTINSL   DS       F          INSTRUCTION LENGTH
+FMTACTCN  DS       F          ACTIONS COUNT
+FMTCSTNL  DS       F          SECT NAME LENGTH
+FMTINSTR  DS       XL6        REPLACED INSTRUCTION
+FMTCSECT  DS       XL8
+****** INPUT ACTION FORMAT ******
+INPACFMT  DSECT
+FMTACTID  DS       CL4        ACTION ID (REGS)
+FMTAADDR  DS       F          REGISTER
+FMTAVAL   DS       F          VALUE
+****** INPUT CHECK FORMAT ******
+INPCHFMT  DSECT
+FMTCHID   DS       CL4        CHECK ID (REGC)
+FMTCADDR  DS       F          REGISTER
+FMTCVAL   DS       F          VALUE
+********************************
+          MEND

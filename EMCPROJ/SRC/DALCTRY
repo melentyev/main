@@ -1,0 +1,104 @@
+DYN       CSECT                                                         00010000
+          USING *,15                                                    00020007
+          STM 14,12,12(13)                                              00030000
+          LR  R2,R1                                                     00031014
+          BALR 12,0                                                     00040000
+BEGIN     DS 0H                                                         00050000
+          USING BEGIN,12                                                00060000
+          OPEN (PRINTER,OUTPUT)                                         00061003
+          LA   0,50 AMOUNT OF STORAGE REQUIRED FOR THIS REQUEST.        00070015
+          GETMAIN R,LV=(0) GET THE STORAGE NECESSARY FOR THE REQUEST.   00080000
+          LR      8,1 SAVE THE ADDRESS OF THE RETURNED STORAGE.         00090015
+          USING S99RBP,8 ESTABLISH ADDRESSABILITY FOR S99RBP DSECT.     00100000
+          LA 4,S99RBPTR+4 POINT FOUR BYTES BEYOND START OF S99RBPTR.    00110000
+          USING S99RB,4 ESTABLISH ADDRESSABILITY FOR RB DSECT.          00120000
+          ST 4,S99RBPTR MAKE 'RBPTR' POINT TO RB.                       00130000
+          OI S99RBPTR,S99RBPND TURN ON THE HIGH-ORDER BIT IN RBPTR.     00140000
+          XC S99RB(RBLEN),S99RB ZERO OUT 'RB' ENTIRELY.                 00150000
+          MVI S99RBLN,RBLEN PUT THE LENGTH OF 'RB' IN ITS LENGTH FIELD. 00160000
+          MVI S99VERB,S99VRBAL SET THE VERB CODE FIELD TO ALLOCATION FU 00170000
+          LA 5,S99RB+RBLEN POINT PAST 'RB' TO START OF TUP LIST.        00180000
+          USING S99TUPL,5 ESTABLISH ADDRESSABILITY FOR TEXT UNIT PTRS.  00190000
+          ST 5,S99TXTPP STORE ADDRESS OF TUP LIST IN THE RB.            00200000
+          LA 6,DSNTU GET ADDRESS OF FIRST TEXT UNIT                     00210000
+          ST 6,S99TUPTR AND STORE IN TUP LIST.                          00220000
+          LA 5,S99TUPL+4 GET ADDRESS OF NEXT TUP LIST ENTRY.            00230000
+          LA 6,STATUSTU GET ADDRESS OF SECOND TEXT UNIT                 00240000
+          ST 6,S99TUPTR AND STORE IN TUP LIST.                          00250000
+          LA 6,S99TUPL+8 POINT PAST END OF TUP LIST.                    00260000
+          USING S99TUNIT,6 ESTABLISH ADDRESSABILITY TO TEXT UNIT.       00270000
+          LA 5,S99TUPL+4 GET ADDRESS OF NEXT TUP LIST ENTRY.            00280000
+          ST 6,S99TUPTR STORE ADDRESS OF TEXT UNIT IN TUP LIST.         00290000
+          OI S99TUPTR,S99TUPLN TURN ON HIGH-ORDER BIT IN LAS            00300000
+          MVC S99TUNIT(14),RETDDN MOVE RETURN DDNAME TEXT UNIT          00310000
+          LR 1,8                                                        00320000
+          DYNALLOC                                                      00330000
+*         PUT   PRINTER,INFILE                                          00330112
+*         PUT   PRINTER,S99RBP                                          00330212
+*         PUT   PRINTER,S99RB                                           00330312
+          WTO TEXT=MYMSGLN                                              00330401
+*         ABEND 777,DUMP                                                00331007
+          LA    R9,INFILE                                               00331107
+          USING IHADCB,R9                                               00331207
+          WTO   'HERE1'                                                 00331307
+          MVC   DCBDDNAM(8),MYDNM                                       00332007
+          MVC   DSABC(12),MYDSNAME                                      00333014
+          WTO   'HERE2'                                                 00333207
+          RDJFCB (INFILE)                                               00333308
+          PUT   PRINTER,JFCBAREA                                        00333408
+          PUT   PRINTER,INFILE                                          00333509
+          LA    R9,JFCBAREA                                             00333614
+          USING INFMJFCB,R9                                             00333714
+          MVC   VOLNUM(6),JFCBVOLS                                      00333814
+          OBTAIN    DSCBABC                                             00333912
+*         ABEND 777,DUMP                                                00334012
+          LH    R7,WORKAREA+44                                          00334112
+          STH   R7,WORKAREA                                             00334214
+          PUT   PRINTER,WORKAREA                                        00334312
+DSCBABC   CAMLST    SEARCH,DSABC,VOLNUM,WORKAREA                        00334712
+DSABC     DC        CL44''                                              00334814
+VOLNUM    DC        CL6''                                               00334913
+WORKAREA  DS        140C              140-BYTE WORK AREA                00335012
+          OPEN  (INFILE,INPUT)                                          00335107
+          WTO   'HERE3'                                                 00335207
+          GET   INFILE,MYMSGLN                                          00335307
+          WTO   'HERE4'                                                 00335407
+          WTO TEXT=MYMSGLN                                              00335507
+INEOF     EQU   *                                                       00336007
+          LM 14,12,12(13)                                               00340000
+          BR 14                                                         00350000
+INAREA    DS CL180                                                      00350107
+INFILE       DCB   DDNAME=,DEVD=DA,MACRF=(GM),                         X00350205
+               LRECL=80,DSORG=PS,EODAD=INEOF,,EXLST=LSTA                00350310
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00351003
+               LRECL=133,DSORG=PS                                       00352003
+LSTA      DS       0F                                                   00353008
+          DC       AL1(EXLLASTE+EXLRJFCB)                               00354008
+          DC       AL3(JFCBAREA)                                        00355008
+JFCBAREA  DS       0F,176C                                              00356008
+RBLEN     EQU (S99RBEND-S99RB)                                          00360000
+MYMSGLN   DC H'80'                                                      00361001
+DSNTU     DC AL2(DALDSNAM)                                              00370000
+          DC X'0001'                                                    00380000
+          DC X'000C'                                                    00390000
+MYDSNAME  DC CL44'MLN1.LINKLIB'                                         00400014
+STATUSTU  DC AL2(DALSTATS)                                              00410000
+          DC X'0001'                                                    00420000
+          DC X'0001'                                                    00430000
+          DC X'08'                                                      00440000
+*RETDDN    DC AL2(DALRTDDN)                                             00450007
+*          DC X'0001'                                                   00460007
+*          DC X'0008'                                                   00470007
+*MYDNM     DC CL8'MYINFILE'                                             00480007
+RETDDN    DC AL2(DALDDNAM)                                              00481007
+          DC X'0001'                                                    00482007
+          DC X'0008'                                                    00483007
+MYDNM     DC CL8'MYINFILE'                                              00484007
+          IHAEXLST ,      DCB EXIT LIST MAPPING                         00485008
+          IEFJFCBN  LIST=YES                                            00486008
+          IEFZB4D0                                                      00490000
+          IEFZB4D2                                                      00500000
+          DCBD                                                          00501005
+DYN       CSECT                                                         00510001
+          YREGS                                                         00511007
+          END                                                           00520000

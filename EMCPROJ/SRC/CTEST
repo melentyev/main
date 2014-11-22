@@ -1,0 +1,46 @@
+CTEST     PROCBGN  FRAMNAME=FRAME,FRAMELEN=FRAMELEN,LBL2=PROLOG
+CTEST     AMODE    24
+          WTO      'CTEST BEGIN'
+*         LOAD     EP=CUTIL
+*         LR       R15,R0
+*         S        R15,=F'20'
+*         MVC      WTOAREA+4(30),0(R15)
+*         WTO      MF=(E,WTOAREA)
+*         MVC      WTOAREA+4(30),30(R15)
+*         WTO      MF=(E,WTOAREA)
+*         A        R15,=F'20'
+          LA       R7,WTOAREA+4
+          CVD      R7,CONVFLD
+          UNPK     ASTR(16),CONVFLD(8)
+          OI       ASTR+15,X'F0'
+          MODESET  KEY=ZERO,MODE=SUP
+          LA       R2,PLARG
+          O        R2,=X'80000000'
+          ST       R2,PLIST
+          LA       R1,PLIST
+*         BALR     R14,R15
+          LINK     EP=CUTIL
+          WTO      MF=(E,WTOAREA)
+          MODESET  KEY=NZERO,MODE=PROB
+********* MAIN PART ***********
+LFINISH   EQU      *
+          WTO      'FINISHING CTEST'
+          LR       R1,R13
+          L        R13,SAVEAREA+4
+          FREEMAIN R,LV=FRAMELEN,A=(R1)
+          LM       R14,R12,12(R13)
+          BR       R14
+WTOAREA   WTO      '                                             ',MF=L
+          DS       0F
+PLIST     DC       F'0'
+PLARG     DC       H'16'
+ASTR      DC       CL16''
+********* DYNAMIC *********
+FRAME     DSECT
+SAVEAREA  DS       80F
+FRAMELEN  EQU      *-FRAME
+CONVFLD   DS       XL8
+********* SVC *********
+*         CVT      DSECT=YES,LIST=YES
+          YREGS
+          END

@@ -1,0 +1,63 @@
+SVCTEST   PROCBGN  FRAMNAME=FRAME,FRAMELEN=FRAMELEN,LBL2=PROLOG         00010007
+SVCTEST   AMODE    31                                                   00011003
+          WTO      'SVCTEST BEGIN'                                      00011107
+********* MAIN PART ***********                                         00120102
+*         MVC      MAGICDD(MGCDCBL),MAGICTPL                            00120203
+*         MVC      OPENMFL(OMFLTPLL),OMFLTPL                            00120303
+*         LA       R3,MAGICDD                                           00120403
+*         ABEND    777,DUMP                                             00120503
+          WTO      'HELLO'                                              00120604
+          MODESET  KEY=ZERO,MODE=SUP   SAVEKEY=SAVEKEYA,                00120705
+          LOAD     EP=IGC0020A,GLOBAL=(YES,F)                           00122009
+          LR       R2,R0                                                00122111
+          SVCUPDTE 201,REPLACE,TYPE=3,EP=(R2)                           00130011
+          MODESET  KEY=NZERO,MODE=PROB                                  00132005
+*         B        LFINISH                                              00136014
+          WTO      'BEFORE SVC'                                         00137013
+          LA       R4,FTST2                                             00138013
+          USING    FRAMTST2,R4                                          00160109
+INST1     L        R6,=X'AABBCCD1'                                      00160204
+INST2     L        R7,=X'AABBCCDD'                                      00160304
+*         L        R4,=X'AABBCCAA'                                      00160414
+          WTO      'RETURNED TO TEST PGM'                               00160504
+*         ABEND    777,DUMP                                             00160604
+                                                                        00160704
+INST3     L        R8,=X'AABBCCDD'                                      00160804
+INST4     L        R9,=X'AABBCCDD'                                      00160904
+          WTO      'AFTER INSTS'                                        00161004
+*         ABEND    555,DUMP                                             00161105
+*         MODESET  KEY=NZERO,MODE=PROB                                  00162004
+LFINISH   EQU      *                                                    00163006
+          WTO      'FINISHING SVCTEST'                                  00164008
+          LR       R1,R13                                               00170000
+          L        R13,SAVEAREA+4                                       00180000
+          FREEMAIN R,LV=FRAMELEN,A=(R1)                                 00190000
+          LM       R14,R12,12(R13)                                      00200000
+          BR       R14                                                  00210000
+MAGICTPL DCB   DDNAME=MAGICDD,DEVD=DA,MACRF=(GM),                      X00210103
+               LRECL=80,DSORG=PS                                        00210203
+MGCDCBL   EQU      *-MAGICTPL                                           00210303
+OMFLTPL   OPEN     (0,INPUT),MF=L                                       00210403
+OMFLTPLL  EQU      *-OMFLTPL                                            00210503
+********* DYNAMIC *********                                             00211000
+FRAME     DSECT                                                         00212000
+SAVEAREA  DS       18F                                                  00213000
+          DS       0F                                                   00213103
+MAGICDD   DS       XL(MGCDCBL)                                          00213203
+INAREA    DS       XL80                                                 00213303
+OPENMFL   DS       XL(OMFLTPLL)                                         00213403
+SETEX1    DS       F                                                    00213508
+FTST2     DS       F                                                    00213613
+          DS       CL8                                                  00213713
+FRAMELEN  EQU      *-FRAME                                              00214000
+******* FRAMTST2 ******                                                 00214108
+FRAMTST2  DSECT                                                         00214208
+AAAFR     DS       F                                                    00214308
+BBBFT     DS       CL8                                                  00214409
+********* SVC *********                                                 00215000
+*         IHAECVT                                                       00232101
+*         IHAPSA                                                        00232201
+          CVT      DSECT=YES,LIST=YES                                   00232310
+*         IHAIPA                                                        00232401
+          YREGS                                                         00240000
+          END                                                           00250000

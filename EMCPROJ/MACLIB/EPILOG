@@ -1,0 +1,24 @@
+*********************************************************               00001001
+* PART OF 'PROLOG-EPILOG-PRDATA'CONSTRUCT                               00002001
+*********************************************************               00003001
+             MACRO                                                      00010000
+&LBL         EPILOG &RET1=NONE                                          00020008
+             GBLC  &PRCSFX                                              00020203
+&DYNLEN      SETC  'DYNLEN'.'&PRCSFX'                                   00020306
+&EPLGSTART   SETC  'PREPSTR'.'&PRCSFX'                                  00020408
+&EPLGSTART   EQU   *                                                    00020508
+             AIF   ('&RET1' EQ 'NONE').NORET1                           00030000
+&LBL         LR    R15,R1                                               00040008
+.NORET1      ANOP                                                       00050005
+&LBL         LR    R1,R13                                               00060008
+*            DC    X'0000'                                              00061009
+             L     R13,4(,13)                                           00070000
+             FREEMAIN R,LV=&DYNLEN,A=(R1)                               00080006
+             L     R14,12(,R13)                                         00090000
+             LM    R0,R12,20(R13)                                       00100000
+             AIF   ('&RET1' EQ 'NONE').NORET2                           00110000
+             LR    R1,R15                                               00120000
+.NORET2      ANOP                                                       00130000
+             XR    R15,R15                                              00140000
+             BR    R14                                                  00150000
+             MEND                                                       00160002

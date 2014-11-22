@@ -1,0 +1,27 @@
+)PANEL
+)ATTR DEFAULT() FORMAT(MIX)                   /* MYPANEL1 -  - 6.0 */
+ 05 TYPE(PT)
+ 06 TYPE(PIN)
+ 09 TYPE(FP)
+ 0A TYPE(NT)
+ 13 TYPE(NEF)
+ 22 TYPE(WASL) SKIP(ON) GE(ON)
+)BODY WINDOW(80,15) CMD(ZCMD)
+’                                      	’                                      ’
+≤Command ===>Z                                                               ’
+’
+√Add Another Hotel
+’
+¿’
+¿’
+≤Othen . . . . .Z             ’
+≤City  . . . . .Z             ’
+)INIT
+.ZVARS = '(ZCMD XCTH XCTY)'
+&ZCMD = ' '
+)PROC
+VER(&XCTH,NONBLANK)
+VER(&XCTY,NONBLANK)
+)END
+/* ISPDTLC Release: 6.0.  Maintenance Level: PID                      */
+/* z/OS 01.10.00.  Created - Date: 17 Nov 2014, Time: 23:22           */

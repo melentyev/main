@@ -1,0 +1,159 @@
+TRYPERT2  CSECT                                                         00010002
+TRYPERT2  AMODE    31                                                   00011006
+PROLOG    EQU      *                                                    00020000
+          STM      R14,R12,12(R13)                                      00030000
+          LR       R12,R15                                              00040000
+          USING    PROLOG,R12                                           00050000
+          GETMAIN  R,LV=FRAMELEN                                        00060000
+          ST       R13,4(,R1)                                           00070000
+          ST       R1,8(,R13)                                           00080000
+          LR       R13,R1                                               00090000
+          USING    FRAME,R13                                            00100000
+********* MAIN PART ***********                                         00101000
+          ST       R13,ESPIEPAR+4                                       00101102
+*         MVI      *+8,X'FF'                                            00101206
+          MODESET  KEY=ZERO,MODE=SUP   SAVEKEY=SAVEKEYA,                00101306
+          BAL      R14,SHOWCTL                                          00101406
+          MODESET  KEY=NZERO,MODE=PROB                                  00101506
+          ESPIE    SET,ESPIE1,((1,15)),PARAM=ESPIEPAR                   00101606
+          MODESET  KEY=ZERO,MODE=SUP   SAVEKEY=SAVEKEYA,                00102003
+          BAL      R14,SHOWCTL                                          00102106
+*         DC       X'0000'                                              00102206
+*         LA       R10,0                                                00102306
+*         LA       R11,0                                                00102406
+*         ISKE     R10,R11                                              00102506
+********* SHOW KEY *************                                        00102606
+*         ABEND    777,DUMP                                             00102706
+          XR       R10,R10                                              00102806
+          LA       R11,ESPIE1                                           00103004
+          LA       R10,476                                              00104006
+*         STURA    R11,R10                                              00104106
+*         SPKA     X'E0'(0)                                             00104205
+          WTO      'TRYPERT2 BEGIN'                                     00110001
+*         EPSW     R7,R8                                                00110105
+*         ST       R7,CONVINP                                           00110305
+*         ST       R8,CONVINP+4                                         00110405
+*         CALTOSTR BIN,INP=CONVINP,OUT=MESSAGE+4,LEN=8,WE=MESSAGE       00110505
+*         STCTL    9,11,CREGS911                                        00111004
+*         CALTOSTR BIN,INP=CREGS911,OUT=MESSAGE+4,LEN=12                00111404
+*         WTO      MF=(E,MESSAGE)                                       00111504
+********* SHOW REAL LOCS **********                                     00111604
+          B        SHOWCTLEND                                           00111706
+SHOWCTL   EQU      *                                                    00111806
+          LR       R11,R14                                              00111906
+          WTO      'REAL'                                               00112006
+          LA       R8,0464(,0)                                          00112106
+          LURA     R7,R8                                                00112206
+          ST       R7,TMPF1                                             00112306
+          LA       R8,0468(,0)                                          00112406
+          LURA     R7,R8                                                00112506
+          ST       R7,TMPF1+4                                           00112606
+          CALTOSTR BIN,INP=TMPF1,OUT=MESSAGE+4,LEN=8,WE=MESSAGE         00112706
+          LA       R8,0472(,0)                                          00112806
+          LURA     R7,R8                                                00112906
+          ST       R7,TMPF1                                             00113006
+          LA       R8,0476(,0)                                          00113106
+          LURA     R7,R8                                                00113206
+          ST       R7,TMPF1+4                                           00113306
+          CALTOSTR BIN,INP=TMPF1,OUT=MESSAGE+4,LEN=8,WE=MESSAGE         00113506
+          BR       R11                                                  00113706
+SHOWCTLEND  EQU    *                                                    00113806
+*         L        R5,0(,R7)                                            00113905
+*         ABEND    777,DUMP                                             00114005
+*         MVC      TMPF1(12),0(R7)                                      00114105
+*         CALTOSTR BIN,INP=TMPF1,OUT=MESSAGE+4,LEN=12,WE=MESSAGE        00114205
+*****************************************                               00114305
+*         DC       X'0000'                                              00114405
+*         ST       R7,NEWPSW                                            00114505
+*         OI       NEWPSW,B'01000000'         PER FLAG                  00114605
+*         OI       NEWPSW+1,B'00001000'       12TH BIT                  00114705
+*         OI       NEWPSW+4,B'10000000'       31-BIT ADDRESING          00114805
+*         CALTOSTR BIN,INP=NEWPSW,OUT=MESSAGE+4,LEN=4                   00114903
+*         WTO      MF=(E,MESSAGE)                                       00115002
+*         CALTOSTR BIN,INP=NEWPSW+4,OUT=MESSAGE+4,LEN=4                 00115103
+*         WTO      MF=(E,MESSAGE)                                       00115202
+*         LPSW     NEWPSW                                               00115305
+*         BR       0                                                    00115405
+*         BR       0                                                    00115505
+NEWPSWAD  EQU      *                                                    00115602
+          STOSM    TMPF1,B'01000000'                                    00115705
+*         STCTL    9,11,CREGS911                                        00115804
+*         OI       CREGS911,B'01000000'                                 00115904
+*         MVC      CREGS911+4(4),APERCAR1                               00116004
+*         MVC      CREGS911+8(4),APERCAR2                               00116104
+*         CALTOSTR BIN,INP=CREGS911,OUT=MESSAGE+4,LEN=12,WE=MESSAGE     00116204
+******** CHECK KEY ************                                         00116304
+*         EPSW     R7,R8                                                00116404
+*         ST       R7,CONVINP                                           00116504
+*         ST       R8,CONVINP+4                                         00116604
+*         CALTOSTR BIN,INP=CONVINP,OUT=MESSAGE+4,LEN=8,WE=MESSAGE       00116704
+*         MODESET  KEY=ZERO,MODE=SUP                                    00116804
+          WTO      'MY PSW'                                             00116906
+          C        R5,TMPF1                                             00117006
+          EPSW     R7,R8                                                00117104
+          ST       R7,CONVINP                                           00117204
+          ST       R8,CONVINP+4                                         00117304
+          CALTOSTR BIN,INP=CONVINP,OUT=MESSAGE+4,LEN=8,WE=MESSAGE       00117404
+          LCTL     9,11,CREGS911                                        00117504
+          CALTOSTR BIN,INP=CREGS911,OUT=MESSAGE+4,LEN=12,WE=MESSAGE     00117606
+*         LA       R8,464                                               00117704
+*         LURA     R7,R8                                                00117804
+*         ST       R7,TMPF1                                             00117904
+*         CALTOSTR BIN,INP=TMPF1,OUT=MESSAGE+4,LEN=4                    00118004
+*         WTO      MF=(E,MESSAGE)                                       00118104
+*         LA       R8,468                                               00118204
+*         LURA     R7,R8                                                00118304
+*         ST       R7,TMPF1                                             00118404
+*         CALTOSTR BIN,INP=TMPF1,OUT=MESSAGE+4,LEN=4                    00118504
+*         WTO      MF=(E,MESSAGE)                                       00118604
+          MODESET  KEY=NZERO,MODE=PROB                                  00118705
+          B        PERCAR1                                              00118803
+*         ABEND    777,DUMP                                             00118902
+          WTO      'FINISH'                                             00119003
+EPILOG    EQU      *                                                    00120000
+          MODESET  KEY=NZERO,MODE=PROB                                  00120205
+          LR       R1,R13                                               00121001
+*****     ABEND    777,DUMP                                             00122003
+          L        R13,SAVEAREA+4                                       00130000
+          FREEMAIN R,LV=FRAMELEN,A=(R1)                                 00180000
+          LM       R14,R12,12(R13)                                      00190000
+          BR       R14                                                  00200000
+********* ESPIE ROUTINE *********                                       00200102
+ESPIE1    EQU      *                                                    00200202
+          L        R8,=X'AAAAAAAA'                                      00200302
+          WTO      MF=(E,ESPIEMSG)                                      00200402
+*         ABEND    888,DUMP                                             00200505
+          BR       R14                                                  00200602
+********* STATIC DATA ***********                                       00200702
+SAVEKEYA  DC       F'0'                                                 00200803
+          CNOP     0,8                                                  00200902
+NEWPSW    DC       F'0'                                                 00201002
+          DC       A(NEWPSWAD)                                          00201102
+          DS       8F                                                   00201202
+PERCAR1   EQU      *                                                    00201302
+          WTO      MF=(E,MSGPERAR)                                      00201403
+          DC       X'0000'                                              00201505
+          B        EPILOG                                               00201603
+          DC       X'EEEEEEE'                                           00201702
+PERCAR2   EQU      *                                                    00201802
+APERCAR1  DC       A(PERCAR1)                                           00201903
+APERCAR2  DC       A(PERCAR2)                                           00202003
+CREGS911  DC       B'01000000'                                          00202104
+          DC       XL3'000000'                                          00202204
+          DC       A(PERCAR1)                                           00202304
+          DC       A(PERCAR2)                                           00202404
+ESPIEPAR  DC       A(PROLOG)                                            00202502
+          DC       F'0'                                                 00202602
+TMPF1     DS       4F                                                   00202705
+MESSAGE   WTO      '                                                   X00202802
+                                                                       X00202902
+                     ',MF=L                                             00203002
+ESPIEMSG  WTO      'ESPIE MSG HERE',MF=L                                00203103
+MSGPERAR  WTO      'PER AREA',MF=L                                      00203203
+********* DYNAMIC DATA **********                                       00204000
+FRAME     DSECT                                                         00210000
+SAVEAREA  DS       18F                                                  00220000
+CONVINP   DS       4F                                                   00221003
+FRAMELEN  EQU      *-FRAME                                              00230000
+          YREGS                                                         00240000
+          END                                                           00250000

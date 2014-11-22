@@ -1,0 +1,69 @@
+TRYPERT1  CSECT                                                         00010000
+TRYPERT1  AMODE    31                                                   00011001
+PROLOG    EQU      *                                                    00020000
+          STM      R14,R12,12(R13)                                      00030000
+          LR       R12,R15                                              00030100
+*         LR       R10,R14                                              00030201
+*         ABEND    444,DUMP                                             00030301
+          USING    PROLOG,R12                                           00030400
+          GETMAIN  R,LV=FRAMELEN                                        00030500
+          ST       R13,4(,R1)                                           00030600
+          ST       R1,8(,R13)                                           00030700
+          LR       R13,R1                                               00030800
+          USING    FRAME,R13                                            00030900
+          WTO      'TRYPERT1 BEGIN'                                     00031000
+EPILOG    EQU      *                                                    00031100
+          ADATA    EPILOG-PROLOG                                        00031202
+          BR       0                                                    00031400
+          BR       0                                                    00031600
+LABEL1    EQU      *                                                    00031704
+          BR       0                                                    00031800
+          L        R6,CONST1                                            00031901
+          L        R5,=X'BBAACCAA'                                      00032001
+*         ABEND    555,DUMP                                             00032102
+          WTO      'NOW HERE'                                           00032201
+          LR       R1,R13                                               00032300
+          L        R13,SAVEAREA+4                                       00032401
+          FREEMAIN R,LV=FRAMELEN,A=(R1)                                 00032500
+          LM       R14,R12,12(R13)                                      00032600
+          BR       R14                                                  00032700
+********* STATIC **********                                             00032801
+CONST1    DC       F'0'                                                 00032901
+********* DYNAMIC *********                                             00033001
+FRAME     DSECT                                                         00033100
+SAVEAREA  DS       18F                                                  00033200
+FRAMELEN  EQU      *-FRAME                                              00034000
+***************************                                             00034105
+INITTEST  CSECT                                                         00035005
+INITTEST  AMODE    31                                                   00036005
+          STM      R14,R12,12(R13)                                      00037005
+          BALR     R12,0                                                00038005
+          USING    *,R12                                                00039005
+********* MAIN ************                                             00039105
+          OPEN     (MAGICDCB,INPUT)                                     00039305
+          GET      MAGICDCB,INAREA                                      00039405
+          CLOSE    (MAGICDCB)                                           00039505
+********* EPILOG **********                                             00039605
+          BR       R14                                                  00039705
+MAGICDCB  DCB      DDNAME=MAGICDD,DEVD=DA,MACRF=(GM),                  X00039805
+               LRECL=80,DSORG=PS                                        00039905
+INAREA    DS       CL80                                                 00040005
+****** INPUT BREAKPOINT FORMAT *******                                  00040105
+INPBPFMT  DSECT                                                         00040205
+FMTOFFST  DS       F          INSTRUCTION OFFSET                        00040305
+FMTINSL   DS       F          INSTRUCTION LENGTH                        00040405
+FMTACTCN  DS       F          ACTIONS COUNT                             00040505
+FMTINSTR  DS       XL6        REPLACED INSTRUCTION                      00040605
+****** INPUT ACTION FORMAT ******                                       00040705
+INPACFMT  DSECT                                                         00040805
+FMTACTID  DS       F          ACTION ID (REGS)                          00040905
+FMTAADDR  DS       F          REGISTER                                  00041006
+FMTAVAL   DS       F          VALUE                                     00041106
+****** INPUT CHECK FORMAT ******                                        00041305
+INPCHFMT  DSECT                                                         00041405
+FMTCHID   DS       F          CHECK ID (REGC)                           00041505
+FMTCADDR  DS       F          REGISTER                                  00041606
+FMTCVAL   DS       F          VALUE                                     00041706
+***********************************                                     00041905
+          YREGS                                                         00042000
+          END                                                           00050000

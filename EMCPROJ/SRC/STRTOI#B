@@ -1,0 +1,81 @@
+             MACRO                                                      00001005
+             DEBR  &R                                                   00002005
+             ST    &R,DEBAREA                                           00003005
+             PUT   PRINTER,DEBAREA                                      00004005
+             MEND                                                       00005005
+*===============================                                        00006005
+PUTONLY      CSECT                                                      00010005
+             STM   14,12,12(13)                                         00020005
+         BALR  R12,0                                                    00030003
+         USING *,R12                                                    00040003
+*===============================                                        00050001
+         ST    13,SAVEAREA+4                                            00060001
+         LR    2,13                                                     00070001
+         LA    13,SAVEAREA                                              00080001
+         ST    13,8(2)                                                  00090001
+*===============================                                        00100001
+         OPEN  (PRINTER,OUTPUT)                                         00110002
+         OPEN  (INFILE,INPUT)                                           00120003
+*===============================                                        00121002
+         GET   INFILE,INAREA                                            00122002
+         CLOSE (INFILE)                                                 00122103
+         PUT   PRINTER,INAREA                                           00123003
+         XR    R7,R7 SET INDEX TO ZERO                                  00123403
+         LA    R8,1                                                     00123503
+         LA    R9,79                                                    00123603
+LENLOOP  EQU   *                                                        00123703
+         LLGC  R10,INAREA(R7)                                           00123805
+         CHI   R10,X'F0'                                                00123903
+         BL    FOUND                                                    00124003
+         CHI   R10,X'F9'                                                00124103
+         BH    FOUND                                                    00124203
+         BXLE  R7,R8,LENLOOP                                            00124304
+FOUND    EQU   *                                                        00124403
+         DEBR  R7                                                       00124505
+         LA    R8,INAREA(R7)                                            00124605
+         LAY   R8,NEG1(,R8)                                             00124705
+         NI    0(R8),X'AF'                                              00124907
+*        SLA   R7,4(0)                                                  00125207
+         LAY   R7,NEG1(,R7)                                             00125307
+         DEBR  R7                                                       00125407
+         EX    R7,PPACK(0)                                              00125507
+         PUT   PRINTER,DWORD                                            00125706
+         CVB   R7,DWORD                                                 00125805
+         DEBR  R7                                                       00126005
+*===============================                                        00126103
+INEOF    EQU   *                                                        00126203
+         CLOSE (PRINTER)                                                00126303
+         L     13,SAVEAREA+4                                            00126403
+         LM    14,12,12(13)                                             00126503
+         XR    15,15                                                    00127003
+         BR    14                                                       00128003
+*===============================                                        00130001
+PPACK    PACK  DWORD(8),INAREA(0)                                       00130107
+NPACK    PACK  DWORD,INAREA+1(0)                                        00130205
+*===============================                                        00130405
+DWORD    DS    D'0'                                                     00130505
+INFILE   DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),EODAD=INEOF,           X00131002
+               LRECL=80,DSORG=PS                                        00132002
+INAREA   DS    CL80' '                                                  00134102
+PRINTER  DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                      X00134203
+               LRECL=133,DSORG=PS                                       00134303
+DEBAREA  DS    CL133' '                                                 00134403
+SAVEAREA DS    18F                                                      00135002
+*===============================                                        00136002
+NEG1     EQU   -1                                                       00137005
+R1       EQU   1                                                        01030001
+R2       EQU   2                                                        01040001
+R3       EQU   3                                                        01050001
+R4       EQU   4                                                        01060001
+R5       EQU   5                                                        01070001
+R6       EQU   6                                                        01080001
+R7       EQU   7                                                        01090001
+R8       EQU   8                                                        01100001
+R9       EQU   9                                                        01110001
+R10      EQU   10                                                       01120001
+R11      EQU   11                                                       01130001
+R12      EQU   12                                                       01140001
+R13      EQU   13                                                       01150001
+R14      EQU   14                                                       01160001
+R15      EQU   15                                                       01170001
+         END                                                            01180001

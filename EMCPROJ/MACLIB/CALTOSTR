@@ -1,0 +1,19 @@
+             MACRO                                                      00010000
+&LBL         CALTOSTR &TYPE,&INP=,&OUT=,&LEN=,&WE=                      00020001
+             AIF   ('&TYPE' EQ 'HEX').HEX                               00051000
+             LA    R15,1                                                00060000
+             AGO   .COMMON1                                             00060100
+.HEX         ANOP                                                       00060200
+             LA    R15,0                                                00061000
+.COMMON1     ANOP                                                       00062000
+             LA    R0,&INP                                              00062100
+             LA    R1,&OUT                                              00062200
+             LR    R2,R0                                                00062300
+             LR    R3,R1                                                00062400
+             LA    R4,&LEN                                              00062500
+             LR    R5,R15                                               00062600
+             LINK  EP=TOSTRING                                          00062800
+             AIF   (K'&WE LT 1).FINISH                                  00062901
+             WTO      MF=(E,&WE)                                        00063001
+.FINISH      ANOP                                                       00064001
+             MEND                                                       00120000

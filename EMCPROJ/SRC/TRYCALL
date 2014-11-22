@@ -1,0 +1,42 @@
+TRYCALL   CSECT                                                         00012016
+          SAVE   (14,12)                                                00020016
+          BALR   R12,0                                                  00030017
+          USING  *,R12                                                  00040016
+*===============================                                        00050000
+          ST     13,SAVEAREA+4                                          00060016
+          LR     2,13                                                   00070016
+          LA     13,SAVEAREA                                            00080016
+          ST     13,8(,2)                                               00090016
+          LR     13,2                                                   00090117
+*===============================                                        00091012
+             OPEN  (PRINTER,OUTPUT)                                     00091220
+*===============================                                        00091320
+          L      R4,=F'-23'                                             00091422
+          WTO    'BEGIN'                                                00091518
+          WHOLE  MSGCONT,0,(R4)                                         00091722
+          WTO    'END'                                                  00091918
+          WTO    TEXT=MSG                                               00092018
+*         WTO    'P1 BEG'                                               00092118
+*         ATTACH EP=SMPLWTO                                             00092218
+*         LOAD  EP=SMPLWTO                                              00092317
+*         LA    R13,SAVEAREA                                            00092417
+*         LR    R15,R0                                                  00092517
+*         BALR  R14,R15                                                 00092617
+*         WTO    'P1 AFT'                                               00092718
+          L      13,SAVEAREA+4                                          00092816
+          RETURN (14,12)                                                00093012
+*===============================                                        00100000
+          YREGS                                                         00110012
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00111019
+               LRECL=133,DSORG=PS                                       00112019
+SAVEAREA  DS    18F                                                     00120012
+MSG       DC    H'50'                                                   00121021
+MSGCONT   DS    CL133                                                   00130021
+          END                                                           00670012
+*         ABEND X'10E',DUMP,,SYSTEM,REASON=21                           00680012
+*         CALL  SMPLWTO                                                 00690012
+*         LOAD  EP=SMPLWTO                                              00700016
+*         LA    R13,SAVEAREA                                            00710012
+*         LR    R15,R0                                                  00720012
+*         BALR  R14,R15                                                 00730012
+*         WTO   'PROGRAM 1 - END'                                       00740012

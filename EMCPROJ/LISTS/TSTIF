@@ -1,0 +1,438 @@
+¯
+                                         High Level Assembler Option Summary                   (PTF UK37157)   Page    1
+                                                                                            HLASM R6.0  2014/11/18 20.58
+²  No Overriding ASMAOPT Parameters
+²  Overriding Parameters-  ADATA
+²  No Process Statements
+
+
+  Options for this Assembly
+²3   ADATA
+²    ALIGN
+²  NOASA
+²    BATCH
+²    CODEPAGE(047C)
+²  NOCOMPAT
+²  NODBCS
+²  NODECK
+²    DXREF
+²    ESD
+²  NOEXIT
+²    FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)
+²  NOFOLD
+²  NOGOFF
+²  NOINFO
+²    LANGUAGE(EN)
+²  NOLIBMAC
+²    LINECOUNT(60)
+²    LIST(121)
+²    MACHINE(,NOLIST)
+²    MXREF(SOURCE)
+²    OBJECT
+²    OPTABLE(UNI,NOLIST)
+²  NOPCONTROL
+²  NOPESTOP
+²  NOPROFILE
+²  NORA2
+²  NORENT
+²    RLD
+²    RXREF
+²    SECTALGN(8)
+²    SIZE(MAX)
+²  NOSUPRWARN
+²    SYSPARM()
+²  NOTERM
+²  NOTEST
+²    THREAD
+²  NOTRANSLATE
+²    TYPECHECK(MAGNITUDE,REGISTER)
+²    USING(NOLIMIT,MAP,WARN(15))
+²  NOWORKFILE
+²    XREF(SHORT,UNREFS)
+
+²  No Overriding DD Names
+¯
+                                              External Symbol Dictionary                                       Page    2
+Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                            HLASM R6.0  2014/11/18 20.58
+²PGMBEGIN  SD 00000001 00000000 00000150             02
+¯
+²                                                                                                               Page    3
+  Active Usings: None
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/11/18 20.58
+²                                      1 PGMBEGIN     AMODE 31                                                   00001009
+²000000                00000 00150     2 PGMBEGIN     CSECT                                                      00010005
+²                                      3              SAVE  (14,12)                                              00020005
+²000000                                5+         DS    0H                                                       01-SAVE
+²000000 90EC D00C            0000C     6+         STM   14,12,12(13)                      SAVE REGISTERS         01-SAVE
+²000004 05C0                           7              BALR  R12,0                                                00030005
+²                 R:C  00006           8              USING *,R12                                                00040005
+²                                      9 *===============================                                        00050005
+²                                     10              GETMAIN R,LV=DYNLEN                                        00060005
+²000006 0700                          12+         CNOP  0,4                     ALIGN PARAMETER                  01-GETMA
+²000008 4510 C00A            00010    13+         BAL   1,*+8                   BRANCH AROUND LENGTH             01-GETMA
+²00000C 0000011D                      14+         DC    A(DYNLEN)               LENGTH                           01-GETMA
+²000010 5800 1000            00000    15+         L     0,0(0,1)                LOAD LENGTH                      01-GETMA
+²000014 0A0A                          16+         SVC   10                      ISSUE GETMAIN SVC                01-GETMA
+²000016 18B1                          17              LR    R11,R1                                               00070005
+²000018 50D0 B004            00004    18              ST    R13,4(,R11)                                          00080005
+²00001C 50B0 D008            00008    19              ST    R11,8(,R13)                                          00090005
+²000020 18DB                          20              LR    R13,R11                                              00100005
+²                 R:D  00000          21              USING DYNMEM,R13                                           00110005
+²                                     22 *===============================                                        00131005
+²                                     23              WTO   'HERE'                                               00132010
+²000022 0700                          25+         CNOP  0,4                                                      01-WTO
+²000024 A715 0006            00030    26+         BRAS  1,IHB0005A               BRANCH AROUND MESSAGE      @LCC 01-WTO
+²000028 0008                          27+         DC    AL2(8)                   TEXT LENGTH            @YA17152 01-WTO
+²00002A 0000                          28+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²00002C C8C5D9C5                      29+         DC    C'HERE'                  MESSAGE TEXT               @L6C 01-WTO
+²000030                               30+IHB0005A DS    0H                                                       01-WTO
+²000030 0A23                          31+         SVC   35                       ISSUE SVC 35               @L6A 01-WTO
+²000032 181D                          32              LR    R1,R13                                               00760005
+²000034 58D0 D004            00004    33              L     R13,SAVEAREA+4                                       00770005
+²                                     34              FREEMAIN R,LV=DYNLEN,A=(R1)                                00780005
+²000038                               36+         CNOP  0,4                                                      01-FREEM
+²000038 47F0 C03A            00040    37+         B     *+8                               BRANCH AROUND LENGTH   01-FREEM
+²00003C 0000011D                      38+         DC    A(DYNLEN)                         LENGTH                 01-FREEM
+²000040 5800 C036            0003C    39+         L     0,*-4                             LOAD SP AND LV         01-FREEM
+²000044 4110 1000            00000    40+         LA    1,0(0,R1)                         LOAD AREA ADDRESS      01-FREEM
+²000048 0A0A                          41+         SVC   10                                ISSUE FREEMAIN SVC     01-FREEM
+²                                     42              RETURN (14,12),RC=0                                        00790005
+²00004A 98EC D00C            0000C    44+         LM    14,12,12(13)                      RESTORE THE REGISTERS  01-RETUR
+²00004E 41F0 0000            00000    45+         LA    15,0(0,0)                         LOAD RETURN CODE       01-RETUR
+²000052 07FE                          46+         BR    14                                RETURN                 01-RETUR
+²                                     47 *===============================                                        00800005
+²000054 A134                          48 TESTINP      DC    XL2'A134'                                            00801009
+²                                     49 MSG     WTO   'RES:                                             ',MF=L  00802009
+²000058                               51+MSG      DS    0F                                                       01-WTO
+²000058 0035                          52+         DC    AL2(53)                  TEXT LENGTH            @YA17152 01-WTO
+²00005A 0000                          53+         DC    B'0000000000000000'      MCSFLAGS                        01-WTO
+²00005C D9C5E27A40404040              54+         DC    C'RES:                                             '    X01-WTO
+²000064 4040404040404040                +                                        MESSAGE TEXT               @L6C
+²                                     55 INFILE       DCB   DDNAME=INFILE,DEVD=DA,MACRF=(GM),                   X00810006
+                                                       LRECL=80,DSORG=PS                                        00820005
+²                                     58+*                       DATA CONTROL BLOCK
+i                                     59+*
+²                                                                                                               Page    4
+  Active Usings: PGMBEGIN+X'6',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/11/18 20.58
+²00008D 000000
+²000090                               60+INFILE   DC    0F'0'          ORIGIN ON WORD BOUNDARY                   01-DCB
+²                                     61+*                       DIRECT ACCESS DEVICE INTERFACE
+²000090 0000000000000000              62+         DC    BL16'0'        FDAD, DVTBL                               01-DCB
+²0000A0 00000000                      63+         DC    A(0)           KEYLEN, DEVT, TRBAL                       01-DCB
+²                                     64+*                       COMMON ACCESS METHOD INTERFACE
+²0000A4 00                            65+         DC    AL1(0)         BUFNO, NUMBER OF BUFFERS                  01-DCB
+²0000A5 000001                        66+         DC    AL3(1)         BUFCB, BUFFER POOL CONTROL BLOCK          01-DCB
+²0000A8 0000                          67+         DC    AL2(0)         BUFL, BUFFER LENGTH                       01-DCB
+²0000AA 4000                          68+         DC    BL2'0100000000000000' DSORG, DATA SET ORGANIZATION       01-DCB
+²0000AC 00000001                      69+         DC    A(1)           IOBAD FOR EXCP OR RESERVED                01-DCB
+²                                     70+*                       FOUNDATION EXTENSION
+²0000B0 00                            71+         DC    BL1'00000000'  BFTEK, BFALN, DCBE INDICATORS             01-DCB
+²0000B1 000001                        72+         DC    AL3(1)         EODAD (END OF DATA ROUTINE ADDRESS)       01-DCB
+²0000B4 00                            73+         DC    BL1'00000000'  RECFM (RECORD FORMAT)                     01-DCB
+²0000B5 000000                        74+         DC    AL3(0)         EXLST (EXIT LIST ADDRESS)                 01-DCB
+²                                     75+*                       FOUNDATION BLOCK
+²0000B8 C9D5C6C9D3C54040              76+         DC    CL8'INFILE'    DDNAME                                    01-DCB
+²0000C0 02                            77+         DC    BL1'00000010'  OFLGS (OPEN FLAGS)                        01-DCB
+²0000C1 00                            78+         DC    BL1'00000000'  IFLGS (IOS FLAGS)                         01-DCB
+²0000C2 5000                          79+         DC    BL2'0101000000000000' MACR (MACRO FORMAT)                01-DCB
+²                                     80+*                       BSAM-BPAM-QSAM INTERFACE
+²0000C4 00                            81+         DC    BL1'00000000'  OPTCD, OPTION CODES                       01-DCB
+²0000C5 000001                        82+         DC    AL3(1)         CHECK OR INTERNAL QSAM SYNCHRONIZING RTN. 01-DCB
+²0000C8 00000001                      83+         DC    A(1)           SYNAD, SYNCHRONOUS ERROR RTN. (3 BYTES)   01-DCB
+²0000CC 0000                          84+         DC    H'0'           INTERNAL ACCESS METHOD FLAGS              01-DCB
+²0000CE 0000                          85+         DC    AL2(0)         BLKSIZE, BLOCK SIZE                       01-DCB
+²0000D0 00000000                      86+         DC    F'0'           INTERNAL ACCESS METHOD FLAGS              01-DCB
+²0000D4 00000001                      87+         DC    A(1)           INTERNAL ACCESS METHOD USE                01-DCB
+²                                     88+*                            QSAM INTERFACE
+²0000D8 00000001                      89+         DC    A(1)           EOBAD                                     01-DCB
+²0000DC 00000001                      90+         DC    A(1)           RECAD                                     01-DCB
+²0000E0 0000                          91+         DC    H'0'           QSWS (FLAGS) AND EITHER DIRCT OR BUFOFF   01-DCB
+²0000E2 0050                          92+         DC    AL2(80)        LRECL                                     01-DCB
+²0000E4 00                            93+         DC    BL1'00000000'  EROPT, ERROR OPTION                       01-DCB
+²0000E5 000001                        94+         DC    AL3(1)         CNTRL                                     01-DCB
+²0000E8 00000000                      95+         DC    H'0,0'         RESERVED AND PRECL                        01-DCB
+²0000EC 00000001                      96+         DC    A(1)           EOB, INTERNAL ACCESS METHOD FIELD         01-DCB
+²                                     97 PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00830005
+                                                       LRECL=133,DSORG=PS                                       00840005
+²                                    100+*                       DATA CONTROL BLOCK
+²                                    101+*
+²0000F0                              102+PRINTER  DC    0F'0'          ORIGIN ON WORD BOUNDARY                   01-DCB
+²                                    103+*                       DIRECT ACCESS DEVICE INTERFACE
+²0000F0 0000000000000000             104+         DC    BL16'0'        FDAD, DVTBL                               01-DCB
+²000100 00000000                     105+         DC    A(0)           KEYLEN, DEVT, TRBAL                       01-DCB
+²                                    106+*                       COMMON ACCESS METHOD INTERFACE
+²000104 00                           107+         DC    AL1(0)         BUFNO, NUMBER OF BUFFERS                  01-DCB
+²000105 000001                       108+         DC    AL3(1)         BUFCB, BUFFER POOL CONTROL BLOCK          01-DCB
+²000108 0000                         109+         DC    AL2(0)         BUFL, BUFFER LENGTH                       01-DCB
+²00010A 4000                         110+         DC    BL2'0100000000000000' DSORG, DATA SET ORGANIZATION       01-DCB
+²00010C 00000001                     111+         DC    A(1)           IOBAD FOR EXCP OR RESERVED                01-DCB
+²                                    112+*                       FOUNDATION EXTENSION
+i000110 00                           113+         DC    BL1'00000000'  BFTEK, BFALN, DCBE INDICATORS             01-DCB
+²                                                                                                               Page    5
+  Active Usings: PGMBEGIN+X'6',R12  DYNMEM,R13
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/11/18 20.58
+²000111 000001                       114+         DC    AL3(1)         EODAD (END OF DATA ROUTINE ADDRESS)       01-DCB
+²000114 00                           115+         DC    BL1'00000000'  RECFM (RECORD FORMAT)                     01-DCB
+²000115 000000                       116+         DC    AL3(0)         EXLST (EXIT LIST ADDRESS)                 01-DCB
+²                                    117+*                       FOUNDATION BLOCK
+²000118 D6E4E3C6C9D3C540             118+         DC    CL8'OUTFILE'   DDNAME                                    01-DCB
+²000120 02                           119+         DC    BL1'00000010'  OFLGS (OPEN FLAGS)                        01-DCB
+²000121 00                           120+         DC    BL1'00000000'  IFLGS (IOS FLAGS)                         01-DCB
+²000122 0050                         121+         DC    BL2'0000000001010000' MACR (MACRO FORMAT)                01-DCB
+²                                    122+*                       BSAM-BPAM-QSAM INTERFACE
+²000124 00                           123+         DC    BL1'00000000'  OPTCD, OPTION CODES                       01-DCB
+²000125 000001                       124+         DC    AL3(1)         CHECK OR INTERNAL QSAM SYNCHRONIZING RTN. 01-DCB
+²000128 00000001                     125+         DC    A(1)           SYNAD, SYNCHRONOUS ERROR RTN. (3 BYTES)   01-DCB
+²00012C 0000                         126+         DC    H'0'           INTERNAL ACCESS METHOD FLAGS              01-DCB
+²00012E 0000                         127+         DC    AL2(0)         BLKSIZE, BLOCK SIZE                       01-DCB
+²000130 00000000                     128+         DC    F'0'           INTERNAL ACCESS METHOD FLAGS              01-DCB
+²000134 00000001                     129+         DC    A(1)           INTERNAL ACCESS METHOD USE                01-DCB
+²                                    130+*                            QSAM INTERFACE
+²000138 00000001                     131+         DC    A(1)           EOBAD                                     01-DCB
+²00013C 00000001                     132+         DC    A(1)           RECAD                                     01-DCB
+²000140 0000                         133+         DC    H'0'           QSWS (FLAGS) AND EITHER DIRCT OR BUFOFF   01-DCB
+²000142 0085                         134+         DC    AL2(133)       LRECL                                     01-DCB
+²000144 00                           135+         DC    BL1'00000000'  EROPT, ERROR OPTION                       01-DCB
+²000145 000001                       136+         DC    AL3(1)         CNTRL                                     01-DCB
+²000148 00000000                     137+         DC    H'0,0'         RESERVED AND PRECL                        01-DCB
+²00014C 00000001                     138+         DC    A(1)           EOB, INTERNAL ACCESS METHOD FIELD         01-DCB
+                                    139              YREGS                                                      00850005
+²                      00000         141+R0       EQU   0                                                        01-YREGS
+²                      00001         142+R1       EQU   1                                                        01-YREGS
+²                      00002         143+R2       EQU   2                                                        01-YREGS
+²                      00003         144+R3       EQU   3                                                        01-YREGS
+²                      00004         145+R4       EQU   4                                                        01-YREGS
+²                      00005         146+R5       EQU   5                                                        01-YREGS
+²                      00006         147+R6       EQU   6                                                        01-YREGS
+²                      00007         148+R7       EQU   7                                                        01-YREGS
+²                      00008         149+R8       EQU   8                                                        01-YREGS
+²                      00009         150+R9       EQU   9                                                        01-YREGS
+²                      0000A         151+R10      EQU   10                                                       01-YREGS
+²                      0000B         152+R11      EQU   11                                                       01-YREGS
+²                      0000C         153+R12      EQU   12                                                       01-YREGS
+²                      0000D         154+R13      EQU   13                                                       01-YREGS
+²                      0000E         155+R14      EQU   14                                                       01-YREGS
+                      0000F         156+R15      EQU   15                                                       01-YREGS
+²                                    158 *===============================                                        00860005
+²000000                00000 0011D   159 DYNMEM       DSECT                                                      00870005
+²000000                              160 SAVEAREA     DS    18F                                                  00880005
+²000048                              161 INAREA       DS    CL80                                                 00890005
+²000098                              162 DEBAREA      DS    CL133                                                00900005
+²                      0011D         163 DYNLEN       EQU   (*-DYNMEM)                                           00910005
+²                                    164 *===============================                                        00920005
+²000000                00000 00008   165 LISTITEM     DSECT                                                      00930005
+²000000                              166 ITVAL        DS    F                                                    00940005
+²000004                              167 ITNEXT       DS    F                                                    00950005
+i                      00008         168 ITEMSIZE     EQU   (*-LISTITEM)                                         00960005
+²                                                                                                               Page    6
+  Active Usings: PGMBEGIN+X'6',R12  DYNMEM,R13
+D-Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/11/18 20.58
+²                                    169 *===============================                                        00970005
+²                                    170              END                                                        00980005
+¯
+                               Ordinary Symbol and Literal Cross Reference                                     Page    7
+Symbol   Length   Value     Id    R Type Asm  Program   Defn References                     HLASM R6.0  2014/11/18 20.58
+²DYNLEN        1 0000011D FFFFFFFF A   U                  163   14    38
+²DYNMEM        1 00000000 FFFFFFFF     J                  159   21U  163
+²IHB0005A      2 00000030 00000001     H  H                30   26B
+²LISTITEM      1 00000000 FFFFFFFE     J                  165  168
+²PGMBEGIN      1 00000000 00000001     J                    2    1
+²R1            1 00000001 00000001 A   U                  142   17    32M   40
+²R11           1 0000000B 00000001 A   U                  152   17M   18    19    20
+²R12           1 0000000C 00000001 A   U                  153    7M    8U
+²R13           1 0000000D 00000001 A   U                  154   18    19    20M   21U   32    33M
+²SAVEAREA      4 00000000 FFFFFFFF     F  F               160   33
+¯
+                                  Unreferenced Symbols Defined in CSECTs                                       Page    8
+  Defn  Symbol                                                                              HLASM R6.0  2014/11/18 20.58
+²    60  INFILE
+²    51  MSG
+²   102  PRINTER
+²   141  R0
+²   151  R10
+²   155  R14
+²   156  R15
+²   143  R2
+²   144  R3
+²   145  R4
+²   146  R5
+²   147  R6
+²   148  R7
+²   149  R8
+²   150  R9
+²    48  TESTINP
+¯
+                                          Macro and Copy Code Source Summary                                   Page    9
+ Con Source                                        Volume    Members                        HLASM R6.0  2014/11/18 20.58
+²  L2 SYS1.MACLIB                                   ZARES1    DCB      FREEMAIN GETMAIN  IHB01    RETURN   SAVE
+²                                                             SYSSTATE WTO      YREGS
+¯
+                                                Dsect Cross Reference                                          Page   10
+Dsect     Length      Id       Defn                                                         HLASM R6.0  2014/11/18 20.58
+²DYNMEM   0000011D  FFFFFFFF     159
+²LISTITEM 00000008  FFFFFFFE     165
+¯
+                                                      Using Map                                                Page   11
+²                                                                                            HLASM R6.0  2014/11/18 20.58
+²  Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text
+          Count      Id           Type          Value    Range     Id        Disp    Stmt
+²     8  00000006  00000001 USING  ORDINARY    00000006 00001000 00000001  12 0003A     39 *,R12
+²    21  00000022  00000001 USING  ORDINARY    00000000 00001000 FFFFFFFF  13 00004     33 DYNMEM,R13
+¯
+                                   General Purpose Register Cross Reference                                    Page   12
+ Register  References (M=modified, B=branch, U=USING, D=DROP, N=index)                      HLASM R6.0  2014/11/18 20.58
+²    0(0)       6    15M   39M   44M
+²    1(1)       6    13M   15    17    26M   32M   40M   40    44M
+²    2(2)       6    44M
+²    3(3)       6    44M
+²    4(4)       6    44M
+²    5(5)       6    44M
+²    6(6)       6    44M
+²    7(7)       6    44M
+²    8(8)       6    44M
+²    9(9)       6    44M
+²   10(A)       6    44M
+²   11(B)       6    17M   18    19    20    44M
+²   12(C)       6     7M    8U   44M
+²   13(D)       6    18    19    20M   21U   32    33M   44
+²   14(E)       6    44M   46B
+²   15(F)       6    44M   45M
+¯
+                                  Diagnostic Cross Reference and Assembler Summary                             Page   13
+                                                                                            HLASM R6.0  2014/11/18 20.58
+²     No Statements Flagged in this Assembly
+HIGH LEVEL ASSEMBLER, 5696-234, RELEASE 6.0, PTF UK37157
+SYSTEM: z/OS 01.10.00              JOBNAME: TSTIF       STEPNAME: STEP       PROCSTEP: C
+²Data Sets Allocated for this Assembly
+² Con DDname   Data Set Name                                Volume  Member
+²  P1 SYSIN    MELEN.SRC                                    ZAIMS1  TSTIF
+²  L1 SYSLIB   MELEN.MACLIB                                 ZAIMS1
+²  L2          SYS1.MACLIB                                  ZARES1
+²     SYSADATA MELEN.ADATAS.DCFCOL01                        ZASYS1
+²     SYSLIN   SYS14322.T205857.RA000.TSTIF.OBJ.H01         ZASYS1
+²     SYSPRINT MELEN.LISTS                                  ZAIMS1  TSTIF
+²
+²  31968K allocated to Buffer Pool       Storage required     888K
+²     39 Primary Input Records Read        10372 Library Records Read                  0 Work File Reads
+²      0 ASMAOPT Records Read                321 Primary Print Records Written         0 Work File Writes
+      9 Object Records Written              377 ADATA Records Written
+²Assembly Start Time: 20.58.58 Stop Time: 20.58.59 Processor Time: 00.00.00.7920
+²Return Code 000
+¯
+                                         High Level Assembler Option Summary                   (PTF UK37157)   Page    1
+                                                                                            HLASM R6.0  2014/11/18 20.58
+²  No Overriding ASMAOPT Parameters
+²  Overriding Parameters-  ADATA
+²  No Process Statements
+
+
+  Options for this Assembly
+²3   ADATA
+²    ALIGN
+²  NOASA
+²    BATCH
+²    CODEPAGE(047C)
+²  NOCOMPAT
+²  NODBCS
+²  NODECK
+²    DXREF
+²    ESD
+²  NOEXIT
+²    FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)
+²  NOFOLD
+²  NOGOFF
+²  NOINFO
+²    LANGUAGE(EN)
+²  NOLIBMAC
+²    LINECOUNT(60)
+²    LIST(121)
+²    MACHINE(,NOLIST)
+²    MXREF(SOURCE)
+²    OBJECT
+²    OPTABLE(UNI,NOLIST)
+²  NOPCONTROL
+²  NOPESTOP
+²  NOPROFILE
+²  NORA2
+²  NORENT
+²    RLD
+²    RXREF
+²    SECTALGN(8)
+²    SIZE(MAX)
+²  NOSUPRWARN
+²    SYSPARM()
+²  NOTERM
+²  NOTEST
+²    THREAD
+²  NOTRANSLATE
+²    TYPECHECK(MAGNITUDE,REGISTER)
+²    USING(NOLIMIT,MAP,WARN(15))
+²  NOWORKFILE
+²    XREF(SHORT,UNREFS)
+
+²  No Overriding DD Names
+¯
+²                                                                                                               Page    2
+  Active Usings: None
+  Loc  Object Code    Addr1 Addr2  Stmt   Source Statement                                  HLASM R6.0  2014/11/18 20.58
+²                                      1 *            OPEN  (PRINTER,OUTPUT)                                     00990010
+²                                      2 *            OPEN  (INFILE,INPUT)                                       01000010
+²                                      3 *===============================                                        01010010
+²                                      4 *            GET   INFILE,INAREA                                        01020010
+²                                      5 *            STRTOINT (R3),INAREA                                       01030010
+²                                      6 *            LA    R2,TESTINP                                           01040010
+²                                      7 *            LA    R3,MSG+8                                             01050010
+²                                      8 *            LA    R4,2                                                 01060010
+²                                      9 *            LA    R5,1                                                 01070010
+²                                     10 *            LINK  EP=TOSTRING                                          01080010
+²                                     11 *            CALTOSTR BIN,INP=TESTINP,OUT=MSG+8,LEN=2                   01090010
+²                                     12 *            WTO   MF=(E,MSG)                                           01100010
+²                                     13 *            WTO   'FINISH'                                             01110010
+²                                     14 *            CLOSE (INFILE)                                             01120010
+²                                     15 *            CLOSE (PRINTER)                                            01130010
+²** ASMA140W END record missing
+²** ASMA435I Record 54 in MELEN.SRC(TSTIF) on volume: ZAIMS1
+¯
+                                   General Purpose Register Cross Reference                                    Page    3
+ Register  References (M=modified, B=branch, U=USING, D=DROP, N=index)                      HLASM R6.0  2014/11/18 20.58
+²    0(0)    (no references identified)
+²    1(1)    (no references identified)
+²    2(2)    (no references identified)
+²    3(3)    (no references identified)
+²    4(4)    (no references identified)
+²    5(5)    (no references identified)
+²    6(6)    (no references identified)
+²    7(7)    (no references identified)
+²    8(8)    (no references identified)
+²    9(9)    (no references identified)
+²   10(A)    (no references identified)
+²   11(B)    (no references identified)
+²   12(C)    (no references identified)
+²   13(D)    (no references identified)
+²   14(E)    (no references identified)
+²   15(F)    (no references identified)
+¯
+                                  Diagnostic Cross Reference and Assembler Summary                             Page    4
+                                                                                            HLASM R6.0  2014/11/18 20.58
+Statements Flagged
+²    16(P1,54)
+
+      1 Statement  Flagged in this Assembly        4 was Highest Severity Code
+HIGH LEVEL ASSEMBLER, 5696-234, RELEASE 6.0, PTF UK37157
+SYSTEM: z/OS 01.10.00              JOBNAME: TSTIF       STEPNAME: STEP       PROCSTEP: C
+²Data Sets Allocated for this Assembly
+² Con DDname   Data Set Name                                Volume  Member
+²  P1 SYSIN    MELEN.SRC                                    ZAIMS1  TSTIF
+²  L1 SYSLIB   MELEN.MACLIB                                 ZAIMS1
+²  L2          SYS1.MACLIB                                  ZARES1
+²     SYSADATA MELEN.ADATAS.DCFCOL01                        ZASYS1
+²     SYSLIN   SYS14322.T205857.RA000.TSTIF.OBJ.H01         ZASYS1
+²     SYSPRINT MELEN.LISTS                                  ZAIMS1  TSTIF
+²
+²  31968K allocated to Buffer Pool       Storage required     888K
+²     15 Primary Input Records Read            0 Library Records Read                  0 Work File Reads
+²      0 ASMAOPT Records Read                117 Primary Print Records Written         0 Work File Writes
+      0 Object Records Written               24 ADATA Records Written
+²Assembly Start Time: 20.58.59 Stop Time: 20.58.59 Processor Time: 00.00.00.0375
+²Return Code 004

@@ -1,0 +1,30 @@
+CPP       CSECT                                                         00010001
+PROLOG    EQU      *                                                    00020001
+          STM      R14,R12,12(R13)                                      00030001
+          LR       R12,R15                                              00040001
+          USING    PROLOG,R12                                           00050001
+          GETMAIN  R,LV=FRAMELEN                                        00060001
+          ST       R13,4(,R1)                                           00070001
+          ST       R1,8(,R13)                                           00080001
+          LR       R13,R1                                               00090001
+          USING    FRAME,R13                                            00100001
+********* MAIN PART ***********                                         00110001
+          WTO      'TRYPERT1 BEGIN'                                     00120001
+*         ABEND    555,DUMP                                             00120103
+*         WTO      TEXT=CST22                                           00121002
+EPILOG    EQU      *                                                    00130001
+          LR       R1,R13                                               00131002
+          L        R13,SAVEAREA+4                                       00140001
+          FREEMAIN R,LV=FRAMELEN,A=(R1)                                 00160001
+          LM       R14,R12,12(R13)                                      00170001
+          BR       R14                                                  00180001
+********* DYNAMIC DATA **********                                       00190001
+FRAME     DSECT                                                         00200001
+SAVEAREA  DS       18F                                                  00210001
+FRAMELEN  EQU      *-FRAME                                              00220001
+*********************************                                       00221001
+CSECT2    CSECT                                                         00222001
+          B        R14                                                  00223001
+CST22     DC       CL4'AAAA'                                            00224001
+          YREGS                                                         00230001
+          END                                                           00240001

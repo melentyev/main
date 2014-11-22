@@ -1,0 +1,50 @@
+SMPLNOR      CSECT                                                      00010000
+             SAVE  (14,12)                                              00020000
+             BALR  R12,0                                                00030000
+             USING *,R12                                                00040000
+*===============================                                        00050000
+*            GETMAIN R,LV=DYNLEN                                        00060000
+*            ST    R13,4(,R1)                                           00070000
+*            LR    R2,R13                                               00080000
+*            LR    R13,R1                                               00090000
+*            ST    R13,8(,R2)                                           00100000
+*            USING DYNMEM,R13                                           00110000
+*===============================                                        00120000
+             ST    13,SAVEAREA+4                                        00130000
+             LR    2,13                                                 00140000
+             LA    13,SAVEAREA                                          00150000
+             ST    13,8(,2)                                             00160000
+*===============================                                        00170000
+             LA    R7,0(0,0)                                            00180000
+             L     R6,NID                                               00190000
+             LA    R6,1(,R6)                                            00200000
+             ST    R6,NID                                               00210000
+             ST    R6,TXTMSG+4                                          00220000
+             WTO  TEXT=TXT                                              00230000
+*            ST    R7,MYDS                                              00240000
+             ST    R6,MYDS                                              00250000
+LOOP         EQU   *                                                    00260000
+*            IF    (R6),EQ,MYDS                                         00270000
+*             X    R7,=F'1'                                             00280000
+*             ST   R7,MYDS                                              00290000
+*             ST   R6,MYDS                                              00300000
+             C     R6,TXTMSG+4                                          00310000
+             BNE   ABND                                                 00320000
+              ST    R6,TXTMSG+4                                         00330000
+              WTO  TEXT=TXT                                             00340000
+              B    LOOP                                                 00350000
+*            ELSE                                                       00360000
+ABND          ABEND 777,,STEP                                           00370000
+*            ENDIF                                                      00380000
+*===============================                                        00390000
+             L     13,SAVEAREA+4                                        00400000
+             RETURN (14,12)                                             00410000
+             YREGS                                                      00420000
+*YNMEM       DSECT                                                      00430000
+TXT          DC    H'50'                                                00440000
+TXTMSG       DC    CL100'MSGT'                                          00450000
+NID          DC    X'000000F0'                                          00460000
+SAVEAREA     DS    18F                                                  00470000
+MYDS         DS    F                                                    00480000
+*YNLEN       EQU   (*-DYNMEM)                                           00490000
+             END                                                        00500000

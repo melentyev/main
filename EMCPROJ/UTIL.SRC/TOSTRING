@@ -1,0 +1,60 @@
+*         R2 - INPUT ADDR, R3 - OUTPUTADDR,                             00003000
+*         R4 - COUNT BYTES, R5 - FORMAT PARAMS                          00004000
+          PRINT    MCALL                                                00005000
+TOSTRING  CSECT                                                         00010000
+TOSTRING  AMODE    31                                                   00010102
+PROLOG    EQU      *                                                    00011000
+          STM      R14,R12,12(R13)                                      00012000
+          LR       R12,R15                                              00013000
+          USING    PROLOG,R12                                           00014000
+          GETMAIN  R,LV=DYNDATAL                                        00015000
+          ST       R1,8(,R13)                                           00016000
+          ST       R13,4(,R1)                                           00020000
+          LR       R13,R1                                               00020100
+          USING    DYNDATA,R13                                          00020200
+********* MAIN PART ****************                                    00020300
+          IF       ((R5),EQ,=F'0')                                      00020700
+           WTO     MF=(E,MSGNONDEF)                                     00020800
+          ELSE                                                          00020900
+*          WTO     'RUN'                                                00021002
+           WHILE   ((R4),GT,=F'0')                                      00021100
+            LA     R6,8                  R6 - COUNTER ON                00021200
+            LLGC   R7,0(,R2)             R7 - CURRENTBYTE               00021300
+*           WTO    'HERE1'                                              00021400
+            WHILE  ((R6),GT,=F'0')                                      00021500
+             LR    R8,R7                                                00021600
+             N     R8,=X'00000080'                                      00021700
+*            WTO    'HERE4'                                             00021800
+             IF    ((R8),EQ,=F'0')                                      00021900
+*             WTO    'HERE 0'                                           00022000
+              MVI  0(R3),C'0'                                           00022100
+             ELSE                                                       00022200
+*             WTO    'HERE 1'                                           00022300
+              MVI  0(R3),C'1'                                           00022400
+             ENDIF                                                      00022500
+             INCR  (R3)                                                 00022600
+*            WTO    'HERE8'                                             00022700
+             SLA   R7,1(0)                                              00022800
+*            WTO    'HERE9'                                             00022900
+             DECR  (R6)                                                 00023000
+*            WTO    'HERE3'                                             00023100
+            ENDWHILE                                                    00023200
+            MVI    0(R3),C' '                                           00023301
+            DECR   (R4)                                                 00023400
+            INCR   (R2,R3)                                              00023500
+           ENDWHILE                                                     00023600
+          ENDIF                                                         00023700
+EPILOG    EQU      *                                                    00023900
+          LR       R1,R13                                               00024000
+          L        R13,4(,R13)                                          00024100
+          FREEMAIN R,LV=DYNDATAL,A=(R1)                                 00025000
+          LM       R14,R12,12(R13)                                      00030000
+          XR       R15,R15                                              00030100
+          BR       R14                                                  00030200
+********* STATIC *********                                              00030300
+MSGNONDEF WTO      'NOT DEFINED OPERATION',MF=L                         00030400
+DYNDATA   DSECT                                                         00031000
+SAVEAREA  DS       18F                                                  00032000
+DYNDATAL  EQU      *-DYNDATA                                            00033000
+          YREGS                                                         00040000
+          END                                                           00050000

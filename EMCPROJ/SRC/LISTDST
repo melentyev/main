@@ -1,0 +1,27 @@
+LISTDST   PROLOG AMODE=31 MODESET=KEYZERO                               00010005
+*         WTO  'HERE1'                                                  00010404
+*         LINK EP=IKJEFT01                                              00010502
+*         WTO  'AAA'                                                    00010602
+*         ATTACH EP=IKJEFT01                                            00010704
+*         WAIT ECB=WAITECB                                              00010804
+*         MODESET KEY=ZERO                                              00010905
+*         WTO   'HERE'                                                  00011005
+*         LA   R1,0(0,0)                                                00011105
+*         LINK EP=IKJEFT1A                                              00011205
+*         ABEND 777,DUMP                                                00011305
+*         LR    R5,R0                                                   00011405
+*         WTO   'AFTERLOAD'                                             00011505
+*         MODESET KEY=NZERO                                             00011605
+*         WTO  'HERE2'                                                  00011701
+          LA    R1,0(0,0)                                               00011805
+          LR    R15,R5                                                  00011905
+          BALR  R14,R15                                                 00012005
+          WTO  'HERE3'                                                  00012101
+*         MODESET EXTKEY=TCB,SAVEKEY=KEYSAVE,WORKREG=1                  00013005
+          EPILOG                                                        00020000
+WAITECB   DC   F'0'                                                     00020103
+*IKJEFT01  DC   V(IKJEFT01)                                             00021001
+          APRDATA                                                       00030000
+          BPRDATA                                                       00040000
+          YREGS                                                         00050000
+          END                                                           00060000

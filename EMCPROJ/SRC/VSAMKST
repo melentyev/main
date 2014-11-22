@@ -1,0 +1,102 @@
+VSAMKST   PROLOG                                                        00010000
+          L      R2,0(,R1)                                              00010104
+          LH     R3,0(,R2)                                              00010204
+          LA     R4,2(,R2)                                              00010304
+          IF    (((R3),EQ,=F'3'),AND,((R4),CLCEQ,ADDSTR))               00010504
+            B    CMDADD                                                 00010604
+          ENDIF                                                         00010804
+          IF    (((R3),EQ,=F'4'),AND,((R4),CLCEQ#4,LISTSTR))            00011504
+            B    CMDLIST                                                00011604
+          ENDIF                                                         00011704
+          IF    (((R3),EQ,=F'6'),AND,((R4),CLCEQ,DELETESTR))            00011904
+            B    CMDDEL                                                 00012004
+          ENDIF                                                         00012104
+          B      ERRCMD                                                 00012304
+*         OPEN   (INFILE,INPUT)                                         00012403
+*         OPEN   (OUTFILE,OUTPUT)                                       00012503
+*         CLOSE  (INFILE)                                               00012603
+*         CLOSE  (OUTFILE)                                              00012703
+CMDLIST   EQU    *                                                      00012804
+          WTO    'CMDLIST'                                              00012904
+          OPEN   (LSTACB)                                               00013004
+INLOOP    GET    RPL=LSTRPL                                             00013104
+          LTR    R15,R15                                                00013204
+          BNZ    LSTERROR                                               00013304
+          MVC    DEBAREA(80),WORKAREA                                   00013404
+          WTO    TEXT=DEB                                               00013504
+          B      INLOOP                                                 00013704
+          PRRET                                                         00013804
+CMDDEL    EQU    *                                                      00013904
+          OPEN   (MODACB)                                               00014006
+          OPEN   (CMDDCB,INPUT)                                         00014106
+          GET    CMDDCB,WORKAREA                                        00014306
+          MVC    KEYFIELD(8),WORKAREA                                   00014406
+          GET    RPL=DELRPL                                             00014504
+          LTR    R15,R15                                                00014604
+          BNZ    GETERROR                                               00014704
+          ERASE  RPL=DELRPL                                             00014804
+          LTR    R15,R15                                                00014904
+          BNZ    DELERROR                                               00015004
+          CLOSE  (CMDDCB)                                               00015106
+          PRRET                                                         00015204
+CMDADD    EQU    *                                                      00015304
+          OPEN   (MODACB)                                               00015406
+          OPEN   (CMDDCB,INPUT)                                         00015506
+          GET    CMDDCB,WORKAREA                                        00015606
+          LA     R2,80(0,0)                                             00015704
+          MODCB  RPL=PUTRPL,RECLEN=(R2)                                 00015804
+          LTR    R15,R15                                                00016004
+          BNZ    CHECKO                                                 00017003
+          PUT    RPL=PUTRPL                                             00018004
+          LTR    R15,R15                                                00018104
+          BNZ    PUTERROR                                               00018204
+          WTO    'AFTPUT'                                               00018303
+          PRRET                                                         00018404
+ERRCMD    EQU    *                                                      00020104
+          WTO    'ERROR IN REQUEST'                                     00020204
+          PRRET                                                         00020304
+EOD       EQU    *                                                      00020404
+          WTO    'EOD'                                                  00020504
+          PRRET                                                         00020604
+LSTERROR  EQU    *                                                      00020704
+          WTO    'LSTERROR'                                             00020804
+          PRRET                                                         00020904
+GETERROR  EQU    *                                                      00021004
+          WTO    'GET ERROR'                                            00021106
+          ABEND  755,DUMP                                               00021204
+          PRRET                                                         00021304
+DELERROR  EQU    *                                                      00021404
+          WTO    'DELETE ERROR'                                         00021506
+          ABEND  755,DUMP                                               00021604
+          PRRET                                                         00021704
+PUTERROR  EQU    *                                                      00021804
+          LR     R5,R15                                                 00021906
+          WTO    'PUT ERROR'                                            00022006
+          ST     R5,DEBAREA                                             00022206
+          WTO    TEXT=DEB                                               00022303
+          PRRET                                                         00022404
+CHECKO    EQU    *                                                      00022503
+          WTO    'CHECKO'                                               00022603
+          EPILOG                                                        00022704
+LSTRPL    RPL  ACB=LSTACB,AREA=WORKAREA,AREALEN=250,                   X00022804
+               OPTCD=(KEY,SEQ,SYN,NUP,MVE)                              00022904
+PUTRPL    RPL  ACB=MODACB,AREA=WORKAREA,AREALEN=250,                   X00023006
+               OPTCD=(KEY,SEQ,SYN,NUP,MVE)                              00026002
+DELRPL    RPL  ACB=MODACB,AREA=WORKAREA,AREALEN=250,                   X00027006
+               ARG=KEYFIELD,OPTCD=(KEY,DIR,SYN,UPD,MVE,FKS,KEQ)         00027303
+EXLST1    EXLST  EODAD=EOD                                              00027504
+MODACB    ACB    DDNAME=FILE,MACRF=(KEY,DIR,OUT)                        00028004
+LSTACB    ACB    DDNAME=FILE,EXLST=EXLST1,MACRF=(KEY,SEQ,IN)            00028104
+CMDDCB    DCB    DDNAME=INPARM,MACRF=(GM),DEVD=DA,LRECL=80,DSORG=PS     00028206
+DELETESTR DC     CL6'DELETE'                                            00028504
+ADDSTR    DC     CL3'ADD'                                               00028604
+LISTSTR   DC     CL4'LIST'                                              00028704
+WORKAREA  DC     CL250'RRRRRRRRAAAAAA'                                  00029004
+KEYFIELD  DC     CL8'RRRRRRRR'                                          00029104
+DEB       DC     H'90'                                                  00029204
+          DC     CL2'D:'                                                00029304
+DEBAREA   DC     CL133''                                                00029403
+          APRDATA                                                       00030000
+          BPRDATA                                                       00040000
+          YREGS                                                         00041003
+          END                                                           00050000

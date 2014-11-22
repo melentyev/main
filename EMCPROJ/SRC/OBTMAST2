@@ -1,0 +1,24 @@
+OBTMAST2  PROLOG AMODE=31                                               00010000
+          L      R3,FLCCVT-PSA                                          00040002
+          L      R4,CVTECVT-CVTMAP(R3)                                  00060002
+          L      R5,ECVTIPA-ECVT(R4)                                    00080002
+          USING  IPA,R5                                                 00090001
+          MVC    MSGVSERC(6),IPASCVOL                                   00100000
+          MVC    MSGDSNC(44),IPASCDSN                                   00101000
+          WTO    TEXT=MSGVSER                                           00110000
+          WTO    TEXT=MSGDSN                                            00111000
+          EPILOG                                                        00120000
+MSGVSER   DC     H'50'                                                  00130000
+          DC     CL7'VOLSER:'                                           00140000
+MSGVSERC  DC     CL40''                                                 00150000
+MSGDSN    DC     H'50'                                                  00151000
+          DC     CL4'DSN:'                                              00152000
+MSGDSNC   DC     CL40''                                                 00153000
+          APRDATA                                                       00160000
+          BPRDATA                                                       00170000
+          IHAECVT                                                       00171001
+          IHAPSA                                                        00180000
+          CVT                                                           00190000
+          IHAIPA                                                        00210000
+          YREGS                                                         00220000
+          END                                                           00230000

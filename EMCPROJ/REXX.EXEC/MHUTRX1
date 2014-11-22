@@ -1,0 +1,333 @@
+/* REXX */
+/*LINE='          END '
+parse var LINE Lab Kw Val
+say '#'Lab'#'Kw'#'Val'#'
+EXIT
+TmpStr='AAA,'
+parse var TmpStr TmpLab','.
+say TmpLab
+EXIT
+*/
+arg TargetModuleName
+LoadModules.0=2
+LoadModules.1='MHUTSET4'
+LoadModules.2='MHUTTST7'
+LoadLibName='MELEN.LOADLIB1'
+SvcComDDNAME='SVCCOM42'
+MyPrefix = 'MH42'
+LoadModName = 'MH42LD1'
+Breakpoints.0 = 0
+Dsects.0 = 0
+'EXECIO * DISKR MHUTIN (STEM Input.'
+'EXECIO * DISKR MODADATA (STEM RawADATA.'
+call ParseInput
+/*say 'Actscnt:' Dsects.0
+say  Dsects.2.Stmts.1 */
+call ParseADATA
+T=MakeLoadModules(LoadLibName,LoadModules.1,LoadModules.2)
+T=MakeSvcCommunicationDataset(LoadModules.1,LoadModules.2,SvcComDDNAME)
+T=WriteForSPZAP(TargetModuleName,201)
+EXIT
+ParseInput: Procedure Expose Input. Dsects. Breakpoints.
+  isDone = 0
+  Ln = 1
+  Do While isDone == 0
+    parse var INPUT.Ln Lab Kw Val
+    Select
+      When Lab == 'END' & Kw == '' then Do
+        Return ''
+        End
+      When Kw == 'SET' | Kw == 'TEST' then Do
+        Tmp = Breakpoints.0 + 1
+        Breakpoints.0 = Tmp
+        Breakpoints.Tmp = Lab
+        End
+      When Kw == 'DSECT' then Do
+        Tmp = Dsects.0 + 1
+        Dsects.0 = Tmp
+        Dsects.Tmp.Bp = Breakpoints.0
+        Dsects.Tmp.Stmts.0 = 1
+        Dsects.Tmp.Stmts.1 = Lab Kw
+        End
+      When Kw \= '' & Lab \= '' & Val \= '' then Do
+        Dn = Dsects.0
+        Sn = Dsects.Dn.Stmts.0 + 1
+        Dsects.Dn.Stmts.0 = Sn
+        Dsects.Dn.Stmts.Sn = INPUT.Ln
+        End
+      Otherwise Do
+        say Kw'#'Lab'#'Val'#'
+        say 'Warning can''t parse, line:' Ln
+        End
+    End
+    Ln=Ln+1
+  End
+  Return ''
+MakeLoadModules:
+  arg LoadLibName,ModNm1,ModNm2
+  T=MakeSrc(1,ModNm1,'SET')
+  T=MakeSrc(2,ModNm2,'TEST')
+  T=CompileSource(1,ModNm1,LoadLibName)
+  T=CompileSource(2,ModNm2,LoadLibName)
+  return ''
+CompileSource: Procedure Expose Source.
+  arg SID,ModName,LoadLibName
+  TmpSrc.0 = 0
+  T=ConcatStem(TmpSrc,Source.SID.Stmts)
+  Lines = TmpSrc.0
+  'EXECIO 'Lines' DISKW SYSIN (STEM TmpSrc.'
+  'EXECIO 0 DISKW SYSIN (FINIS'
+  ADDRESS LINKMVS 'ASMA90'
+  "Alloc F(SYSLMOD) old ds('"LoadLibName"("ModName")') reuse"
+  HEWLPARM='MAP,LET,LIST,NCAL,AC=1'
+  ADDRESS LINKMVS 'HEWL HEWLPARM'       /* MAP,LET,LIST,NCAL,AC=1' */
+  return ''
+MakeProlog:
+  PrologSrc.0 = 0
+  Tmp=AppendStem(PrologSrc,ModName' CSECT')
+  Tmp=AppendStem(PrologSrc,ModName' AMODE 31')
+  Tmp=AppendStem(PrologSrc,' STM     14,12,12(13)')
+  Tmp=AppendStem(PrologSrc,' LR      12,15')
+  Tmp=AppendStem(PrologSrc,' USING   'ModName',12')
+  Tmp=AppendStem(PrologSrc,' LR      5,1')
+  return ''
+MakeSrc:
+   Procedure Expose Dsects. Breakpoints. MyPrefix ORDGlobalBuf. ADATA. Source.
+  arg IBp,ModName,SrcType
+  Source.IBp.Stmts.0 = 0
+  RealDsSrc.0 = 0
+  MyUsings.0  = 0
+  MyDsSrc.0   = 0
+  MyCsect.0   = 0
+  MvcSrc.0    = 0
+  UsingReg    = 1
+  Tmp=MakeProlog(ModName)
+  Do IDs = 1 to Dsects.0 by 1
+    If Dsects.IDs.Bp == IBp then Do
+      parse var Dsects.IDs.Stmts.1 NewCsectLab Kw Val
+      call ObtainRealDsect(NewCsectLab)
+      Do IGlB = 1 to ORDGlobalBuf.0 by 1
+        Tmp=AppendStem(MyDsSrc,ORDGlobalBuf.IGlB)
+      End
+      USID = FindBestUsing(Breakpoints.1,NewCsectLab)
+      say 'USID'USID
+      UsingReg = UsingReg + 1
+      Displ = ADATA.USING.USID.Register * 4
+      Tmp=AppendStem(MyUsings,' L     'UsingReg','Displ'(,1)')
+      Tmp=AppendStem(MyUsings,' USING 'NewCsectLab','UsingReg)
+      NewCsectLab=MyPrefix||NewCsectLab
+   /* Tmp=AppendStem(MyDsSrc,NewCsectLab' CSECT')   */
+      Do IDsStmt = 2 to Dsects.IDs.Stmts.0 by 1
+        parse var Dsects.IDs.Stmts.IDsStmt Lab Kw Val
+        Tmp=AppendStem(MyCsect,MyPrefix||Lab' 'Kw' 'Val)
+        If SrcType=='SET' then Do
+    /*    Tmp=AppendStem(MvcSrc,' ABEND   555,DUMP')  */
+          T=AppendStem(MvcSrc,' MVC 'Lab','MyPrefix||Lab)
+        End
+        Else Do
+          T=AppendStem(MvcSrc,' CLC 'Lab','MyPrefix||Lab)
+          T=AppendStem(MvcSrc,' BNE NEQUMH55')
+        End
+      End
+    End
+  End
+  If SrcType=='TEST' then Do
+    T=AppendStem(MvcSrc,' WTO ''TEST PASSED''')
+    T=AppendStem(MvcSrc,' B ENDTMH55')
+    T=AppendStem(MvcSrc,'NEQUMH55 EQU *')
+    T=AppendStem(MvcSrc,' WTO ''TEST FAILED''')
+    T=AppendStem(MvcSrc,'ENDTMH55 EQU *')
+  End
+  Tmp=AppendStem(MvcSrc,'    LM      14,12,12(13)')
+  Tmp=AppendStem(MvcSrc,'    BR      14')
+  say 'MVC'MvcSrc.0'MyDsSrc'MyDsSrc.0'#'
+  T=ConcatStem(Source.IBp.Stmts,PrologSrc)
+  T=ConcatStem(Source.IBp.Stmts,MyUsings)
+  T=ConcatStem(Source.IBp.Stmts,MvcSrc)
+  T=ConcatStem(Source.IBp.Stmts,MyCsect)
+  T=ConcatStem(Source.IBp.Stmts,MyDsSrc)
+/*call WriteStem(Source.IBp.Stmts)*/
+  Return ''
+FindBestUsing: Procedure Expose ADATA.
+  arg Place,SectLabel
+  N = FindSymbolRecordByLabel(Place)
+  StmtN = ADATA.SymbolRecord.N.SymbolStmtNumber
+  LastFound = -1
+  I=1
+  Do While I <= ADATA.USING.0
+    if (ADATA.USING.I.LeftOp == SectLabel &      ,
+        ADATA.USING.I.StmtNumber > LastFound &   ,
+        ADATA.USING.I.StmtNumber <= StmtN         ) then
+    Do
+      LastFound = I
+    End
+    I = I + 1
+  End
+  If (LastFound == -1) then Do
+    say 'USING NOT FOUND! ('SectLabel')'
+    EXIT
+  End
+  return LastFound
+FindSymbolRecordByLabel: Procedure Expose ADATA.
+  arg ArgLbl
+  I = 1
+  Do While I <= ADATA.SymbolRecord.0 & ADATA.SymbolRecord.I.SymbolName \= ArgLbl
+    I = I + 1
+  End
+  return I
+ObtainRealDsect: Procedure Expose ADATA. ORDGlobalBuf.
+  ORDGlobalBuf.0 = 0
+  arg Lab
+  ExpectedESDID=''
+/*say 'ADATA.SymbolRecord.0#'ADATA.SymbolRecord.0'#'Lab'#'*/
+  Do ORDLoopI=1 to ADATA.SymbolRecord.0 by 1
+  /*say '#'ADATA.SymbolRecord.ORDLoopI.SymbolName'#' */
+    If (ADATA.SymbolRecord.ORDLoopI.SymbolName==Lab) Then Do
+      ExpectedESDID = ADATA.SymbolRecord.ORDLoopI.SymbolSectionESDID
+    End
+  End
+  Do ORDLoopI=1 to ADATA.SrcAnalysisRecord.0 by 1
+    orig = ADATA.SrcAnalysisRecord.ORDLoopI.RecOrigin
+    tmpesdid = ADATA.SrcAnalysisRecord.ORDLoopI.SARESDID
+    If (orig \= 2 & tmpesdid==ExpectedESDID) then Do
+      Tmp=AppendStem(ORDGlobalBuf,ADATA.SrcAnalysisRecord.ORDLoopI.LineText)
+    End
+  End
+  Return ''
+ParseADATA: Procedure Expose RawADATA. ADATA.
+  ADATA.USING.0              = 0
+  ADATA.SrcAnalysisRecord.0  = 0
+  ADATA.SymbolRecord.0       = 0
+  ADATA.ESDRecord.0          = 0
+  ADATA.MachineInstruction.0 = 0
+  Do ParseADATAI=1 to RawADATA.0 by 1
+    Line=RawADATA.ParseADATAI
+    Code=Substr(Line,2,2)
+    Select
+      When Code=='0020'X Then Do      /* ESDID Record */
+        Parse Var Line . 13 RT 14 . 17 pESDID 21 . 49 NOFF 53 NLEN 57 .
+        ESDInd=AppendStem(ADATA.ESDRecord,'')
+        NOFF=C2D(NOFF)
+        ADATA.ESDRecord.ESDInd.RecordType=RT
+        ADATA.ESDRecord.ESDInd.RecordESDID=pESDID
+        ADATA.ESDRecord.ESDInd.RecordESDIDName=Substr(Line,NOFF+1,C2D(NLEN))
+        End
+      When Code=='0030'X Then Do
+        Tmp = ADATA.SrcAnalysisRecord.0 + 1
+        ADATA.SrcAnalysisRecord.0 = Tmp
+        TxtOffset = C2D(Substr(Line,121,4))
+        TxtLen = C2D(Substr(Line,125,4))
+        ADATA.SrcAnalysisRecord.Tmp.LineText = Substr(Line,TxtOffset+1,72)
+        ADATA.SrcAnalysisRecord.Tmp.SARESDID = Substr(Line,13,4)
+        ADATA.SrcAnalysisRecord.Tmp.RecOrigin = C2D(Substr(Line,41,1))
+        ADATA.SrcAnalysisRecord.Tmp.SARLoctr = C2D(Substr(Line,37,4))
+        End
+      When Code=='0036'X Then Do
+        Tmp=AppendStem(ADATA.MachineInstruction,'')
+        Len=C2D(Substr(Line,37,4))
+        ADATA.MachineInstruction.Tmp.InstrLoctr=C2D(Substr(Line,21,4))
+        ADATA.MachineInstruction.Tmp.InstrValue=Substr(Line,41,Len)
+        say 'MI:' ADATA.MachineInstruction.Tmp.InstrLoctr
+        End
+      When Code=='0042'X Then Do       /* Symbol Record */
+        Tmp = AppendStem(ADATA.SymbolRecord,'')
+        Parse Var Line . 13 SectionESDID 17 StmtN 21 Loctr 25 . 59 Len 63 Lab
+        Lab=Left(Lab,C2D(Len))
+        Loctr=C2D(Loctr)
+        StmtN=C2D(StmtN)
+        ADATA.SymbolRecord.Tmp.SymbolName = Lab
+        ADATA.SymbolRecord.Tmp.SymbolLoctr = Loctr
+        ADATA.SymbolRecord.Tmp.SymbolStmtNumber = StmtN
+        ADATA.SymbolRecord.Tmp.SymbolSectionESDID = SectionESDID
+        End
+      When Code=='0080'X Then Do      /* USING Map Record */
+        Parse Var Line 57 TmpLab','.
+        Tmp=AppendStem(ADATA.USING,'')
+        ADATA.USING.Tmp.Register=C2D(Substr(Line,39,1))
+        ADATA.USING.Tmp.StmtNumber=C2D(Substr(Line,19,4))
+        ADATA.USING.Tmp.LeftOp=TmpLab
+        End
+      Otherwise Do
+        End
+    End
+  End
+  Return ''
+NewStem:
+  arg NewStemName
+  NewStemName'.0'=0
+  arg NSCurArg
+  Do While NSCurArg \= ''
+    T=AppendStem(NewStemName,NSCurArg)
+    arg NSCurArg
+  End
+  return ''
+WriteStem:
+  arg WriteStemStem
+  WriteStemN=value(WriteStemStem'.0')
+  Do WriteStemI=1 to 100500 by 1 while WriteStemI <= WriteStemN
+    say value(WriteStemStem'.'WriteStemI)
+    End
+  return
+ConcatStem:
+  arg CtStem1,CtStem2
+  CtStem2N=value(CtStem2'.0')
+  Do CtStI = 1 to 100500 by 1 while CtStI <= CtStem2N
+    Tmp = value(CtStem1'.0') + 1
+    T=value(CtStem1'.0',Tmp)
+    T=value(CtStem1'.'Tmp,value(CtStem2'.'CtStI))
+  End
+  return ''
+AppendStem:
+  arg AppendStemStem,AppendStemValue
+  ASNewInd=VALUE(AppendStemStem'.0') + 1
+  Tmp=VALUE(AppendStemStem'.0',ASNewInd)
+  Tmp=VALUE(AppendStemStem'.'ASNewInd,AppendStemValue)
+  return ASNewInd
+PushBackStem:
+  arg PushBackStemStem
+  PBNewInd=VALUE(PushBackStemStem'.0') + 1
+  Tmp=VALUE(PushBackStemStem'.0',PBNewInd)
+  return PBNewInd
+FindRecordInd:
+  arg FRIStNm,FRIKF,FRINeedle
+  FRII = 1
+  FRIN = VALUE(FRIStNm'.0')
+  Do While FRII <= FRIN & VALUE(FRIStNm'.'FRII'.'FRIKF) \= FRINeedle
+    FRII = FRII + 1
+  End
+  return FRII
+WriteForSPZAP: Procedure Expose Breakpoints. ADATA.
+  arg ModName,SVCNUM
+  OUTPUT.0=0
+  Do BPi = 1 to 2 by 1
+    SymbInd = FindSymbolRecordByLabel(Breakpoints.BPi)
+    ESDIDVal = ADATA.SymbolRecord.SymbInd.SymbolSectionESDID
+    SymLoctr = ADATA.SymbolRecord.SymbInd.SymbolLoctr
+    ESDInd = FindRecordInd(ADATA.ESDRecord,'RecordESDID',ESDIDVal)
+    CSECT = ADATA.ESDRecord.ESDInd.RecordESDIDName
+    T=AppendStem(OUTPUT,' NAME    'ModName'  'CSECT)
+    T=AppendStem(OUTPUT,' REP     'D2X(SymLoctr,4)' 0A'D2X(SVCNUM,2))
+  End
+  "EXECIO" OUTPUT.0 "DISKW FORSPZAP (STEM OUTPUT."
+  "EXECIO 0 DISKW FORSPZAP (FINIS"
+  Return ''
+MakeSvcCommunicationDataset: Procedure Expose Breakpoints. ADATA.
+  arg ModName1,ModName2,DDNAME
+  Instructions.0 = 0
+  Do BPi = 1 to 2 by 1
+    SymbInd = FindSymbolRecordByLabel(Breakpoints.BPi)
+    LoctrVal = ADATA.SymbolRecord.SymbInd.SymbolLoctr
+    say 'MSCDLoc:' LoctrVal
+    InstrInd = FindRecordInd(ADATA.MachineInstruction,'InstrLoctr',LoctrVal)
+    say 'MSCII: ' InstrInd ADATA.MachineInstruction.InstrInd.InstrLoctr
+    T=AppendStem(Instructions,ADATA.MachineInstruction.InstrInd.InstrValue)
+    say 'MSC:' ADATA.MachineInstruction.InstrInd.InstrValue
+  End
+  OUTPUT.0=0
+  INS1=Left(Instructions.1,2)
+  INS2=Left(Instructions.2,2)
+  T=AppendStem(OUTPUT,ModName1||INS1||ModName2||INS2||'AAAABBBBZZ')
+  T=AppendStem(OUTPUT,'TMPSTR')
+  "EXECIO" OUTPUT.0 "DISKW "DDNAME" (STEM OUTPUT."
+  "EXECIO 0 DISKW "DDNAME" (FINIS"
+  return ''

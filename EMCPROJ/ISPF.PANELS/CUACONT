@@ -1,0 +1,24 @@
+)PANEL
+)ATTR DEFAULT() FORMAT(MIX)                    /* CUACONT -  - 6.0 */
+ 05 TYPE(PT)
+ 09 TYPE(FP)
+ 0A TYPE(NT)
+ 13 TYPE(NEF)
+ 22 TYPE(WASL) SKIP(ON) GE(ON)
+)BODY WINDOW(35,8) CMD(ZCMD)
+’               	’                ’
+≤Command Add Ano... ===>Z       ’
+’
+¿’
+¿’
+≤Othen . . . . .Z             ’
+≤City  . . . . .Z             ’
+)INIT
+.ZVARS = '(ZCMD XCTH XCTY)'
+&ZCMD = ' '
+)PROC
+VER(&XCTH,NONBLANK)
+VER(&XCTY,NONBLANK)
+)END
+/* ISPDTLC Release: 6.0.  Maintenance Level: PID                      */
+/* z/OS 01.10.00.  Created - Date: 17 Nov 2014, Time: 23:15           */

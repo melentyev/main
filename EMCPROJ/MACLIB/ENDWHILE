@@ -1,0 +1,11 @@
+             MACRO                                                      00010001
+             ENDWHILE                                                   00020002
+             GBLA   &WHSTC#ID(100)                                      00030001
+             GBLC   &WHSTC#ST(100)                                      00040001
+             GBLA   &WHSTC#SZ                                           00050001
+&ENDWH       SETC   'WENDLB#'.'&WHSTC#ID(&WHSTC#SZ)'                    00060002
+&WHLOOP      SETC   'WHLOOP#'.'&WHSTC#ID(&WHSTC#SZ)'                    00070002
+&WHSTC#SZ    SETA   &WHSTC#SZ-1                                         00110002
+             B      &WHLOOP                                             00120002
+&ENDWH       EQU    *                                                   00130002
+             MEND                                                       00140001

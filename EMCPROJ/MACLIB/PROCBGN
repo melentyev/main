@@ -1,0 +1,26 @@
+          MACRO
+&LAB      PROCBGN  &CSECT=Y,&LBL2=,&RBASE=R12,&RFRAME=R13,             X
+               &FRAMNAME=FRAME,&FRAMELEN=FRAMELEN,&NOLINK=N
+           AIF     ('&CSECT' NE 'Y' OR '&NOLINK' EQ 'Y').SKIPCSECT
+&LAB      CSECT
+.SKIPCSECT ANOP
+           AIF     ('&LBL2' EQ '').SKIPLBL2
+&LBL2     EQU      *
+.SKIPLBL2  ANOP
+           AIF     ('&NOLINK' EQ 'Y').NOLINK
+          STM      R14,R12,12(R13)
+          LR       R12,R15
+          LR       R2,R1
+          USING    &LAB,&RBASE
+          GETMAIN  R,LV=&FRAMELEN
+          ST       R13,4(,R1)
+          ST       R1,8(,R13)
+          LR       &RFRAME,R1
+          USING    &FRAMNAME,&RFRAME
+          LR       R1,R2
+          AGO      .MENDL
+.NOLINK   ANOP
+&LAB      EQU      *
+.MENDL    ANOP
+          ANOP
+          MEND

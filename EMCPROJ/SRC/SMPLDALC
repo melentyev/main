@@ -1,0 +1,111 @@
+SMPLDA1   PROLOG                                                        00001001
+          LR      R5,R1                                                 00001103
+          L       R2,0(,R5)                                             00001203
+          LH      R3,0(,R2)                                             00001303
+          STH     R3,NAME1                                              00001603
+          BCTR    R3,0                                                  00001703
+          EX      R3,NAMEMVC                                            00001803
+          EX      R3,DSABCMVC                                           00001903
+          CALLD   SMPLDALC,(NAME1,DDNAME1),R9                           00002003
+          OPEN    (PRINTER,OUTPUT)                                      00002103
+          RDJFCB  (INFILE)                                              00002203
+          LA      R9,JFCBAREA                                           00002303
+          USING   INFMJFCB,R9                                           00002403
+          MVC     VOLNUM(6),JFCBVOLS                                    00002503
+          OBTAIN  DSCBABC                                               00002703
+          LH      R7,WORKAREA+42                                        00002803
+          WHOLE   INAREA,0,(R7)                                         00002903
+          PUT     PRINTER,INAREA                                        00003003
+          LH      R7,WORKAREA+44                                        00003103
+          WHOLE   INAREA,0,(R7)                                         00003203
+          PUT     PRINTER,INAREA                                        00003303
+          EPILOG                                                        00003401
+NAMEMVC   MVC     NAMEC1(0),2(R2)                                       00003503
+DSABCMVC  MVC     DSABC(0),2(R2)                                        00003603
+INFILE       DCB   DDNAME=MYINFILE,DEVD=DA,MACRF=(GM),                 X00003703
+               LRECL=80,DSORG=PS,EODAD=INEOF,,EXLST=LSTA                00003803
+PRINTER      DCB   DDNAME=OUTFILE,DEVD=DA,MACRF=(PM),                  X00003903
+               LRECL=133,DSORG=PS                                       00004003
+NAME1     DC H'12'                                                      00004102
+NAMEC1    DC CL44'MLN1.LINKLIB'                                         00004202
+DDNAME1   DC H'8'                                                       00004302
+DDNAMEC1  DC CL8'MYINFILE'                                              00004402
+DSCBABC   CAMLST    SEARCH,DSABC,VOLNUM,WORKAREA                        00004503
+DSABC     DC        CL44''                                              00004603
+VOLNUM    DC        CL6''                                               00004703
+WORKAREA  DS        140C              140-BYTE WORK AREA                00004803
+LSTA      DS       0F                                                   00004903
+          DC       AL1(EXLLASTE+EXLRJFCB)                               00005003
+          DC       AL3(JFCBAREA)                                        00005103
+JFCBAREA  DS       0F,176C                                              00005203
+          APRDATA                                                       00005301
+INAREA    DS       CL135                                                00005403
+          BPRDATA                                                       00005501
+          IHAEXLST ,      DCB EXIT LIST MAPPING                         00005603
+          IEFJFCBN  LIST=YES                                            00005703
+          DCBD                                                          00005803
+****************************************************                    00006001
+SMPLDALC  PROLOG  TYPE=LOCAL                                            00010002
+          LR      R5,R1                                                 00010102
+          L       R2,0(,R5)                                             00010302
+          LH      R3,0(,R2)                                             00010401
+          MVC     DSNTU(4),DSNTUTMPL                                    00010501
+          MVC     DDNTU(6),DDNTUTMPL                                    00010601
+          STH     R3,DSNTUL                                             00010701
+          BCTR    R3,0                                                  00010801
+          EX      R3,DSNMVC                                             00010901
+          L       R2,4(R5)                                              00011002
+          LH      R3,0(,R2)                                             00011101
+          STH     R3,DDNTUL                                             00011202
+          BCTR    R4,0                                                  00011302
+          EX      R3,DDNMVC                                             00011401
+          LA      R8,RBDATA                                             00013000
+          USING   S99RBP,R8      R8 - S99RBP DSECT.                     00014000
+          LA      R4,S99RBPTR+4                                         00015000
+          USING   S99RB,R4       ESTABLISH ADDRESSABILITY FOR RB DSECT. 00016000
+          ST      R4,S99RBPTR         MAKE 'RBPTR' POINT TO RB.         00019000
+          OI      S99RBPTR,S99RBPND   TURN ON HIGH-ORDER BIT IN RBPTR.  00019100
+          XC      S99RB(RBLEN),S99RB  ZERO OUT 'RB' ENTIRELY.           00019200
+          MVI     S99RBLN,RBLEN       PUT THE LENGTH OF                 00019300
+          MVI     S99VERB,S99VRBAL SET THE VERB CODE FIELD              00019400
+          LA      R5,S99RB+RBLEN POINT PAST 'RB' TO START OF TUP LIST.  00019500
+          USING   S99TUPL,R5                                            00019600
+          ST      R5,S99TXTPP STORE ADDRESS OF TUP LIST IN THE RB.      00019700
+          LA      R6,DSNTU GET ADDRESS OF FIRST TEXT UNIT               00019800
+          ST      R6,S99TUPTR AND STORE IN TUP LIST.                    00019900
+          LA      R5,S99TUPL+4 GET ADDRESS OF NEXT TUP LIST ENTRY.      00020000
+          LA      R6,STATUSTU GET ADDRESS OF SECOND TEXT UNIT           00020100
+          ST      R6,S99TUPTR AND STORE IN TUP LIST.                    00020200
+          LA      R5,S99TUPL+4 GET ADDRESS OF NEXT TUP LIST ENTRY.      00020300
+          LA      R6,DDNTU                                              00020501
+          ST      R6,S99TUPTR                                           00020700
+          OI      S99TUPTR,S99TUPLN TURN ON HIGH-ORDER BIT IN LAS       00020800
+          LR      R1,R8                                                 00021600
+          DYNALLOC                                                      00021900
+INEOF     EQU     *                                                     00022602
+          EPILOG                                                        00022702
+RBLEN     EQU (S99RBEND-S99RB)                                          00027000
+DSNMVC    MVC DSNTUNM(0),2(R2)                                          00028001
+DDNMVC    MVC DDNTUNM(0),2(R2)                                          00028101
+DSNTUTMPL DC AL2(DALDSNAM)                                              00029000
+          DC X'0001'                                                    00029100
+STATUSTU  DC AL2(DALSTATS)                                              00029401
+          DC X'0001'                                                    00029500
+          DC X'0001'                                                    00029600
+          DC X'08'                                                      00029700
+DDNTUTMPL DC AL2(DALDDNAM)                                              00030201
+          DC X'0001'                                                    00030300
+          DC X'0008'                                                    00030400
+          APRDATA                                                       00031000
+DDNTU     DS F                                                          00031101
+DDNTUL    DS H                                                          00031202
+DDNTUNM   DS CL8                                                        00031401
+DSNTU     DS F                                                          00032001
+DSNTUL    DS H                                                          00034001
+DSNTUNM   DS CL44                                                       00035000
+RBDATA    DS CL60                                                       00036000
+          BPRDATA                                                       00040000
+          IEFZB4D0                                                      00040300
+          IEFZB4D2                                                      00040400
+          YREGS                                                         00041000
+          END                                                           00050000

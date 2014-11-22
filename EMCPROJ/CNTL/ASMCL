@@ -1,0 +1,29 @@
+//ASMCL    JOB
+//         SET PROGNM=COPYDS
+//*LDDEL  EXEC PGM=IEFBR14
+//*F        DD DSN=MELEN.LOADLIB(&PROGNM),DISP=(OLD,DELETE,DELETE)
+//**********************************************
+//C       EXEC PGM=ASMA90
+//SYSLIB    DD DSN=SYS1.MACLIB,DISP=SHR
+//          DD DSN=MELEN.MACLIB,DISP=SHR
+//SYSUT1   DD  DSN=&&SYSUT1,SPACE=(4096,(120,120),,,ROUND),
+//             UNIT=SYSALLDA,BUFNO=1
+//SYSPRINT  DD SYSOUT=*
+//SYSLIN    DD DSN=&&OBJ,SPACE=(3040,(40,40),,,ROUND),
+//             UNIT=SYSALLDA,DISP=(NEW,PASS),
+//             BLKSIZE=3040,LRECL=80,RECFM=FB,BUFNO=1
+//SYSIN     DD DSN=MELEN.SRC(&PROGNM),DISP=SHR
+//**********************************************
+//L       EXEC PGM=HEWL,PARM='MAP,LET,LIST,REUS=RENT',
+//             COND=(8,LT,C)
+//SYSLIN   DD  DSN=&&OBJ,DISP=(OLD,DELETE)
+//         DD  DDNAME=SYSIN
+//SYSIN    DD    *
+     NAME  COPYDS(R)
+/*
+//SYSLMOD  DD  DISP=(MOD,CATLG),UNIT=SYSDA,SPACE=(1024,(1000,500,5)),
+//             DSN=MELEN.LOADLIB1
+//SYSPRINT DD  SYSOUT=*
+//**********************************************
+//G       EXEC PGM=&PROGNM
+//STEPLIB  DD  DSN=MELEN.LOADLIB,DISP=SHR

@@ -1,0 +1,85 @@
+IGC0020A  CSECT                                                         00020002
+IGC0020A  AMODE    31                                                   00030001
+*GC0020A  RMODE    24                                                   00030106
+          STM      R14,R7,RBEXSAVE-RBBASIC(R5)                          00031004
+          LR       R11,R5                                               00031104
+          USING    RBBASIC,R11     ADDRESSABILITY TO RB                 00031204
+          BALR     R12,0                                                00031302
+          USING    *,R12                          TO THIS ROUTINE       00031404
+          GETMAIN  R,LV=FRAMELEN                                        00031502
+          LR       R13,R1                                               00031602
+          USING    DYNFRAME,R13                   TO DYNAMIC FRAME      00031704
+          WTO      'IN SVC ROUTINE'                                     00031802
+*         USING    R9,TMPF1DS                                           00031902
+          MVC      MESSAGE(MSGLEN),MSGTMPL        PREPARE FOR DEB MSG   00032304
+*         MVC      MESSAGE+4(4),RBGRS11-RBBASIC(R5)                     00032404
+          MVC      MAGICDD(MGCDCBL),MAGICTPL                            00033002
+          MVC      OPENMFL(OMFLTPLL),OMFLTPL                            00033102
+          MVC      CLOSEMFL(CMFLTPLL),CMFLTPL                           00033204
+          MVC      IEARBUML(IEARUMLL),IUMLTPLB                          00033305
+          OPEN     (MAGICDD,INPUT),MODE=31,MF=(E,OPENMFL)  MAGICDD OPEN 00033404
+          WTO      'AFTER OPEN'                                         00033502
+          GET      MAGICDD,INAREA                                       00033602
+          WTO      'AFTER GET'                                          00033704
+          L        R4,RBLINK                        LOOKING FOR OLD PSW 00033804
+          N        R4,=X'00FFFFFF'                                      00033904
+*         MVC      MESSAGE+4(8),RBOPSW-RBBASIC(R4)                      00034004
+*         WTO      MF=(E,MESSAGE)                                       00034104
+          L        R5,RBOPSWA-RBBASIC(R4)        OLD PSW FOUND          00034204
+          S        R5,=F'2'                                             00034304
+          MVC      0(2,R5),INAREA+FMTINSTR-INPBPFMT  RESTORING INSTR    00034404
+          L        R5,INAREA+FMTACTCN-INPBPFMT                          00034504
+          GET      MAGICDD,INAREA              SKIP CHECK DEFS          00034604
+ACTSLOOP  EQU      *                           LOOP ON ACTIONS          00034704
+          GET      MAGICDD,INAREA                                       00034804
+          L        R6,INAREA+FMTAADDR-INPACFMT                          00034904
+          MHI      R6,4                                                 00035004
+          LA       R6,RBGRSAVE(R6)                                      00035104
+*         L        R8,0(,R6)                                            00035204
+*         ABEND    999,DUMP                                             00035304
+          MVC      0(4,R6),INAREA+FMTAVAL-INPACFMT                      00035404
+          BCT      R5,ACTSLOOP                 END ACTSLOOP             00035504
+          WTO      'BEFORE CLOSE'                                       00035605
+*         CLOSE    (MAGICDD),MODE=31,MF=(E,CLOSEMFL)                    00035705
+*         ABEND    888,DUMP                                             00035904
+          WTO      'BEFORE IEARBUP'                                     00036005
+          IEARBUP  ADDRTYPE=DELTA,PSWDELTA=PSWD,MF=(E,IEARBUML),       X00036105
+               WHICHRB=PREV,PSWBYTE03=NO                                00036205
+*         LR       R6,R15                                               00036302
+*         LR       R7,R0                                                00036402
+*         ABEND    333,DUMP                                             00036502
+          WTO      'FINISHING SVC1'                                     00036602
+*         FREEMAIN R,LV=FRAMELEN,A=(R13)                                00036702
+          LM       R14,R1,RBEXSAVE                                      00037004
+          BR       R14                                                  00040001
+********* CONST **********************                                  00040102
+MAGICTPL  DCB      DDNAME=MAGICDD,DEVD=DA,DSORG=PS,MACRF=(GM),LRECL=80  00041005
+MGCDCBL   EQU      *-MAGICTPL                                           00041102
+OMFLTPL   OPEN     (0,INPUT),MF=L                                       00041202
+OMFLTPLL  EQU      *-OMFLTPL                                            00041302
+CMFLTPL   CLOSE    (0),MODE=31,MF=L                                     00041404
+CMFLTPLL  EQU      *-CMFLTPL                                            00041504
+IUMLTPLB  EQU      *                                                    00041605
+          IEARBUP  MF=(L,IUMLTPL)                                       00042005
+IEARUMLL  EQU      *-IUMLTPLB                                           00042105
+PSWD      DC       F'-2'                                                00043005
+MSGTMPL   WTO      '                                             ',MF=L 00050102
+MSGLEN    EQU      *-MSGTMPL                                            00050202
+********* DYNAMIC ********************                                  00050302
+DYNFRAME  DSECT                                                         00050402
+MESSAGE   WTO      '                                             ',MF=L 00051002
+          DS       0F                                                   00051102
+MAGICDD   DS       XL(MGCDCBL)                                          00051202
+OPENMFL   DS       XL(OMFLTPLL)                                         00051402
+CLOSEMFL  DS       XL(CMFLTPLL)                                         00051504
+IEARBUML  DS       XL(IUMLTPLL)                                         00051605
+INAREA    DS       XL80                                                 00051704
+FRAMELEN  EQU      *-DYNFRAME                                           00052002
+********* MAPPINGS *******************                                  00054002
+          MHUTMAPS                                                      00055004
+          CVT      DSECT=YES                                            00060002
+          IHAECVT                                                       00060102
+          IKJRB    DSECT=YES      MAP SVRB AND PRB                      00060402
+*         IEEXSA                                                        00061002
+          YREGS                                                         00070001
+          END                                                           00080001

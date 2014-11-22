@@ -1,0 +1,31 @@
+             MACRO                                                      00010000
+             INTTOSTR &DEST,&RP                                         00020000
+&DLDEST      SETA  L'&DEST-1                                            00030000
+&DW          SETC  'DBGDW'.'&SYSNDX'                                    00040000
+&DATASKIP    SETC  'ITSSKPD'.'&SYSNDX'                                  00050000
+&NEGATIVE    SETC  'ITSNEGN'.'&SYSNDX'                                  00060000
+             MVC   &DEST.(1),=X'40'                                     00070000
+             MVC   &DEST+1(&DLDEST),&DEST                               00080000
+             AIF   ('&RP'(1,1) EQ '(' AND '&RP'(K'&RP,1) EQ ')').FREG   00090000
+.FMEM        ANOP                                                       00100000
+             L     1,&RP                                                00110000
+             AGO   .COMMON                                              00120000
+.FREG        ANOP                                                       00130000
+&R           SETC  '&RP'(2,K'&RP-2)                                     00140000
+             LR    1,&R                                                 00150000
+.COMMON      CVD   1,&DW                                                00160000
+             LLGC  14,&DW+7                                             00170000
+             N     14,=X'0000000F'                                      00180000
+             C     14,=X'0000000D'                                      00190000
+             BE    &NEGATIVE                                            00200000
+             UNPK  &DEST.(8),&DW                                        00210000
+             OI    &DEST+7,X'F0'                                        00220000
+             B     &DATASKIP                                            00230000
+&NEGATIVE    EQU   *                                                    00240000
+             UNPK  &DEST+1(8),&DW                                       00250000
+             OI    &DEST+8,X'F0'                                        00260000
+             MVC   &DEST.(1),=C'-'                                      00270000
+             B     &DATASKIP                                            00280000
+&DW          DS    XL8                                                  00290000
+&DATASKIP    EQU   *                                                    00300000
+             MEND                                                       00310000
