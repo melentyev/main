@@ -1,0 +1,131 @@
+#include <stdio.h>
+#include <stddef.h>
+#include "adata.h"
+#define FALSE 0
+#define TRUE 1
+
+#define COLOR_JUMP_FROM 1
+#define COLOR_VISITED 1
+
+#define NEW_STRUCT(TYPE) (struct TYPE*)malloc(sizeof(struct TYPE))
+
+#define FB_READ(BUF, LEN, F) fread((BUF), 1, (LEN), (F))
+
+#define WTO(S) __asm__("WTO '" #S "'")
+
+typedef unsigned char BYTE;
+typedef BYTE* pBYTE;
+
+
+struct JumpTable
+{
+    struct JumpTable *next;
+    int offsetFrom, offsetTo;
+    char moduleFrom[10], moduleTo[10];
+};
+
+
+struct JumpTable* parse_jump_table(const char* file)
+{
+    FILE *f;
+    struct JumpTable *tbl, *tblNew;
+    int recLen, rcnt;
+    char buf[256];
+    WTO(HEREEEE);
+    f = fopen(file, "rb");
+    FB_READ(buf, 80, f);
+    FB_READ(buf, 80, f);
+    FB_READ(buf, 80, f);
+    rcnt = FB_READ(buf, 80, f);
+    while (rcnt > 0)
+    {
+        buf[80] = 0;
+        tblNew = NEW_STRUCT(JumpTable);
+        sscanf(buf, "%s", tblNew->moduleFrom);
+        sscanf(buf + 1 * (12 + 1), "%x", &tblNew->offsetFrom);
+        sscanf(buf + 2 * (12 + 1), "%s", tblNew->moduleTo);
+        sscanf(buf + 3 * (12 + 1), "%x", &tblNew->offsetTo);
+        LIST_CONS(tblNew, tbl);
+    /*  puts(buf);
+        printf("%s|%x|%s|%x|\n",tbl->moduleFrom, tbl->offsetFrom,
+            tbl->moduleTo, tbl->offsetTo);  */
+        FB_READ(buf, 80, f);
+        rcnt = FB_READ(buf, 80, f);
+    }
+    reverse_list(tbl, offsetof(struct JumpTable, next));
+}
+
+process_jump_table(struct JumpTable *tbl, struct Adata *modules,
+    BYTE **lineColor)
+{
+    int mod = 0, offset = 0, srcRec = 0, done = FALSE;
+    while (!done)
+    {
+        curModName = modules[mod];
+        if (strcmp(modules[mod], tbl->moduleFrom) == 0 &&
+            offset == tbl->offsetFrom)
+        {
+
+        }
+    }
+}
+
+int AdataSrcRecCmp(const void *r1, const void *r2)
+{
+    int l1 = (struct AdataSrcAnalysisRecord*)r1->loctr;
+    int l2 = (struct AdataSrcAnalysisRecord*)r2->loctr;
+    int e1 = (struct AdataSrcAnalysisRecord*)r1->EsdId;
+    int e2 = (struct AdataSrcAnalysisRecord*)r2->EsdId;
+    if (l1 == l2)
+    {
+        int sn1 = (struct AdataSrcAnalysisRecord*)r1->stmtNumber;
+        int sn2 = (struct AdataSrcAnalysisRecord*)r1->stmtNumber;
+    }
+    else
+    {
+        return l2 - l1;
+    }
+}
+
+int main(int argc, char **argv)
+{
+    char* mods[4];
+    struct Adata mod_adata[4];
+    struct JumpTable *tbl;
+    int i, mod_cnt = 4;
+    mods[0] = "S1";
+    mods[1] = "S2";
+    mods[2] = "S3";
+    mods[3] = "S4";
+    tbl = parse_jump_table("EMCPROJ.OUTPUT(SPYM)");
+    for (i = 0; i < 0; i++)
+    {
+        struct AdataUsingRec *usings;
+        struct AdataSrcAnalysisRecord *srcAnalysisRecords;
+        struct AdataSymbolRecord *symbolRecords;
+        char modname[256];
+        int length;
+        strcpy(modname, "EMCPROJ.ADATAS.");
+        strcat(modname, mods[i]);
+        if (!parse_adata(modname, &mod_adata[i]) )
+        {
+            WTO(ADATA_PARSE_FAILED);
+            return 0;
+        }
+        length = list_length(mod_adata[i].srcAnalysisRecords);
+        srcAnalysisRecords = (struct AdataSrcAnalysisRecord*)malloc(
+            length * sizeof(struct AdataSrcAnalysisRecord));
+
+        list_to_array(srcAnalysisRecords, mod_adata[i].srcAnalysisRecords,
+            sizeof(struct AdataSrcAnalysisRecord),
+            offsetof(struct AdataSrcAnalysisRecord, next));
+        qsort(srcAnalysisRecords, length,
+            sizeof(struct AdataSrcAnalysisRecord),
+            AdataSrcRecCmp);
+        free_list(mod_adata[i].srcAnalysisRecords,
+            offsetof(struct AdataSrcAnalysisRecord, next));
+        mod_adata[i].srcAnalysisRecords = srcAnalysisRecords; // Now it is array
+    }
+    process_jump_table(tbl);
+    return 0;
+}

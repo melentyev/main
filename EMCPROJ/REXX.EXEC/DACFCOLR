@@ -1,8 +1,9 @@
 /* REXX */
 call Initialize
 call ProcessSelectListing
-ADDRESS ISPEXEC
-"LIBDEF ISPPLIB"
+"ISPEXEC TBCLOSE DACFCOLM"
+"ISPEXEC LIBDEF ISPTLIB"
+"ISPEXEC LIBDEF ISPPLIB"
 EXIT
 call ProcessShowListing(2)
 Initialize:
@@ -16,7 +17,8 @@ Initialize:
   ShowPanelMember   = "DACFCSHW"
   SelectPanelMember = "DACFCSEL"
   ADATADD           = "MODADATA"
-  DynAreaLineLen    = 40
+  ISPTABLDS = 'MELEN.ISPF.TABLES'
+  DynAreaLineLen    = 75
   red      = '01'x
   blue     = '02'x
   green    = '03'x
@@ -40,9 +42,6 @@ Initialize:
   "Alloc F("ddpanel") old ds('MELEN.ISPF.PANELS("ShowPanelMember")') reuse"
   call MakeListingPanelDs
   "Free F("ddpanel")"
-  "Alloc F("ddpanel") old ds('MELEN.ISPF.PANELS("SelectPanelMember")') reuse"
-  call MakeSelectListingPanelDs
-  "Free F("ddpanel")"
   call ParseTable
   /*
   Do i = 1 to ADATA.SrcAnalysisRecord.0 by 1
@@ -51,38 +50,41 @@ Initialize:
             ADATA.SrcAnalysisRecord.i.RecOrigin'%'||,
             ADATA.SrcAnalysisRecord.i.SARLoctr'%'
   End  */
-  call CreateModulesTable
+  "ISPEXEC LIBDEF ISPPLIB dataset id('MELEN.ISPF.PANELS')"
+  call InitModulesTable
+  return ''
+InitModulesTable:
   ADDRESS ISPEXEC
-  "LIBDEF ISPPLIB dataset id('MELEN.ISPF.PANELS')"
+  "LIBDEF ISPTABL DATASET ID('"ISPTABLDS"')"
+  "TBCREATE DACFCOLM NAMES(XMODNAME) WRITE"
+  Do i = 1 to Modules.0 by 1
+    XMODNAME = Modules.i
+    "ISPEXEC TBADD DACFCOLM"
+  End
+  "ISPEXEC TBCLOSE DACFCOLM"
+  "ISPEXEC LIBDEF ISPTABL"
+
+  "LIBDEF ISPTLIB DATASET ID('"ISPTABLDS"')"
+  "TBOPEN DACFCOLM SHARE"
   return ''
 ProcessSelectListing:
   ADDRESS ISPEXEC
-  dyndata  = ''
-  maxlines = Modules.0
-  size = 15000
-  Do i = 1 to Modules.0 by 1
-  /*say 'dyndata'dyndata'#'*/
-    dyndata = dyndata || inputFld || COPIES(' ',6) || white ||,
-      Left(Modules.i, DynAreaLineLen - 8, ' ')
-  End
   disprc = 0
   do until disprc > 0
-    dynarea = dyndata
-    size = length(dynarea)
-    "display panel("SelectPanelMember")"
+    TSEL=''
+    "TBVCLEAR DACFCOLM"
+    "TBTOP DACFCOLM"
+    'TBDISPL DACFCOLM PANEL(DACFMODS) ROWID(TBCRP)'
     disprc = rc
-    dynres = dynarea
-    Do SelPanLI = 1 to Modules.0 by 1
-      PInd = POS(inputFld,dynres)
-      SelPanData = Substr(dynres, PInd+1, 6)
-      dynres  = Substr(dynres, PInd+7)
-      if TRANSLATE(STRIP(SelPanData,'B','_'))  = 'S'then Do
-        call ProcessShowListing(SelPanLI)
-        call ProcessSelectListing
-      End
+    TDSELS = ZTDSELS
+    SAY 'TD'TDSELS'TB'TBCRP
+    TBCRP=ABS(TBCRP)
+    If (TBCRP > 0) Then Do
+      call ProcessShowListing(TBCRP)
+      call ProcessSelectListing
     end
   end
-  Return
+  Return ''
 
 ProcessShowListing:
   Arg ModNum
@@ -124,47 +126,20 @@ ProcessShowListing:
     end
   end
   return ''
-CreateModulesTable: Procedure Expose Modules.
-  ISPTABLDS = 'MELEN.ISPF.TABLES'
-  ADDRESS ISPEXEC
-  "LIBDEF ISPTABL DATASET ID('"ISPTABLDS"')"
-  "TBCREATE TABLE1 KEYS(MIND) NAMES(MODNAME) WRITE"
-  Do I = 1 to Modules.0 by 1
-    MIND = I
-    MODNAME = Modules.I
-    "ISPEXEC TBADD TABLE1"
-  End
-  "TBCLOSE TABLE1"
-  "LIBDEF ISPTABL"
-  return ''
 MakeListingPanelDs:
   call PanelCommonHeader
   queue '%-|-|- Example for using a dynamic area -|-|-'
   queue '%Command ===>_zcmd                                        ' ||,
         '    %Scroll ===>_AMT +'
   queue '%'
-  queue '+ This area is fixed.   Size: &size'
+/*queue '+ This area is fixed.   Size: &size'
   queue '+'
-  queue '+ This is an input field%===>_somevar +'
+  queue '+ This is an input field%===>_somevar +'    */
   queue '+'
-  queue '+This#@dynarea'||COPIES(' ', DynAreaLineLen - 9)||'@H'
+  queue '+T#@dynarea'||COPIES(' ', DynAreaLineLen - 9)||'@H'
   call PanelCommonFooter
   return
 
-MakeSelectListingPanelDs:
-  call PanelCommonHeader
-  queue '%-|-|- Example for using a dynamic area -|-|-'
-  queue '%Command ===>_zcmd                                        ' ||,
-        '    %Scroll ===>_AMT +'
-  queue '%'
-  queue '+ This is select    .   Size: &size'
-  queue '+'
-  queue '+ This is an input field%===>_somevar +'
-  queue '+'
-  queue '+X#@dynarea'||COPIES(' ', DynAreaLineLen - 9)||'@X'
-/*queue '+This#@dynarea                     @H'  */
-  call PanelCommonFooter
-  return
 PanelCommonHeader:
   "newstack"
   queue ')attr'
@@ -300,7 +275,7 @@ ProcessTable: Procedure Expose JmpTbl. ModADATA. Modules. ModLines.
   Done = 0
   Do PI = 1 to 200 by 1 while Done == 0
     CurModName = Modules.CurMod
-    say 'CurModName'CurModName'*'CurOff
+ /* say 'CurModName'CurModName'*'CurOff */
     If JmpTbl.JR.FromMod == CurModName & JmpTbl.JR.FromOff == CurOff then Do
       ModLines.CurMod.SrcRec.Jumped = 1
       say 'Jumped:'CurOff

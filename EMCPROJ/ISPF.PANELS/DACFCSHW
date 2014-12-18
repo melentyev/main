@@ -10,11 +10,8 @@
 %-|-|- Example for using a dynamic area -|-|-
 %Command ===>_zcmd                                            %Scroll ===>_AMT +
 %
-+ This area is fixed.   Size: &size
 +
-+ This is an input field%===>_somevar +
-+
-+This#@dynarea                               @H
++T#@dynarea                                                                  @H
 
        $This should be at the bottom of the screen when in full screen.
 )end

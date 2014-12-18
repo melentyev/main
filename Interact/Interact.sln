@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Interact", "Interact\Interact.fsproj", "{418A6F2D-01CF-44D3-A1F7-52BFC5120D80}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "InteractServer", "InteractServer\InteractServer.fsproj", "{3BA8CFB7-8C77-4CC7-A381-087537CAE713}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SocketInteract", "SocketInteract\SocketInteract.fsproj", "{551E90F6-EE91-49A6-9595-60C219F5A56A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Telnet", "Telnet\Telnet.csproj", "{3DA2C184-11CC-4C5F-B0F3-6BAB2C139656}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{418A6F2D-01CF-44D3-A1F7-52BFC5120D80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{418A6F2D-01CF-44D3-A1F7-52BFC5120D80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{418A6F2D-01CF-44D3-A1F7-52BFC5120D80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{418A6F2D-01CF-44D3-A1F7-52BFC5120D80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BA8CFB7-8C77-4CC7-A381-087537CAE713}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BA8CFB7-8C77-4CC7-A381-087537CAE713}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BA8CFB7-8C77-4CC7-A381-087537CAE713}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BA8CFB7-8C77-4CC7-A381-087537CAE713}.Release|Any CPU.Build.0 = Release|Any CPU
+		{551E90F6-EE91-49A6-9595-60C219F5A56A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{551E90F6-EE91-49A6-9595-60C219F5A56A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{551E90F6-EE91-49A6-9595-60C219F5A56A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{551E90F6-EE91-49A6-9595-60C219F5A56A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DA2C184-11CC-4C5F-B0F3-6BAB2C139656}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DA2C184-11CC-4C5F-B0F3-6BAB2C139656}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DA2C184-11CC-4C5F-B0F3-6BAB2C139656}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DA2C184-11CC-4C5F-B0F3-6BAB2C139656}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

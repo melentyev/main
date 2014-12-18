@@ -1,0 +1,74 @@
+#include "adata.h"
+
+#define NEW_STRUCT(TYPE) (struct TYPE*)malloc(sizeof(struct TYPE))
+
+int parse_adata(const char *file, struct Adata *adata)
+{
+    struct VFile *f;
+    char record[ADATA_MAX_REC_LEN];
+    unsigned short code, tmp2;
+    struct AdataSrcAnalysisRecord *aSrcRec;
+    struct AdataSymbolRecord *aSymRec;
+    int tmp4, txtLen, txtOff, recLen, i, srcRecI;
+    printf("file: %s\n", file);
+    adata->usings = 0;
+    adata->srcAnalysisRecords = 0;
+    adata->symbolRecords = 0;
+    srcRecI = 0;
+
+  /*tmp4 = fread(record,1,ADATA_MAX_REC_LEN, f);
+    printf("%d\n", tmp4);
+    printf("%d", f);
+    return TRUE;*/
+    f = Vopen(file);
+    if (!f)
+    {
+        return FALSE;
+    }
+    while (!Veof(f));
+    {
+        recLen = Vread(record, f);
+      /*printf("recLen: %d\n", recLen);*/
+        memcpy(&code, record + 1, 2);
+        fwrite(record, 1, recLen, stdout);
+        printf("\n");
+        switch (code)
+        {
+            case 0x30:   /* Source Analysis Record */
+                aSrcRec = NEW_STRUCT(AdataSrcAnalysisRecord);
+                aSrcRec->initialIndex = srcRecI++;
+                memcpy(&txtLen, record + 120, 4);
+                memcpy(&txtOff, record + 124, 4);
+                NEW_STRING(aSrcRec->recText, txtLen);
+                memcpy(aSrcRec->recText, record + txtOff, txtLen);
+                memcpy(&aSrcRec->EsdId, record + 12, 4);
+                memcpy(&aSrcRec->recOrigin, record + 40, 1);
+                memcpy(&aSrcRec->loctr, record + 36, 4);
+                printf("Found:|%X|%d|%s|\n", aSrcRec->loctr,
+                      txtLen, aSrcRec->recText);
+                LIST_CONS(aSrcRec,adata->srcAnalysisRecords);
+
+                break;
+            case 0x42: /* Symbol Record */
+                aSymRec = NEW_STRUCT(AdataSymbolRecord);
+                memcpy(&aSymRec->EsdId, record + 12, 4);
+                memcpy(&aSymRec->stmtNumber, record + 16, 4);
+                memcpy(&aSymRec->loctr, record + 20, 4);
+                memcpy(&txtLen, record + 58, 4);
+                NEW_STRING(aSymRec->symbolName, txtLen);
+                memcpy(aSymRec->symbolName, record + 62, txtLen);
+                LIST_CONS(aSymRec,adata->symbolRecords);
+            default:
+                break;
+        }
+    }
+    Vclose(f);
+    return TRUE;
+}
+
+void free_adata(struct Adata *adata)
+{
+    free_list((pBYTE)adata->srcAnalysisRecords,
+        (int)offsetof(struct AdataSrcAnalysisRecord, next));
+}
+

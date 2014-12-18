@@ -1,5 +1,19 @@
 //MHUTJOB   JOB  CLASS=C,REGION=0K
-//         JCLLIB  ORDER=(GCC.PROCLIB)
+//         JCLLIB  ORDER=(GCC.PROCLIB,MELEN.PROCLIB)
+//TEST      EXEC MHUTTEST,MOD='SVCTEST',CLSVC=1,SETSVC=0,CLMOD=1
+//R.MHUTIN   DD *
+INST2    SET
+FRAMTST2  DSECT
+BBBFT     DC       CL8'22222222'
+AAAFR     DC       F'5'
+INST3    TEST
+FRAMTST2  DSECT
+BBBFT     DC       CL8'22222222'
+AAAFR     DC       F'5'
+          END
+/*
+//
+
 //*CCL      EXEC GCCCL,
 //*  INFILE='MELEN.GCC.SOURCE(CMHUTIL)',
 //*  OUTFILE='MELEN.LOADLIB1(CMHUTIL)',   COPTS='-DLOOP',
@@ -61,17 +75,6 @@
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800),
 //             SPACE=(TRK,(3,15)),UNIT=SYSDA
 //SYSTSIN  DD *
-/*
-//MHUTIN   DD *
-INST2    SET
-FRAMTST2  DSECT
-BBBFT     DC       CL8'22222222'
-AAAFR     DC       F'5'
-INST3    TEST
-FRAMTST2  DSECT
-BBBFT     DC       CL8'22222222'
-AAAFR     DC       F'5'
-          END
 /*
 //**************************************************
 //S      EXEC PGM=AMASPZAP

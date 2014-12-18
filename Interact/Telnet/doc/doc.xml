@@ -1,0 +1,842 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Telnet</name>
+    </assembly>
+    <members>
+        <member name="T:Telnet.Terminal">
+            <summary>
+            Supports telnet connectivity.
+            <p>
+            Version 0.70	1st running version<br/>
+            Version 0.71	Telnet class renamed to Terminal and close method improved<br/>
+            Version 0.72	Added custom exceptions which may be used externally
+            				Feedback of Mark H. considered, Wait() method added and WaitForChangedScreen() fixed<br/>
+            Version 0.73	Offset problem in Virtual Screen fixed due to mail of Steve, thanks!<br/>
+            Version 0.74	SendResponseFunctionKey(int) and fixed WaitFor[XYZ]-methods to better reflect
+                            the timeout. Thanks Judah!<br/>
+            </p>
+            <list type="number">
+            	<listheader>
+            		<term>Features</term>
+            		<description>Telnet functionality implemented</description>
+            	</listheader>
+            	<item>
+            		<term>LOGOUT</term>
+            		<description>Logout functionaliy implemented</description>
+            	</item>
+            	<item>
+            		<term>NAWS</term>
+            		<description>Sends a window size</description>
+            	</item>
+            	<item>
+            		<term>TERMTYPE</term>
+            		<description>Sends an "ANSI"-terminal type</description>
+            	</item>
+            	<item>
+            		<term>Other telnet commands</term>
+            		<description>Will be answered correctly with WILL / WONT</description>
+            	</item>
+            	<item>
+            		<term>ESC-Sequences</term>
+            		<description>Method dealing with ESC-sequences</description>
+            	</item>
+            </list>
+            </summary>
+            <remarks>
+            The class is NOT thread safe for several connections,
+            so each connection should have its own instance.
+            <p>
+            Credits for source code / technical information helping me:<br/>
+            Tyler Kline		"clsScriptingTelnet"	<a href="http://www.c-sharpcorner.com/Code/2003/Jan/TelnetScripting.asp">Internet page</a> <br/>
+            Igor Moochnick	"RemoteConsoleSolution"	<a href="http:http://www.gotdotnet.com/community/usersamples/Default.aspx?query=telnet">Internet page</a> <br/>
+            </p>
+            <p>
+            <a href="http://www.networksorcery.com/enp/protocol/Terminal.htm">http://www.networksorcery.com/enp/protocol/Terminal.htm</a><br/>
+            <a href="http://members.tripod.com/~ilkerf/cdoc/vt100ref.html">http://members.tripod.com/~ilkerf/cdoc/vt100ref.html</a><br/>
+            <a href="http://www.klausbasan.de/misc/telnet/index.html">http://www.klausbasan.de/misc/telnet/index.html</a><br/>
+            </p>
+            </remarks>
+        </member>
+        <member name="F:Telnet.Terminal.VERSION">
+            <summary>The version</summary>
+        </member>
+        <member name="M:Telnet.Terminal.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="hostName">IP address, e.g. 192.168.0.20</param>
+        </member>
+        <member name="M:Telnet.Terminal.#ctor(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="hostName">IP address, e.g. 192.168.0.20</param>
+            <param name="port">Port, usually 23 for telnet</param>
+            <param name="timeoutSeconds">Timeout for connections [s], both read and write</param>
+            <param name="virtualScreenWidth">Screen width for the virtual screen</param>
+            <param name="virtualScreenHeight">Screen height for the virtual screen</param>
+        </member>
+        <member name="M:Telnet.Terminal.Finalize">
+            <summary>
+            Destructor, calls Close()
+            </summary>
+        </member>
+        <member name="M:Telnet.Terminal.Dispose">
+            <summary>
+            Dispose part, calls Close()
+            </summary>
+        </member>
+        <member name="M:Telnet.Terminal.Connect">
+            <summary>
+            Connect to the telnet server
+            </summary>
+            <returns>true if connection was successful</returns>
+        </member>
+        <member name="M:Telnet.Terminal.Close">
+            <summary>
+            Closes external resources.
+            Safe, can be called multiple times
+            </summary>
+        </member>
+        <member name="M:Telnet.Terminal.IsOpenConnection">
+            <summary>
+            Is connection still open?
+            </summary>
+            <returns>true if connection is open</returns>
+        </member>
+        <member name="M:Telnet.Terminal.SendResponse(System.String,System.Boolean)">
+            <summary>
+            Send a response to the server
+            </summary>
+            <param name="response">response String</param>
+            <param name="endLine">terminate with appropriate end-of-line chars</param>
+            <returns>true if sending was OK</returns>
+        </member>
+        <member name="M:Telnet.Terminal.SendResponseFunctionKey(System.Int32)">
+            <summary>
+            Send a Funktion Key response to the server
+            </summary>
+            <param name="key">Key number 1-12</param>
+            <returns>true if sending was OK</returns>
+        </member>
+        <member name="M:Telnet.Terminal.SendLogout">
+            <summary>
+            Send a synchronously telnet logout-response
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Telnet.Terminal.SendLogout(System.Boolean)">
+            <summary>
+            Send a telnet logout-response
+            </summary>
+            <param name="synchronous">Send synchronously (true) or asynchronously (false)</param>
+            <returns></returns>
+        </member>
+        <member name="M:Telnet.Terminal.WaitForString(System.String)">
+            <summary>
+            Wait for a particular string
+            </summary>
+            <param name="searchFor">string to be found</param>
+            <returns>string found or null if not found</returns>
+        </member>
+        <member name="M:Telnet.Terminal.WaitForString(System.String,System.Boolean,System.Int32)">
+            <summary>
+            Wait for a particular string
+            </summary>
+            <param name="searchFor">string to be found</param>
+            <param name="caseSensitive">case sensitive search</param>
+            <param name="timeoutSeconds">timeout [s]</param>
+            <returns>string found or null if not found</returns>
+        </member>
+        <member name="M:Telnet.Terminal.WaitForRegEx(System.String)">
+            <summary>
+            Wait for a particular regular expression
+            </summary>
+            <param name="regEx">string to be found</param>
+            <returns>string found or null if not found</returns>
+        </member>
+        <member name="M:Telnet.Terminal.WaitForRegEx(System.String,System.Int32)">
+            <summary>
+            Wait for a particular regular expression
+            </summary>
+            <param name="regEx">string to be found</param>
+            <param name="timeoutSeconds">timeout [s]</param>
+            <returns>string found or null if not found</returns>
+        </member>
+        <member name="M:Telnet.Terminal.WaitForChangedScreen">
+            <summary>
+            Wait for changed screen. Read further documentation 
+            on <code>WaitForChangedScreen(int)</code>.
+            </summary>
+            <returns>changed screen</returns>
+        </member>
+        <member name="M:Telnet.Terminal.WaitForChangedScreen(System.Int32)">
+            <summary>
+            Waits for changed screen: This method here resets
+            the flag of the virtual screen and afterwards waits for
+            changes.
+            <p>
+            This means the method detects changes after the call
+            of the method, NOT prior.
+            </p>
+            <p>
+            To reset the flag only use <code>WaitForChangedScreen(0)</code>.
+            </p>
+            </summary>
+            <param name="timeoutSeconds">timeout [s]</param>
+            <remarks>
+            The property ChangedScreen of the virtual screen is
+            reset after each call of Hardcopy(). It is also false directly
+            after the initialization.
+            </remarks>
+            <returns>changed screen</returns>
+        </member>
+        <member name="M:Telnet.Terminal.Wait(System.Int32)">
+            <summary>
+            Wait (=Sleep) for n seconds
+            </summary>
+            <param name="seconds">seconds to sleep</param>
+        </member>
+        <member name="M:Telnet.Terminal.GetWaitTimeout(System.Int32)">
+            <summary>
+            Helper method: 
+            Get the appropriate timeout, which is the bigger number of
+            timeoutSeconds and this.timeoutReceive (TCP client timeout)
+            </summary>
+            <param name="timeoutSeconds">timeout in seconds</param>
+        </member>
+        <member name="M:Telnet.Terminal.GetWaitSleepTimeMs(System.Int32)">
+            <summary>
+            Helper method: 
+            Get the appropriate sleep time based on timeout and TRIAL
+            </summary>
+            <param name="timeoutSeconds">timeout ins seconds</param>
+        </member>
+        <member name="M:Telnet.Terminal.TimeoutAbsoluteTime(System.Int32)">
+            <summary>
+            Helper method: 
+            Get the end time, which is "NOW" + timeout
+            </summary>
+            <param name="timeoutSeconds">timeout int seconds</param>
+        </member>
+        <member name="M:Telnet.Terminal.ReadFromStream(System.IAsyncResult)">
+            <summary>
+            Callback function to read from the network stream
+            </summary>
+            <param name="asyncResult">Callback result</param>
+        </member>
+        <member name="M:Telnet.Terminal.WriteToStream(System.IAsyncResult)">
+            <summary>
+            Callback function to write to the network stream
+            </summary>
+            <param name="asyncResult">Callback result</param>
+        </member>
+        <member name="M:Telnet.Terminal.ParseAndRespondServerStream(System.Int32)">
+            <summary>
+            Go thru the data received and answer all technical server
+            requests (TELNET negotiations).
+            </summary>
+            <param name="bytesRead">number of bytes read</param>
+            <remarks>
+            Thread saftey regarding the virtual screen needs to be considered
+            </remarks>
+        </member>
+        <member name="M:Telnet.Terminal.ParseEscSequence(System.Int32,System.IO.MemoryStream)">
+            <summary>
+            Deal with ESC Sequences as in VT100, ..
+            </summary>
+            <param name="bc">current buffer counter</param>
+            <param name="response">Stream for the response (back to Telnet server)</param>
+            <returns>new buffer counter (last byte dealed with)</returns>
+            <remarks>
+            Thread saftey regarding the virtual screen needs to be considered
+            </remarks>
+        </member>
+        <member name="M:Telnet.Terminal.MatchSequence(System.Int32,System.Byte[])">
+            <summary>
+            Does the sequence match the buffer starting at 
+            current index?
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="sequence">Bytes need to match</param>
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.MatchSequence(System.Int32,System.Byte[],System.Int32)">
+            <summary>
+            Does the sequence match the buffer starting at 
+            current index?
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="sequence">Bytes need to match</param>
+            <param name="ignoreIndex">Index of the byte which does not NEED to match, e.g. 2 means the 3rd byte (index 2) does not need to match</param>
+            
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.MatchSequence(System.Int32,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Does the sequence match the buffer starting at 
+            current index?
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="sequence">Bytes need to match</param>
+            <param name="ignoreIndex1">Index of the byte which does not NEED to match, e.g. 2 means the 3rd byte (index 2) does not need to match</param>
+            <param name="ignoreIndex2">Index of the byte which does not NEED to match, e.g. 2 means the 3rd byte (index 2) does not need to match</param>
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.MatchSequence(System.Int32,System.Byte[],System.Int32[])">
+            <summary>
+            Does the sequence match the buffer starting at 
+            current index?
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="sequence">Bytes need to match</param>
+            <param name="ignoreIndex">Index of bytes which do not NEED to match, e.g. 2 means the 3rd byte (index 2) does not need to match</param>
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.MatchSequence(System.Int32,System.String)">
+            <summary>
+            Does the sequence match the buffer?
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="sequence">String needs to match</param>
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.MatchSequence(System.Int32,System.String,System.Int32)">
+            <summary>
+            Does the sequence match the buffer?
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="sequence">String needs to match</param>
+            <param name="ignoreIndex">Index of the byte which does not NEED to match, e.g. 2 means the 3rd byte (index 2) does not need to match</param>
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.MatchSequence(System.Int32,System.String,System.Int32,System.Int32)">
+            <summary>
+            Does the sequence match the buffer?
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="sequence">String needs to match</param>
+            <param name="ignoreIndex1">Index of the byte which does not NEED to match, e.g. 2 means the 3rd byte (index 2) does not need to match</param>
+            <param name="ignoreIndex2">Index of the byte which does not NEED to match, e.g. 2 means the 3rd byte (index 2) does not need to match</param>
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.MatchRegExp(System.Int32,System.String)">
+            <summary>
+            Match a regular Expression
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="regExp">Regular expression</param>
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.MatchRegExp(System.Int32,System.Text.RegularExpressions.Regex)">
+            <summary>
+            Match a regular Expression
+            </summary>
+            <param name="bufferCounter">Current buffer counter</param>
+            <param name="r">Regular expression object</param>
+            <returns>Number of characters matching</returns>
+        </member>
+        <member name="M:Telnet.Terminal.NewCursorXPosition(System.String)">
+            <summary>
+            Find the X position in a VT cursor position sequence.
+            This only works if the sequence is a valid position sequence!
+            </summary>
+            <param name="escSequence">Valid position sequence</param>
+            <returns>X position (column)</returns>
+        </member>
+        <member name="M:Telnet.Terminal.NewCursorYPosition(System.String)">
+            <summary>
+            Find the Y position in a VT cursor position sequence.
+            This only works if the sequence is a valid position sequence!
+            </summary>
+            <param name="escSequence">Valid position sequence</param>
+            <returns>Y position (column)</returns>
+        </member>
+        <member name="M:Telnet.Terminal.CursorMovements(System.String)">
+            <summary>
+            Move the cursor for n-positions.
+            </summary>
+            <param name="escSequence">Valid ESC sequence for cursor right/left</param>
+            <returns>move about n positions</returns>
+        </member>
+        <member name="M:Telnet.Terminal.TelnetWill(System.Byte,System.IO.MemoryStream)">
+            <summary>
+            Add a "WILL" response, e.g. "WILL negotiate about terminal size"
+            </summary>
+            <param name="willDoWhat"></param>
+            <param name="response"></param>
+        </member>
+        <member name="M:Telnet.Terminal.TelnetWont(System.Byte,System.IO.MemoryStream)">
+            <summary>
+            Add a "WONT" response, e.g. "WONT negotiate about terminal size"
+            </summary>
+            <param name="wontDoWhat"></param>
+            <param name="response"></param>
+        </member>
+        <member name="M:Telnet.Terminal.TelnetDo(System.Byte,System.IO.MemoryStream)">
+            <summary>
+            Add a "DO" response, e.g. "DO ..."
+            </summary>
+            <param name="doWhat"></param>
+            <param name="response"></param>
+        </member>
+        <member name="M:Telnet.Terminal.TelnetDont(System.Byte,System.IO.MemoryStream)">
+            <summary>
+            Add a "DONT" response, e.g. "DONT ..."
+            </summary>
+            <param name="dontDoWhat"></param>
+            <param name="response"></param>
+        </member>
+        <member name="M:Telnet.Terminal.TelnetSubIsANSI(System.IO.MemoryStream)">
+            <summary>
+            Add a telnet sub-negotiation for ANSI 
+            terminal
+            </summary>
+            <param name="response">MemoryStream</param>
+        </member>
+        <member name="M:Telnet.Terminal.TelnetSubNAWS(System.Int32,System.Int32,System.IO.MemoryStream)">
+            <summary>
+            Telnet sub send terminal size.
+            </summary>
+            <param name="w">window width</param>
+            <param name="h">window height</param>
+            <param name="response">MemoryStream</param>
+        </member>
+        <member name="M:Telnet.Terminal.CleanBuffer(System.Int32)">
+            <summary>
+            Cleans the buffer - not necessary since the values
+            would just be overwritten - but useful for debugging!
+            </summary>
+            <param name="bytesRead">Bytes read and need cleaning</param>
+        </member>
+        <member name="M:Telnet.Terminal.MemoryStreamToByte(System.IO.MemoryStream)">
+            <summary>
+            The MemoryStream bas a bigger byte buffer than bytes
+            were really written to it. This method fetches all bytes
+            up the the position written to.
+            </summary>
+            <param name="ms">MemoryStream</param>
+            <returns>really written bytes</returns>
+        </member>
+        <member name="M:Telnet.Terminal.FindIPAddress(System.String)">
+            <summary>
+            Helper to find a valid IP with a string
+            </summary>
+            <param name="candidate">search this string for IP</param>
+            <returns>IP address or null</returns>
+        </member>
+        <member name="P:Telnet.Terminal.VirtualScreen">
+            <summary>
+            Property virtual screen
+            </summary>
+        </member>
+        <member name="P:Telnet.Terminal.EchoOn">
+            <summary>
+            Server echo on?
+            </summary>
+        </member>
+        <member name="T:Telnet.TelnetException">
+            <summary>
+            Exception dealing with connectivity
+            </summary>
+        </member>
+        <member name="M:Telnet.TelnetException.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="message">Exception's message</param>
+        </member>
+        <member name="T:Telnet.TerminalException">
+            <summary>
+            Exception dealing with parsing ...
+            </summary>
+        </member>
+        <member name="M:Telnet.TerminalException.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="message">Exception's message</param>
+        </member>
+        <member name="T:Telnet.Demo.TerminalDemo">
+            <summary>
+            Demo for the telnet class:
+            <p>
+            <a href="http://www.klausbasan.de/misc/telnet/index.html">Further details</a>
+            </p>
+            </summary>
+        </member>
+        <member name="M:Telnet.Demo.TerminalDemo.Main(System.String[])">
+            <summary>
+            The main entry point for the application.
+            Can be used to test the programm and run it from command line.
+            </summary>
+        </member>
+        <member name="M:Telnet.Demo.TerminalDemo.DemoMSTelnetServer(System.String[])">
+            <summary>
+            Demo for a MS Telnet server
+            </summary>
+        </member>
+        <member name="M:Telnet.Demo.TerminalDemo.DemoRH73TelnetServer(System.String[])">
+            <summary>
+            Demo for a Linux RedHat 7.3 telnet server
+            </summary>
+        </member>
+        <member name="M:Telnet.Demo.TerminalDemo.DemoRT311Router(System.String[])">
+            <summary>
+            Demo for a RT311 Router
+            </summary>
+        </member>
+        <member name="T:Telnet.VirtualScreen">
+            <summary>
+            Implements a simple "screen". This is used by telnet.
+            <p>
+            The x (rows) and y (columns) values may have an offset. If the offset
+            is 0/0 the left upper corner is [0,0], or 0-based. With an offset of 1/1
+            the left upper corner is [1,1], or 1-based.
+            </p>
+            </summary>
+            <remarks>
+            The class is not thread safe (e.g. search in buffer and modification
+            of buffer must not happen. It is duty of the calling class to guarantee this.
+            </remarks>
+        </member>
+        <member name="F:Telnet.VirtualScreen.SPACE">
+            <summary>
+            ASCII code for Space
+            </summary>
+        </member>
+        <member name="M:Telnet.VirtualScreen.CursorReset">
+            <summary>
+            Reset the cursor to upper left corner
+            </summary>
+        </member>
+        <member name="M:Telnet.VirtualScreen.CursorNextLine">
+            <summary>
+            Move the cursor to the beginning of the next line
+            </summary>
+        </member>
+        <member name="M:Telnet.VirtualScreen.CursorPosition(System.Int32,System.Int32)">
+            <summary>
+            Set the cursor (offset coordinates)
+            </summary>
+            <param name="x">X Position (lines) with offset considered</param>
+            <param name="y">Y Position (columns) with offset considered</param>
+            <remarks>
+            Use the method MoveCursorTo(x,y) when upscrolling should
+            be supported
+            </remarks>
+        </member>
+        <member name="M:Telnet.VirtualScreen.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Constructor (offset 0/0)
+            </summary>
+            <param name="width">Screen's width</param>
+            <param name="height">Screen's height</param>
+        </member>
+        <member name="M:Telnet.VirtualScreen.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="width">Screen's width</param>
+            <param name="height">Screen's height</param>
+            <param name="xOffset">Screen coordinates are 0,1 .. based</param>
+            <param name="yOffset">Screen coordinates are 0,1 .. based</param>
+        </member>
+        <member name="M:Telnet.VirtualScreen.CleanScreen">
+            <summary>
+            Clean the screen and reset cursor.
+            </summary>
+            <remarks>
+            Changes the output-flag and scrolledUp attribute!
+            </remarks>
+        </member>
+        <member name="M:Telnet.VirtualScreen.CleanScreen(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Cleans a screen area, all values are
+            considering any offset
+            </summary>
+            <remarks>
+            - Changes the output-flag!
+            - Visible area is considered
+            </remarks>
+            <param name="xstart">upper left corner (included)</param>
+            <param name="ystart">upper left corner (included)</param>
+            <param name="xend">lower right corner (included)</param>
+            <param name="yend">lower right corner (included)</param>
+        </member>
+        <member name="M:Telnet.VirtualScreen.CleanLine(System.Int32,System.Int32)">
+            <summary>
+            Clean the current line
+            </summary>
+            <remarks>
+            - Changes the output-flag! <br/>
+            - Visible area is considered
+            </remarks>
+            <param name="xStart">X with offset considered</param>
+            <param name="xEnd">X with offset considered</param>
+        </member>
+        <member name="M:Telnet.VirtualScreen.CleanToCursor">
+            <summary>
+            Clean screen including the cursor position
+            </summary>
+            - Changes the output-flag! <br/>
+            - Visible area is considered
+        </member>
+        <member name="M:Telnet.VirtualScreen.CleanFromCursor">
+            <summary>
+            Clean screen including the cursor position
+            </summary>
+            - Changes the output-flag! <br/>
+            - Visible area is considered
+        </member>
+        <member name="M:Telnet.VirtualScreen.ScrollUp(System.Int32)">
+            <summary>
+            Scrolls up about n lines.
+            </summary>
+            <param name="lines"></param>
+            <remarks>
+            Changes the output-flag! <br/>
+            TODO: Do we have to change the coordinates offset?
+            Is line 5 after 2 lines scrolling now line 3 or still 5?
+            </remarks>
+            <returns>number of lines scrolled</returns>
+            
+        </member>
+        <member name="M:Telnet.VirtualScreen.WriteByte(System.Byte)">
+            <summary>
+            Write a byte to the screen, and set new cursor position.
+            </summary>
+            <remarks>
+            Changes the output-flag!
+            </remarks>
+            <param name="writeByte">Output byte</param>
+            <returns>True if byte has been written</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.WriteByte(System.Byte[])">
+            <summary>
+            Write a byte to the screen, and set new cursor position.
+            </summary>
+            <remarks>
+            Changes the output-flag!
+            </remarks>
+            <param name="writeBytes">Output bytes</param>
+            <returns>True if byte has been written</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.WriteByte(System.Byte,System.Boolean)">
+            <summary>
+            Write a byte to the screen.
+            </summary>
+            <remarks>
+            Changes the output-flag!
+            </remarks>
+            <param name="writeByte">Output byte</param>
+            <param name="moveCursor">Move the cursor or not</param>
+            <returns>True if byte has been written</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.WriteLine(System.String)">
+            <summary>
+            Write a string to the screen, and set new cursor position.
+            </summary>
+            <remarks>
+            Changes the output-flag!
+            </remarks>
+            <param name="s">Output string</param>
+            <returns>True if byte has been written</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.Write(System.String)">
+            <summary>
+            Write a string to the screen, and set new cursor position.
+            </summary>
+            <remarks>
+            Changes the output-flag!
+            </remarks>
+            <param name="s">Output string</param>
+            <returns>True if string has been written</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.Write(System.Char)">
+            <summary>
+            Write a char to the screen, and set new cursor position.
+            </summary>
+            <remarks>
+            Changes the output-flag!
+            </remarks>
+            <param name="c">Output char</param>
+            <returns>True if char has been written</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.MoveCursor(System.Int32)">
+            <summary>
+            Move cursor +/- positions forward.
+            Scrolls up if necessary.
+            </summary>
+            <param name="positions">Positions to move (+ forward / - backwards)</param>
+            <remarks>
+            Changes the scrolledUp attribute!
+            </remarks>
+        </member>
+        <member name="M:Telnet.VirtualScreen.MoveCursorVertical(System.Int32)">
+            <summary>
+            Move the cursor n rows down (+) or up(-)
+            </summary>
+            <param name="lines">Number of rows up(-) or down(+)</param>
+            <remarks>
+            Changes the scrolledUp attribute!
+            </remarks>
+        </member>
+        <member name="M:Telnet.VirtualScreen.MoveCursorTo(System.Int32,System.Int32)">
+            <summary>
+            Move cursor to a position considering 
+            scrolling up / lines breaks
+            </summary>
+            <param name="xPos">X Position considering offset</param>
+            <param name="yPos">Y Position considering offset</param>
+            <returns>true if cursor could be moved</returns>
+            <remarks>
+            Just to set a cursor position the attributes CursorX / CursorY
+            could be used. This here features scrolling.
+            </remarks>
+            <remarks>
+            Changes the scrolledUp attribute!
+            </remarks>
+        </member>
+        <member name="M:Telnet.VirtualScreen.Dispose">
+            <summary>
+            Clean everything up
+            </summary>
+        </member>
+        <member name="M:Telnet.VirtualScreen.GetLine(System.Int32)">
+            <summary>
+            Get a line as string
+            </summary>
+            <param name="yPosition"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.ToString">
+            <summary>
+            Class info
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.Hardcopy">
+            <summary>
+            Return the values as string
+            </summary>
+            <returns>Screen buffer as string including NLs (newlines)</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.Hardcopy(System.Boolean)">
+            <summary>
+            Return the values as string
+            </summary>
+            <param name="lowercase">true return as lower case</param>
+            <returns>Screen buffer as string including NLs (newlines)</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.FindOnScreen(System.String,System.Boolean)">
+            <summary>
+            Find a string on the screen
+            </summary>
+            <param name="findString">String to find</param>
+            <param name="caseSensitive">true for case sensitive search</param>
+            <returns>string found</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.FindRegExOnScreen(System.String)">
+            <summary>
+            Find a regular expression on the screen
+            </summary>
+            <param name="regExp">Regular expression to find</param>
+            <returns>string found</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.FindRegExOnScreen(System.String,System.Boolean)">
+            <summary>
+            Find a regular expression on the screen
+            </summary>
+            <param name="regExp">Regular expression to find</param>
+            <param name="caseSensitive">true for case sensitive search</param>
+            <returns>string found</returns>
+        </member>
+        <member name="M:Telnet.VirtualScreen.FindRegExOnScreen(System.Text.RegularExpressions.Regex)">
+            <summary>
+            Find a regular expression on the screen
+            </summary>
+            <param name="regExp">Regular expression to find</param>
+            <returns>Mathc object or null</returns>
+        </member>
+        <member name="P:Telnet.VirtualScreen.Width">
+            <summary>
+            window size 
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.Height">
+            <summary>
+            Window height
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.CursorX">
+            <summary>
+            Cursor position with offset considered
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.CursorY">
+            <summary>
+            Cursor position with offset considered
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.CursorXLeft">
+            <summary>
+            X Offset 
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.CursorXRight">
+            <summary>
+            X max value 
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.CursorYMax">
+            <summary>
+            Y max value 
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.CursorYMin">
+            <summary>
+            Y max value 
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.CursorX0">
+            <summary>
+            0-based coordinates for cursor, internally used.
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.CursorY0">
+            <summary>
+            0-based coordinates for cursor, internally used
+            </summary>
+        </member>
+        <member name="P:Telnet.VirtualScreen.ChangedScreen">
+            <summary>
+            Changed screen buffer ?
+            </summary>
+        </member>
+        <member name="T:Telnet.Demo.VirtualScreenTest">
+            <summary>
+            Some Test methods for the screen class
+            </summary>
+        </member>
+        <member name="M:Telnet.Demo.VirtualScreenTest.FillScreen(Telnet.VirtualScreen)">
+            <summary>
+            Fill the screen with a pattern
+            </summary>
+            <param name="vs">Virtual screen</param>
+        </member>
+        <member name="M:Telnet.Demo.VirtualScreenTest.WriteBlockOperation(Telnet.VirtualScreen)">
+            <summary>
+            Write a byte block and strings
+            </summary>
+            <param name="vs">Virtual screen</param>
+        </member>
+        <member name="M:Telnet.Demo.VirtualScreenTest.WriteBigX(Telnet.VirtualScreen)">
+            <summary>
+            Test cursor movements
+            </summary>
+            <param name="vs">Virtual screen</param>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,3 @@
+/* REXX */
+arg args
+say 'args:#'args'#'

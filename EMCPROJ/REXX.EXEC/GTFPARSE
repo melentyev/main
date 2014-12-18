@@ -1,0 +1,11 @@
+/* REXX */
+GTFDD = 'GTFFILE'
+'EXECIO 3000 DISKR 'GTFDD' (Finis STEM INPUT.'
+cnt = 0
+Do i = 1 to INPUT.0 by 1
+  If (substr(INPUT.I,1,2) \= 'FF03'X) then Do
+    say INPUT.I
+    cnt = cnt + 1
+  End
+End
+say cnt

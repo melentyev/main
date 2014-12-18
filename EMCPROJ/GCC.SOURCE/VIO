@@ -1,0 +1,43 @@
+#include "vio.h"
+
+struct VFile* Vopen(const char* file)
+{
+    struct VFile *f = NEW_STRUCT(VFile);
+    int rcnt = 0;
+    f->handle = fopen(file, "rb");
+    if (!f->handle)
+    {
+        return NULL;
+    }
+    f->eof = (fread(&(f->recLen), 1, 4, f->handle) < 4);
+    printf("RcOpen: |%08X|%d|\n", f->recLen & 0x0000ffff, f->recLen >> 16);
+    f->recLen = (f->recLen >> 16) - 4;
+    return f;
+}
+
+size_t Vread(void *buf, struct VFile *f)
+{
+     int rcnt, curLen, tmp;
+     fread(buf, 1, curLen = f->recLen, f->handle);
+     f->eof = (fread(&(f->recLen), 1, 4, f->handle) < 4);
+     tmp = f->recLen & 0x0000ffff;
+    /*   printf("Rc: |%8X|%d|\n", tmp, f->recLen >> 16);
+     if (tmp != 0)
+     {
+         printf("Tmp: |%8X|%d|\n", tmp, f->recLen >> 16);
+     }*/
+     f->recLen = (f->recLen >> 16) - 4;
+     return curLen;
+}
+
+int Veof(struct VFile *f)
+{
+    return f->eof;
+}
+
+void Vclose(struct VFile *f)
+{
+    fclose(f->handle);
+    f->handle = NULL;
+    free(f);
+}

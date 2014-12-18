@@ -90,6 +90,7 @@ MakeProlog:
   Tmp=AppendStem(PrologSrc,' LR      12,15')
   Tmp=AppendStem(PrologSrc,' USING   'ModName',12')
   Tmp=AppendStem(PrologSrc,' LR      5,1')
+  Tmp=AppendStem(PrologSrc,' XR      15,15')
   return ''
 MakeSrc:
    Procedure Expose Dsects. Breakpoints. MyPrefix ORDGlobalBuf. ADATA. Source.
@@ -132,13 +133,14 @@ MakeSrc:
     End
   End
   If SrcType=='TEST' then Do
-    T=AppendStem(MvcSrc,' WTO ''TEST PASSED''')
+    T=AppendStem(MvcSrc,' LA  15,1(0,0)')
     T=AppendStem(MvcSrc,' B ENDTMH55')
     T=AppendStem(MvcSrc,'NEQUMH55 EQU *')
-    T=AppendStem(MvcSrc,' WTO ''TEST FAILED''')
+    T=AppendStem(MvcSrc,' LA  15,2(0,0)')
     T=AppendStem(MvcSrc,'ENDTMH55 EQU *')
   End
-  Tmp=AppendStem(MvcSrc,'    LM      14,12,12(13)')
+  Tmp=AppendStem(MvcSrc,'    L       14,12(,13)')
+  Tmp=AppendStem(MvcSrc,'    LM      0,12,20(13)')
   Tmp=AppendStem(MvcSrc,'    BR      14')
   say 'MVC'MvcSrc.0'MyDsSrc'MyDsSrc.0'#'
   T=ConcatStem(Source.IBp.Stmts,PrologSrc)

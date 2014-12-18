@@ -1,0 +1,63 @@
+#ifndef ADATA_H
+#define ADATA_H
+
+#define ADATA_MAX_REC_LEN 256
+#define ADATA_HEADER_LENGTH 12
+/*struct AdataHeaderMap
+{
+    BYTE langCode;
+    unsigned short recType;
+    BYTE adalevel;
+    BYTE flag;
+    BYTE editionNumber;
+    unsigned int reserved;
+    unsigned short fieldLen;
+};*/
+
+struct AdataEsdRecord
+{
+    struct AdataEsdRecord *next;
+    int id;
+    int type;
+    char *name;
+};
+
+struct AdataUsingRec
+{
+    struct AdataEsdRecord *next;
+    int registerNum;
+    int stmtNumber;
+    char *leftOp;
+};
+
+struct AdataSymbolRecord
+{
+    struct AdataSymbolRecord *next;
+    char *symbolName;
+    int EsdId;
+    int loctr;
+    int stmtNumber;
+};
+
+struct AdataSrcAnalysisRecord
+{
+    struct AdataSrcAnalysisRecord *next;
+    int EsdId;
+    int loctr;
+    int initialIndex;
+    char *recText;
+    unsigned char recOrigin;
+};
+
+struct Adata
+{
+    struct AdataUsingRec *usings;
+    struct AdataSrcAnalysisRecord *srcAnalysisRecords;
+    struct AdataSymbolRecord *symbolRecords;
+  /*int usings_cnt;
+    int SARecords_cnt; */
+};
+
+int parse_adata(const char *file, struct Adata *adata);
+void free_adata(struct Adata *adata);
+#endif

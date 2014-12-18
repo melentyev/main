@@ -1,0 +1,5 @@
+/* REXX */
+MyFunc: Procedure
+  arg sname
+  T=value(sname||'.1',6)
+  return ''

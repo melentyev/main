@@ -1,0 +1,29 @@
+)PANEL
+)ATTR DEFAULT() FORMAT(MIX)                   /* DACFMODS -  - 6.0 */
+ 05 TYPE(PT)
+ 09 TYPE(FP)
+ 0A TYPE(NT)
+ 13 TYPE(NEF)
+ 1A TYPE(LEF)
+ 1D TYPE(LI)
+ 08 TYPE(CH)
+)BODY WINDOW(69,13) CMD(ZCMD)
+Õ                                	Õ                                 Õ
+²Command ===>Z                                                    Õ
+Õ
+ÕSelect module for displaying.Õ     Õ
+ÕThen press enter.Õ                 Õ
+Õ
+ÊS  ÊModule name
+)MODEL
+ÈZÕ Z                      Õ
+)INIT
+.ZVARS = '(ZCMD TSEL XMODNAME)'
+&ZCMD = ' '
+        .ATTR(TSEL) = 'CKBOX(ON)'
+.ATTR(TSEL)='JUST(LEFT)'
+.ATTR(XMODNAME)='JUST(LEFT)'
+)PROC
+)END
+/* ISPDTLC Release: 6.0.  Maintenance Level: PID                      */
+/* z/OS 01.10.00.  Created - Date: 24 Nov 2014, Time: 05:52           */

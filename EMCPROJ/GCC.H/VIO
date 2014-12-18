@@ -1,0 +1,19 @@
+#ifndef VIO_H
+#define VIO_H
+
+struct VFile
+{
+    FILE *handle;
+    int recLen;
+    int eof;
+};
+
+struct VFile* Vopen(const char* file);
+
+size_t Vread(void *buf, struct VFile *f);
+
+int Veof(struct VFile *f);
+
+void Vclose(struct VFile *f);
+
+#endif

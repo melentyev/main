@@ -6,13 +6,15 @@ SVCTEST   AMODE    31                                                   00011003
 *         MVC      OPENMFL(OMFLTPLL),OMFLTPL                            00120303
 *         LA       R3,MAGICDD                                           00120403
 *         ABEND    777,DUMP                                             00120503
-          WTO      'HELLO'                                              00120604
-          MODESET  KEY=ZERO,MODE=SUP   SAVEKEY=SAVEKEYA,                00120705
+          ST       R8,SOMFLD                                            00120615
+          WTO      'HELLO'                                              00120704
+          MODESET  KEY=ZERO,MODE=SUP   SAVEKEY=SAVEKEYA,                00120805
           LOAD     EP=IGC0020A,GLOBAL=(YES,F)                           00122009
           LR       R2,R0                                                00122111
           SVCUPDTE 201,REPLACE,TYPE=3,EP=(R2)                           00130011
           MODESET  KEY=NZERO,MODE=PROB                                  00132005
 *         B        LFINISH                                              00136014
+          MVC      MAGICDD(8),INAREA                                    00136116
           WTO      'BEFORE SVC'                                         00137013
           LA       R4,FTST2                                             00138013
           USING    FRAMTST2,R4                                          00160109
@@ -34,11 +36,13 @@ LFINISH   EQU      *                                                    00163006
           FREEMAIN R,LV=FRAMELEN,A=(R1)                                 00190000
           LM       R14,R12,12(R13)                                      00200000
           BR       R14                                                  00210000
-MAGICTPL DCB   DDNAME=MAGICDD,DEVD=DA,MACRF=(GM),                      X00210103
-               LRECL=80,DSORG=PS                                        00210203
-MGCDCBL   EQU      *-MAGICTPL                                           00210303
-OMFLTPL   OPEN     (0,INPUT),MF=L                                       00210403
-OMFLTPLL  EQU      *-OMFLTPL                                            00210503
+SOMFLD    DS       F                                                    00210116
+          DS       F                                                    00210216
+MAGICTPL DCB   DDNAME=MAGICDD,DEVD=DA,MACRF=(GM),                      X00210303
+               LRECL=80,DSORG=PS                                        00210403
+MGCDCBL   EQU      *-MAGICTPL                                           00210503
+OMFLTPL   OPEN     (0,INPUT),MF=L                                       00210603
+OMFLTPLL  EQU      *-OMFLTPL                                            00210703
 ********* DYNAMIC *********                                             00211000
 FRAME     DSECT                                                         00212000
 SAVEAREA  DS       18F                                                  00213000

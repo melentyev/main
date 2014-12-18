@@ -1,0 +1,24 @@
+#ifndef GENLIST_H
+#define GENLIST_H
+
+#define LIST_CONS(NEW,LST) \
+  { (NEW)->next = (LST); (LST) = (NEW); }
+
+#define NEW_STRING(VAR,LEN) \
+  { (VAR) = (char*)malloc((size_t)((LEN) + 1)); \
+    (VAR)[LEN] = 0; }
+
+#define LIST_LEN(LIST,ITERVAR,LENVAR)     \
+  (ITERVAR) = (LIST);                     \
+  while ((ITERVAR) != 0) {                \
+    (LENVAR)++;                           \
+    (ITERVAR) = (ITERVAR)->next;          \
+  }
+typedef unsigned char BYTE;
+typedef BYTE* pBYTE;
+
+int list_to_array(pBYTE array, pBYTE list, int elsize, int next_fld_offset);
+void free_list(pBYTE list, int next_fld_offset);
+pBYTE reverse_list(pBYTE list, int next_fld_offset);
+
+#endif

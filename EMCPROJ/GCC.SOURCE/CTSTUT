@@ -1,0 +1,18 @@
+#include <stdio.h>
+void FENT(int k)
+{
+    FILE *fout;
+  /*__asm__(" LR 1,2");*/
+  /*__asm__(" ENTRY FENT"); */
+    fout  = fopen("dd:OUTDD", "w");
+    fprintf(fout, "aa|%d|aa", k);
+    fclose(fout);
+}
+void FTST(void)
+{
+    FENT(8);
+}
+/*int main(void)
+{
+    return 0;
+}*/

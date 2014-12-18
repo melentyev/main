@@ -1,5 +1,21 @@
-CTEST     PROCBGN  FRAMNAME=FRAME,FRAMELEN=FRAMELEN,LBL2=PROLOG
+CTEST     CSECT
+PROLOG    EQU      *
+          STM      R14,R12,12(R13)
+          LR       R12,R15
+          LR       R2,R1
+          USING    CTEST,R12
+          GETMAIN  R,LV=FRAMELEN
+          LR       R3,R13
+          ST       R13,4(,R1)
+          ST       R1,8(,R13)
+          LR       R13,R1
+          USING    FRAME,R13
+          LR       R1,R2
 CTEST     AMODE    24
+MAIN      EQU      *
+          ENTRY    MAIN
+          LA       R3,SAVEAREA+96
+          ST       R3,76(,R13)
           WTO      'CTEST BEGIN'
 *         LOAD     EP=CUTIL
 *         LR       R15,R0
@@ -13,15 +29,19 @@ CTEST     AMODE    24
           CVD      R7,CONVFLD
           UNPK     ASTR(16),CONVFLD(8)
           OI       ASTR+15,X'F0'
-          MODESET  KEY=ZERO,MODE=SUP
+*         MODESET  KEY=ZERO,MODE=SUP
           LA       R2,PLARG
           O        R2,=X'80000000'
           ST       R2,PLIST
           LA       R1,PLIST
-*         BALR     R14,R15
-          LINK     EP=CUTIL
+          L        R15,CTSTUTAD
+          LR       R5,R15
+          LA       R1,MYARG
+*         ABEND    777,DUMP
+          BALR     R14,R15
+*         LINK     EP=CTSTUT
           WTO      MF=(E,WTOAREA)
-          MODESET  KEY=NZERO,MODE=PROB
+*         MODESET  KEY=NZERO,MODE=PROB
 ********* MAIN PART ***********
 LFINISH   EQU      *
           WTO      'FINISHING CTEST'
@@ -30,17 +50,20 @@ LFINISH   EQU      *
           FREEMAIN R,LV=FRAMELEN,A=(R1)
           LM       R14,R12,12(R13)
           BR       R14
+          EXTRN    FENT
+CTSTUTAD  DC       V(FENT)
 WTOAREA   WTO      '                                             ',MF=L
           DS       0F
 PLIST     DC       F'0'
 PLARG     DC       H'16'
 ASTR      DC       CL16''
+CONVFLD   DS       XL8
+MYARG     DC       F'777'
 ********* DYNAMIC *********
 FRAME     DSECT
-SAVEAREA  DS       80F
+SAVEAREA  DS       1096C
 FRAMELEN  EQU      *-FRAME
-CONVFLD   DS       XL8
 ********* SVC *********
 *         CVT      DSECT=YES,LIST=YES
           YREGS
-          END
+          END      CTEST

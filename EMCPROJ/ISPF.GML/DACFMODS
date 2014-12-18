@@ -1,0 +1,28 @@
+<!DOCTYPE DM SYSTEM ()>
+  <VARCLASS NAME=STR12 TYPE='CHAR 12'>
+  <VARCLASS NAME=STR23 TYPE='CHAR 23'>
+  <VARCLASS NAME=DSELIND TYPE='CHAR 1'>
+  <VARLIST>
+    <VARDCL NAME=XMODNAME VARCLASS=STR23>
+    <VARDCL NAME=TSEL VARCLASS=DSELIND>
+  </VARLIST>
+  <PANDEF ID=pd2>
+  <PANEL NAME=DACFMODS PANDEF=pd2  DEPTH=13   WIDTH=69>
+    <INFO WIDTH=35>
+    <P>
+    Select module for displaying.
+    <P compact>
+    Then press enter.
+    <p>
+    </INFO>
+    <LSTFLD>
+      <source type=init>
+        .ATTR(TSEL) = 'CKBOX(ON)'
+      </source>
+      <LSTCOL DATAVAR=TSEL USAGE=IN COLWIDTH=1>S
+      <LSTCOL DATAVAR=XMODNAME
+        USAGE=OUT
+        COLWIDTH=23>Module name
+    </LSTFLD>
+    <CMDAREA>
+  </PANEL>

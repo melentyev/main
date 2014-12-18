@@ -1,0 +1,38 @@
+#include <stdio.h>
+
+int main(int argc, char **argv)
+{
+
+    char buf[200], str_buf[128];
+    FILE *svccom;
+    int i, n;
+    char *tgt, *buf_ptr;
+  /*i = 3;
+    n = i / 0;*/
+    printf("Hellogcc!\n");
+    printf("%d\n", argc);
+    printf("%s\n", argv[1]);
+    sscanf(argv[1], "%d\n", &n);
+    printf("%d\n", n);
+    tgt = (char*)n;
+    svccom = fopen("MELEN.MHUT.SVCCOM42", "rb");
+    fread(buf, 1, 80, svccom);
+    fclose(svccom);
+    buf_ptr = buf;
+    while (strncmp(buf_ptr,"AAAABBBB", 8) != 0
+           && strncmp(buf_ptr,"--------", 8) == 0)
+    {
+        buf_ptr += 10;
+    }
+    if (strncmp(buf_ptr,"AAAABBBB", 8) == 0)
+    {
+        return (5);
+    }
+    memcpy((char*)n, buf_ptr, 10);
+    memcpy(buf_ptr, "--------++", 10);
+    printf("after copy");
+    svccom = fopen("MELEN.MHUT.SVCCOM42", "wb");
+    fwrite(buf, 1, 80, svccom);
+    fclose(svccom);
+    return (0);
+}

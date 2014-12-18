@@ -1,0 +1,62 @@
+#include "genlist.h"
+
+int list_to_array(pBYTE array, pBYTE list, int elsize, int next_fld_offset)
+{
+    int* tmp, len;
+    len = 0;
+    while (list != NULL)
+    {
+        len++;
+        memcpy(array, list, elsize);
+        array += elsize;
+        list = (pBYTE)(*((int*)(list + next_fld_offset)));
+    }
+    return len;
+}
+
+void free_list(pBYTE list, int next_fld_offset)
+{
+    pBYTE tmp;
+    while (list != NULL)
+    {
+        tmp = (pBYTE)(*((int*)(list + next_fld_offset)));
+        free(list);
+        list = tmp;
+    }
+}
+
+int list_length(pBYTE list, int next_fld_offset)
+{
+    int len;
+    while (list != NULL)
+    {
+        len++;
+        list = (pBYTE)(*((int*)(list + next_fld_offset)));
+    }
+    return len;
+}
+
+pBYTE reverse_list(pBYTE list, int next_fld_offset)
+{
+    int len, iter, i, nullfld;
+    pBYTE *buf;
+    nullfld = 0;
+    len = list_length(list, next_fld_offset);
+    buf = (pBYTE*)malloc(len * sizeof(pBYTE));
+    iter = 0;
+    while(list != NULL)
+    {
+        buf[iter++] = list;
+        list = (pBYTE)(*((int*)(list + next_fld_offset)));
+    }
+    for (i = iter - 1; i > 0; i--)
+    {
+        list = buf[i];
+        memcpy(list + next_fld_offset, buf[i - 1], 4);
+    }
+    list = buf[0];
+    memcpy(list + next_fld_offset, nullfld, 4);
+    list = buf[iter - 1];
+    free(buf);
+    return list;
+}
