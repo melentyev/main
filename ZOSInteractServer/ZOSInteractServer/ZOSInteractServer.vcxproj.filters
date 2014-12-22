@@ -16,18 +16,144 @@
     <Filter Include="zos">
       <UniqueIdentifier>{619f8ba1-c9ec-4a97-9e4f-1b95a579d9fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="corvusoft">
+      <UniqueIdentifier>{4a9d9774-7fb6-4b3d-9f7f-ba975591e48d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="corvusoft\headers">
+      <UniqueIdentifier>{42f50e51-b87b-475a-80d0-488575aafff6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="corvusoft\source">
+      <UniqueIdentifier>{46d3bc36-102b-405c-a0c3-f805d419bf76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="corvusoft\impl_header">
+      <UniqueIdentifier>{065341b2-476c-4f8d-902a-e826f7314e36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http-parser">
+      <UniqueIdentifier>{5cd07df7-9f84-437e-a613-83e3b92a5971}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TcpServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Service.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RestServerEvents.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RestClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Response.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Method.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Resource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dummy.h">
+    <ClInclude Include="TcpServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dummy_socket.h">
+    <ClInclude Include="corvusoft\restbed\log_level.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\logger.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\method.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\mode.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\request.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\resource.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\response.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\service.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\settings.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\status_code.h">
+      <Filter>corvusoft\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_bridge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\logger_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\method_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\path_parameter_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\request_builder_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\request_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\resource_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\resource_matcher_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\response_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\service_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\settings_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="corvusoft\restbed\detail\status_code_impl.h">
+      <Filter>corvusoft\impl_header</Filter>
+    </ClInclude>
+    <ClInclude Include="rest_framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StatusCode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RestClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Method.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StringUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
   </ItemGroup>
 </Project>

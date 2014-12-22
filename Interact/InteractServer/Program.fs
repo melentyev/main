@@ -32,11 +32,41 @@ let ftpUpdateList1 =
     ]
     |> List.map (fun (dep, dest) -> @"""C:\Users\objec_000\GoogleDrive\EMC\GTFPARSE\GTFPARSE\" + dep + @"""", dest)
 
-let ftpUpdateList = 
-    [
-        "Main.cpp", "'MELEN.INTSERV.C(MAIN)'"
-    ]
-    |> List.map (fun (dep, dest) -> @"""C:\Users\objec_000\Documents\GitHub\main\ZOSInteractServer\ZOSInteractServer\" + dep + @"""", dest)
+let parseFtpUpdateList () = 
+    let lines = File.ReadAllLines("update_list.txt")
+    let fn (l: string) =
+        let arr = 
+            l.Trim().Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
+            |> Array.map(fun s -> s.Trim().Trim([|'\"'; ','|]))
+        if arr.Length > 1 && (not (arr.[0].StartsWith("//"))) then Some(arr.[0], arr.[1]) else None
+    Array.choose fn lines
+
+let ftpUpdateList () = 
+    
+    (*[
+        "Main.cpp",             "'/u/ibmuser/rest/src/Main.C'"
+        "Method.cpp",           "'/u/ibmuser/rest/src/Method.C'"
+        "Request.cpp",          "'/u/ibmuser/rest/src/main.C'"
+        "Resource.cpp",         "'/u/ibmuser/rest/src/main.C'"
+        "Response.cpp",         "'/u/ibmuser/rest/src/main.C'"
+        "RestClient.cpp",       "'/u/ibmuser/rest/src/main.C'"
+        "RestServerEvents.cpp", "'/u/ibmuser/rest/src/main.C'"
+        "Service.cpp",          "'/u/ibmuser/rest/src/main.C'"
+        "StringUtil.cpp",       "'/u/ibmuser/rest/src/main.C'"
+
+        "Method.h",         "'/u/ibmuser/rest/src/Method.h'"
+        "Request.h",        "'/u/ibmuser/rest/src/Request.h'"
+        "rest_framework.h", "'/u/ibmuser/rest/src/rest_framework.h'"
+        "RestClient.h",     "'/u/ibmuser/rest/src/RestClient.h'"
+        "StatusCode.h",     "'/u/ibmuser/rest/src/StatusCode.h'"
+        "StringUtil.h",     "'/u/ibmuser/rest/src/StringUtil.h'"
+        "TcpServer.h",      "'/u/ibmuser/rest/src/TcpServer.h'"
+        "Makefile",         "'/u/ibmuser/rest/Makefile'"
+        
+    ]*)
+    parseFtpUpdateList ()
+    |> Seq.map (fun (dep, dest) -> @"""C:\Users\user\Documents\GitHub\main\ZOSInteractServer\ZOSInteractServer\" + dep + @"""", dest)
+    |> Seq.toList
     //"..\..\..\Interact\bin\Debug\Interact.exe" "FTPUPD"
 type SmallFtpClient () = 
     let proc = new Process()
@@ -185,9 +215,8 @@ let main argv =
         | [|"FTPUPD"|] -> 
             use cl = new SmallFtpClient()
             cl.Connect()
-            ftpUpdateList 
+            ftpUpdateList ()
             |> List.iter (fun (dep, dest) -> cl.SendFile(dep, dest) )
-
             
         | [|"SUBMIT"; jcl; jobname |] -> 
             let jobId, text = doSubmit jcl jobname

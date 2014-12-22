@@ -53,11 +53,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\objec_000\Documents\GitHub\main\ZOSInteractServer\ZOSInteractServer\zos;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\user\Documents\GitHub\main\ZOSInteractServer\ZOSInteractServer;C:\Users\objec_000\Documents\GitHub\main\ZOSInteractServer\ZOSInteractServer\zos;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -80,10 +81,49 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Method.cpp" />
+    <ClCompile Include="Request.cpp" />
+    <ClCompile Include="Resource.cpp" />
+    <ClCompile Include="Response.cpp" />
+    <ClCompile Include="RestClient.cpp" />
+    <ClCompile Include="RestServerEvents.cpp" />
+    <ClCompile Include="Service.cpp" />
+    <ClCompile Include="StringUtil.cpp" />
+    <ClCompile Include="TcpServer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dummy.h" />
-    <ClInclude Include="dummy_socket.h" />
+    <ClInclude Include="corvusoft\restbed\detail\logger_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\method_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\path_parameter_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\request_builder_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\request_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\resource_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\resource_matcher_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\response_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\service_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\settings_impl.h" />
+    <ClInclude Include="corvusoft\restbed\detail\status_code_impl.h" />
+    <ClInclude Include="corvusoft\restbed\logger.h" />
+    <ClInclude Include="corvusoft\restbed\log_level.h" />
+    <ClInclude Include="corvusoft\restbed\method.h" />
+    <ClInclude Include="corvusoft\restbed\mode.h" />
+    <ClInclude Include="corvusoft\restbed\request.h" />
+    <ClInclude Include="corvusoft\restbed\resource.h" />
+    <ClInclude Include="corvusoft\restbed\response.h" />
+    <ClInclude Include="corvusoft\restbed\service.h" />
+    <ClInclude Include="corvusoft\restbed\settings.h" />
+    <ClInclude Include="corvusoft\restbed\status_code.h" />
+    <ClInclude Include="lib_bridge.h" />
+    <ClInclude Include="Method.h" />
+    <ClInclude Include="Request.h" />
+    <ClInclude Include="RestClient.h" />
+    <ClInclude Include="rest_framework.h" />
+    <ClInclude Include="StatusCode.h" />
+    <ClInclude Include="StringUtil.h" />
+    <ClInclude Include="TcpServer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
