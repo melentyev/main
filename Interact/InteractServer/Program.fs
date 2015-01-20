@@ -18,56 +18,18 @@ let logonProc = "ISPFPROC"
 
 let awaitTask = Async.Ignore << Async.AwaitIAsyncResult 
 
-let ftpUpdateList1 = 
-    [
-        "ADATA.c", "'MELEN.GCC.SOURCE(ADATA)'"
-        "GENLIST.c", "'MELEN.GCC.SOURCE(GENLIST)'"
-        "COMMON.c", "'MELEN.GCC.SOURCE(COMMON)'"
-        "GTFSAP.c", "'MELEN.GCC.SOURCE(GTFSAP)'"
-        "VIO.c", "'MELEN.GCC.SOURCE(VIO)'"
-        "genlist.h", "'MELEN.GCC.H(GENLIST)'"
-        "adata.h", "'MELEN.GCC.H(ADATA)'"
-        "common.h", "'MELEN.GCC.H(COMMON)'"
-        "vio.h", "'MELEN.GCC.H(VIO)'"
-    ]
-    |> List.map (fun (dep, dest) -> @"""C:\Users\objec_000\GoogleDrive\EMC\GTFPARSE\GTFPARSE\" + dep + @"""", dest)
-
-let parseFtpUpdateList () = 
-    let lines = File.ReadAllLines("update_list.txt")
+let ftpUpdateListFromFile (file: string) =
+    let lines = File.ReadAllLines(file)
+    let path_pref = Path.GetDirectoryName file
     let fn (l: string) =
         let arr = 
             l.Trim().Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
             |> Array.map(fun s -> s.Trim().Trim([|'\"'; ','|]))
-        if arr.Length > 1 && (not (arr.[0].StartsWith("//"))) then Some(arr.[0], arr.[1]) else None
+        if arr.Length = 2 && (not (arr.[0].StartsWith("//"))) then Some(arr.[0], arr.[1]) else None
     Array.choose fn lines
-
-let ftpUpdateList () = 
-    
-    (*[
-        "Main.cpp",             "'/u/ibmuser/rest/src/Main.C'"
-        "Method.cpp",           "'/u/ibmuser/rest/src/Method.C'"
-        "Request.cpp",          "'/u/ibmuser/rest/src/main.C'"
-        "Resource.cpp",         "'/u/ibmuser/rest/src/main.C'"
-        "Response.cpp",         "'/u/ibmuser/rest/src/main.C'"
-        "RestClient.cpp",       "'/u/ibmuser/rest/src/main.C'"
-        "RestServerEvents.cpp", "'/u/ibmuser/rest/src/main.C'"
-        "Service.cpp",          "'/u/ibmuser/rest/src/main.C'"
-        "StringUtil.cpp",       "'/u/ibmuser/rest/src/main.C'"
-
-        "Method.h",         "'/u/ibmuser/rest/src/Method.h'"
-        "Request.h",        "'/u/ibmuser/rest/src/Request.h'"
-        "rest_framework.h", "'/u/ibmuser/rest/src/rest_framework.h'"
-        "RestClient.h",     "'/u/ibmuser/rest/src/RestClient.h'"
-        "StatusCode.h",     "'/u/ibmuser/rest/src/StatusCode.h'"
-        "StringUtil.h",     "'/u/ibmuser/rest/src/StringUtil.h'"
-        "TcpServer.h",      "'/u/ibmuser/rest/src/TcpServer.h'"
-        "Makefile",         "'/u/ibmuser/rest/Makefile'"
-        
-    ]*)
-    parseFtpUpdateList ()
-    |> Seq.map (fun (dep, dest) -> @"""C:\Users\user\Documents\GitHub\main\ZOSInteractServer\ZOSInteractServer\" + dep + @"""", dest)
+    |> Seq.map (fun (dep, dest) -> @"""" + path_pref + @"\" + dep + @"""", dest)
     |> Seq.toList
-    //"..\..\..\Interact\bin\Debug\Interact.exe" "FTPUPD"
+
 type SmallFtpClient () = 
     let proc = new Process()
     let mutable sw = null
@@ -212,10 +174,10 @@ let main argv =
         let request = Encoding.ASCII.GetString(messageBuf, 0, count).TrimEnd [| '\r'; '\n' |]   
         printfn "Request: %s" request
         match request.Split([| ' ' |], StringSplitOptions.RemoveEmptyEntries) with
-        | [|"FTPUPD"|] -> 
+        | [|"FTPUPD"; list_path|] -> 
             use cl = new SmallFtpClient()
             cl.Connect()
-            ftpUpdateList ()
+            ftpUpdateListFromFile (list_path)
             |> List.iter (fun (dep, dest) -> cl.SendFile(dep, dest) )
             
         | [|"SUBMIT"; jcl; jobname |] -> 
