@@ -9,7 +9,7 @@
 
 RestClient::RestClient(int socket, Service *service) : m_socket(socket),
     scan_from(0), m_state_ind(0), body_recved(0), m_service(service)
-{
+{   
     received_bytes.clear();
     received_string.clear();
     state_seq.clear();

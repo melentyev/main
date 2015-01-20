@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "StatusCode.h"
+#include "Log.h"
 
 #ifndef WIN32                      
 #include <sys/types.h>             
@@ -214,6 +215,7 @@ protected:
 			timeout.tv_usec = 0;
 
 			int mx = clients.empty() ? TcpServer::_serv_sock : std::max(TcpServer::_serv_sock, *max_element(clients.begin(), clients.end()));
+            Log::console("select()");
 			if (select(mx + 1, &readset, &writeset, NULL, &timeout) <= 0)
 			{
 				throw("select");
