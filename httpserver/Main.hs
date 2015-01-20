@@ -10,10 +10,10 @@ import qualified Data.Map as Map
 service = S.Service { S.port = 1488, S.resources = resources }
 
 resources = 
-	[
+	[ 
 		Res.Resource { Res.path = "/testget", Res.method = Method.Get, Res.callback = testget }
 	]
-testget req = Resp.Response { 
+testget req = return $ Resp.Response { 
 	Resp.httpVersion = (1, 1), 
 	Resp.statusCode = StatusCode.Ok, 
 	Resp.statusMessage = "OK", 
