@@ -5,6 +5,7 @@ import System.IO
 import qualified Resource as Res
 import Control.Concurrent
 import Data.Maybe
+import qualified Data.Map as Map
 
 data Service = Service {
     port :: Int,    
@@ -19,10 +20,17 @@ data StateData = StateData {
     url :: Maybe String,
     contentLength :: Int,
     headers :: Map String String,
-    body :: String
+    body :: String,
+    buffer :: String,
 }
 
-initialState = 0
+initialState = StateData { 
+    tag = Started, 
+    url = Nothing, 
+    contentLength = 0, 
+    headers = Map.empty, 
+    body = [], buffer = [] 
+}
 
 serviceLoop :: Socket -> IO ()
 serviceLoop sock = do
