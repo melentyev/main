@@ -1,4 +1,4 @@
-module Method (Method(..)) where
+module Method (Method(..), fromString) where
 
 import Data.Char
 

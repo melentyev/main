@@ -57,7 +57,7 @@ executable httpserver
   -- other-extensions:    
   
   -- Other library packages from which modules are imported.
-  build-depends:       base, network, containers, bytestring
+  build-depends:       base, network, containers, bytestring, parsec
   
   -- Directories containing source files.
   -- hs-source-dirs:      

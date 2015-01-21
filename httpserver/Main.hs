@@ -13,13 +13,32 @@ resources =
 	[ 
 		Res.Resource { Res.path = "/testget", Res.method = Method.Get, Res.callback = testget }
 	]
-testget req = return $ Resp.Response { 
+
+testget req _ = return $ Resp.Response { 
 	Resp.httpVersion = (1, 1), 
 	Resp.statusCode = StatusCode.Ok, 
 	Resp.statusMessage = "OK", 
 	Resp.headers = Map.empty, 
 	Resp.body = ""
 }
+
+mapStream :: IO ((ByteString -> IO ()) -> Res.BodyStream -> ())
+mapStream f stream = do
+    acceptedData <- bodyStream 10
+	case acceptedData of 
+		Success (bs, stream') -> f bs >> mapStream f stream'
+		EOF 				  -> return ()
+		Error                 -> return () 
+
+getfile req bodyStream = do
+	res <- mapStream (print) bodyStream
+	return $ Resp.Response {
+		Resp.httpVersion = (1, 1), 
+		Resp.statusCode = StatusCode.Ok, 
+		Resp.statusMessage = "OK", 
+		Resp.headers = Map.empty, 
+		Resp.body = show res
+	}
 
 
 main :: IO()
