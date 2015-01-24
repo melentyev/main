@@ -1,7 +1,7 @@
 module Service (Service(..), start) where
 
-import Network.Socket hiding (send, recv)
-import Network.Socket.ByteString (send, recv)
+import Network.Socket hiding (send, recv, sendAll)
+import Network.Socket.ByteString (send, recv, sendAll)
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString as BS
 import System.IO
@@ -26,67 +26,81 @@ data StateTag = ParseRequestLine
               | ParseBody
               | Parsed
               | ParseFailed
+              | Finished
+              deriving (Show)
 
 data StateData = StateData {
     tag           :: StateTag,
     url           :: String,
     contentLength :: Int,
     request       :: Req.Request,
-    buffer        :: String,
+    buffer        :: BS.ByteString,
     isBadRequest  :: Bool,
     bodyRecved    :: Int,
     body          :: BS.ByteString,
     bodyReader    :: Res.BodyStream
 } deriving (Show)
 
+nullstr = (B8.pack "")
+
 initialState :: StateData
 initialState = StateData { 
     tag           = ParseRequestLine, 
-    url           = Nothing, 
+    url           = "", 
     contentLength = 0, 
     request       = Req.Request { 
-        Req.path        = 0, 
+        Req.httpVersion = (1, 1),
+        Req.path        = "", 
         Req.method      = Method.Get,     
         Req.headers     = Map.empty, 
         Req.queryParams = Map.empty 
     },
-    buffer        = BS.pack "",
+    buffer        = nullstr,
     isBadRequest  = False,
     bodyRecved    = 0,
-    body          = BS.pack ""
+    body          = nullstr,
+    bodyReader    = \_ -> return Res.EOF
 }
 
 serviceLoop :: Socket -> Service -> IO ()
 serviceLoop sock service = do
     conn <- accept sock
+    putStrLn "socket accepted"
     forkIO (clientThread conn initialState service)
     serviceLoop sock service
 
-findResource :: Service -> Req.Request -> Maybe Resource
-findResource s req = List.find (\r -> Res.path s == Req.path req && Res.method s == Req.method r) $ resources service
+findResource :: Service -> Req.Request -> Maybe Res.Resource
+findResource s req = List.find (\r -> Res.path r == Req.path req && Res.method r == Req.method req) $ resources s
 
-
-httpLineEnding = BS.pack "\r\n"
-
+httpLineEnding = B8.pack "\r\n"
 
 clientThread :: (Socket, SockAddr) -> StateData -> Service -> IO ()
 clientThread (sock, sa) clientState service = do
     buf <- recv sock 1024
+    putStrLn $ "clientThread: (buf: " ++ show (BS.length buf) ++ ")"
     if B8.null buf 
-    then sClose socket
-    else 
-        let state' = handleData clientState buf in
-        case tag state' of 
-            ParseFailed -> sClose socket
-            Finished    -> sClose socket
-            Parsed      ->
-                let request = Req.request state' in
-                case findResource service request of 
-                    Just resource -> handleRequest resource request (bodyReader state')
-                    Nothing -> Req.badRequest
-            _ -> clientThread (sock, sa) state'                  
+    then sClose sock
+    else do
+        let state' = handleData clientState buf service 
+        print state'
+        (case tag state' of 
+            ParseFailed -> sClose sock
+            Finished    -> sClose sock
+            Parsed      -> do
+                    let req = request state'
+                    resp <- maybe 
+                        (return Resp.notFound) 
+                        (\resource -> Res.handleRequest resource req (bodyReader state') )
+                        (findResource service req)
+                    print resp
+                    sendResponse sock resp
+                    sClose sock
+            _ -> clientThread (sock, sa) state' service)
 
-handleData :: StateData -> ByteString -> Service -> StateData 
+sendResponse :: Socket -> Resp.Response -> IO ()
+sendResponse sock resp = sendAll sock (Resp.rawData resp)
+
+handleData :: StateData -> BS.ByteString -> Service -> StateData 
 handleData st buf service =
     handle $ st { buffer = BS.append (buffer st) buf }
     where
@@ -96,7 +110,7 @@ handleData st buf service =
             else 
                 case P.parseRequestLine pref of
                     Just (method, path, queryParams, httpVersion) -> 
-                        handle $ state { tag = ParseHeader, request = req', buffer = drop 2 suf }
+                        handle $ state { tag = ParseHeader, request = req', buffer = BS.drop 2 suf }
                         where req' = (request state) { 
                                 Req.method = method, 
                                 Req.path = path,
@@ -113,25 +127,25 @@ handleData st buf service =
                         handle $ state { 
                             tag = if not isLastHeader then ParseHeader else ParseBody, 
                             request = req', 
-                            buffer = drop 2 suf, 
+                            buffer = BS.drop 2 suf, 
                             contentLength = contLen'
                         }
                         where
                             req' = (request state) { Req.headers = headers' }
                             contLen' = if key == "Content-Length" then read val else 0                   
-                            headers' = (if not isLastHeader then Map.insert key val else id) $ (Req.headers state)
+                            headers' = (if not isLastHeader then Map.insert key val else id) $ (Req.headers . request) state
                     _ -> state { tag = ParseFailed }
         handle state@StateData { tag = ParseBody } = 
             if newLen == contLen 
             then state' { tag = Parsed, bodyReader = reader' 0 } 
             else handle state' 
             where
-                request         = request state'
-                res             = findResource service request
+                req             = request state'
+                --res             = findResource service request
                 reader' off len = 
-                    if off >= newLen 
+                    return $ if off >= newLen 
                     then Res.EOF 
-                    else Res.Success (BS.take rdLen $ BS.drop off $ body state', reader' $ off + len)
+                    else Res.Success (BS.take rdLen (BS.drop off $ body state'), reader' $ off + len)
                     where rdLen = min len (newLen - off)
 
                 contLen = contentLength state
@@ -172,7 +186,7 @@ handleData st buf service =
 start :: Service -> IO ()
 start service = withSocketsDo $ do
     putStrLn "Service started"
-    sock <- (socket AF_INET Stream 0)
+    sock <- socket AF_INET Stream 0
     setSocketOption sock ReuseAddr 1
     bindSocket sock (SockAddrInet (fromIntegral $ port service) iNADDR_ANY)
     listen sock 20

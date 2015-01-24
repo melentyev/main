@@ -9,9 +9,9 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Char
 import Control.Applicative ((<*>), (<$>))
 import Method
+import qualified Data.Map as Map
 
-mkTriple a b c = (a, b, c)
-parseDigit = (read . (\c -> [c])) <$> digit
+parseDigit = ( (read  :: String -> Int) . (\c -> [c])) <$> digit
 version = (,) <$> parseDigit <*> (char '.' >> parseDigit)
 
 alpha = oneOf "abcdefghijklmnopqrstuvwxyz"
@@ -19,21 +19,25 @@ capAlpha = oneOf "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 (|-->) a b = a >>= (\e -> b >> return e)
 
-urlEncodedChar = char '%' >> (string "00" <|> string "11")
-urlEncoded = many $ (alpha <|> capAlpha <|> digit <|> urlEncodedChar)
+uenc c = try (string (uenc' c) >> return c) where 
+	uenc' ('\\') = "5C"
+	uenc' ('/')  = "2F"
+
+urlEncodedChar = char '%' >> ( uenc '\\' <|> uenc '/' )
+urlEncoded = many $ (alpha <|> capAlpha <|> digit <|> char '-' <|> urlEncodedChar)
 queryParam = (,) <$> (urlEncoded |--> char '=') <*> urlEncoded
 queryString = Map.fromList <$> many queryParam
 method = fromString <$> many (noneOf " ")
 path = spaces >> many (noneOf "? ")
 
-requestLine :: GenParser Char st (Method, String, Map String String, (Int, Int))
-requestLine = mkTriple 
+requestLine :: GenParser Char st (Method, String, Map.Map String String, (Int, Int))
+requestLine = (,,,) 
 	<$> method
 	<*> path
 	<*> option Map.empty (char '?' >> queryString)
 	<*> (spaces >> string "HTTP/" >> version)
 
-parseRequestLine :: BS.ByteString -> Maybe (Method, String, Map String String, (Int, Int))
+parseRequestLine :: BS.ByteString -> Maybe (Method, String, Map.Map String String, (Int, Int))
 parseRequestLine line =
     fromEither $ parse requestLine "(unknown)" (C8.unpack line)
 
@@ -47,5 +51,5 @@ parseHeader line =
 		Just (k, v) -> Just (k, v, False)
 		_ -> Nothing
 	
-fromEither :: Either _ b -> Maybe b
+fromEither :: Either a b -> Maybe b
 fromEither = either (const Nothing) (Just)

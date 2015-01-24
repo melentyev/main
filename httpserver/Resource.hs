@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 module Resource (
 	Resource(..),
 	StreamResult(..),
@@ -16,6 +18,9 @@ data StreamResult = EOF
 				  | Success (BS.ByteString, BodyStream)
 
 type BodyStream = Int -> IO StreamResult
+
+instance Show (Int -> IO StreamResult) where
+	show _ = "(-#BodyStream#-)"
 
 data Resource = Resource { 
 	path :: String,

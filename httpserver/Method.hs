@@ -6,7 +6,7 @@ data Method = Get
 			| Post
 			| Put
 			| Delete	
-			deriving (Show)
+			deriving (Eq, Show)
 
 fromString :: String -> Method
 fromString s = 

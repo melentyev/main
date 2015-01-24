@@ -9,4 +9,6 @@ data Request = Request {
     method :: Method,
     headers :: M.Map String String,
     queryParams :: M.Map String String
-}
+} deriving (Show)
+
+
