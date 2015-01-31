@@ -19,6 +19,6 @@ executable hsdoom
   main-is:             Main.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.7 && <4.8, bytestring, binary, GLUT, containers, JuicyPixels
+  build-depends:       base >=4.7 && <4.8, bytestring, binary, GLUT, containers, JuicyPixels, GLUtil, OpenGL
   -- hs-source-dirs:      
   default-language:    Haskell2010

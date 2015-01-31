@@ -13,6 +13,7 @@ import Numeric (showHex)
 import Codec.Picture
 import qualified Wad as W
 import qualified Draw as D
+import Draw3
 --import qualified Text.Show.Pretty as Pr
 
 imageCreator :: String -> IO ()
@@ -23,10 +24,10 @@ runGame :: IO ()
 runGame = do
     lazyWad   <- openBinaryFile "doom.wad" ReadMode >>= BL.hGetContents
     dir       <- W.loadDirectory lazyWad
-    pnames    <- loadPnames dir lazyWad
+    let pnames = W.loadPnames dir lazyWad
     let levels = W.getLevels dir
     D.drawMap (levels !! 0) lazyWad
 
 main :: IO ()
-main = runGame
+main = d3dmain
 

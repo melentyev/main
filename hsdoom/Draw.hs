@@ -28,7 +28,8 @@ drawMap level input = do
     mainLoop
 
 gameLoop level input = do
-    let (vs, lds, sects) = W.loadLevelGeometry level input
+    --let (vs, lds, sects) = W.loadLevelGeometry level input
+    return ()
     
 
 

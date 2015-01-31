@@ -12,6 +12,7 @@ module Wad (
 	loadDirectory,
 	getLevels,
 	loadLevelGeometry,
+	loadPnames,
 	) where
 
 import qualified Data.ByteString.Lazy as BL
@@ -173,9 +174,9 @@ readPnames input =
 
 loadPnames :: [DirEntry] -> BL.ByteString -> [String]
 loadPnames dir input = 
-	let de = List.find (\e -> deName e == "PNAMES") dir in 
+	let de = fromJust $ List.find (\e -> deName e == "PNAMES") dir in 
 	let off = deFilepos de in
-	readPnames $ BL.drop off input
+	readPnames $ BL.drop (fromIntegral off) input
 
 readDirectoryEntry :: BL.ByteString -> DirEntry
 readDirectoryEntry s = 
@@ -214,13 +215,13 @@ loadLevelGeometry level input =
  	let lds   = readLinedefs ldcnt (\i -> vs !! i) lddat in 
  	(vs, lds)
 
-readMapPatch = str = 
+readMapPatch str = 
 	MapPatch {
 		mpOriginx = ox,
 		mpOriginy = oy,
 		mpPatch   = mp
 	}
-	where [ox, mp, oy] = runGet (sequence . replicate 3 getInt16le) str
+	where [ox, mp, oy] = runGet (sequence $ replicate 3 getInt16le) str
 
 loadMapPatches :: Int -> BL.ByteString -> [MapPatch]
 loadMapPatches 0 _   = []
@@ -228,10 +229,10 @@ loadMapPatches n str = readMapPatch str : loadMapPatches (n - 1) (BL.drop mapPat
 
 loadTextureMap :: BL.ByteString -> Texture
 loadTextureMap s = Texture {
-		txName    = dropTailNulls nm,
+		txName    = dropTailNulls $ BL8.unpack nm,
 		txWidth   = w,
 		txHeight  = h,
-		txPatches = loadMapPatches pc rest
+		txPatches = loadMapPatches (fromIntegral pc) rest
 	}
 	where
 	rest = BL.drop texMapPatsOff s
@@ -242,8 +243,8 @@ loadTextureMap s = Texture {
 
 loadTextures :: BL.ByteString -> [Texture]
 loadTextures input = 
-    let cnt = runGet getWord32le input in
-    let offsets = runGet (sequence $ replicate cnt getInt32le) $ BL.drop 4 input in
+    let cnt = runGet getInt32le input in
+    let offsets = runGet (sequence $ replicate (fromIntegral cnt) getInt32le) $ BL.drop 4 input in
     map (\off -> loadTextureMap $ BL.drop off input) offsets
     
 
