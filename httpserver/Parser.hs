@@ -30,16 +30,18 @@ queryString = Map.fromList <$> many queryParam
 method = fromString <$> many (noneOf " ")
 path = spaces >> many (noneOf "? ")
 
-requestLine :: GenParser Char st (Method, String, Map.Map String String, (Int, Int))
-requestLine = (,,,) 
-	<$> method
-	<*> path
-	<*> option Map.empty (char '?' >> queryString)
-	<*> (spaces >> string "HTTP/" >> version)
+requestLine :: GenParser Char st (Method, String, (Int, Int))
+requestLine = (,,) <$> method <*> rawUrl <*> (spaces >> string "HTTP/" >> version)
 
-parseRequestLine :: BS.ByteString -> Maybe (Method, String, Map.Map String String, (Int, Int))
-parseRequestLine line =
-    fromEither $ parse requestLine "(unknown)" (C8.unpack line)
+rawUrl = spaces >> many (noneOf " ")
+
+url = (,) <$> path <*> option Map.empty (char '?' >> queryString)
+
+parseRequestLine :: BS.ByteString -> Maybe (Method, String, String, Map.Map String String, (Int, Int))
+parseRequestLine line = do
+	(m, u, v) <- fromEither $ parse requestLine "(unknown)" (C8.unpack line)
+	(p, q)    <- fromEither $ parse url "(unknown)" u 
+	return (m, u, p, q, v)
 
 header = (,) <$> many (noneOf ": ") <*> (char ':' >> char ' ' >> many anyChar)
 

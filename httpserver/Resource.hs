@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-
 module Resource (
 	Resource(..),
 	StreamResult(..),
@@ -11,16 +9,8 @@ import qualified Request as Req
 import qualified Response as Resp
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString as BS
+import DataDecl
 
-
-data StreamResult = EOF
-				  | Error
-				  | Success (BS.ByteString, BodyStream)
-
-type BodyStream = Int -> IO StreamResult
-
-instance Show (Int -> IO StreamResult) where
-	show _ = "(-#BodyStream#-)"
 
 data Resource = Resource { 
 	path :: String,
