@@ -17,7 +17,7 @@ vertex3f x y z = vertex $ Vertex3 x y (z :: GLfloat)
 drawMap :: W.Level -> BL.ByteString -> IO ()
 drawMap level input = do
     --print level
-    let (vs, lds) = W.loadLevelGeometry level input
+    let (vs, lds, sects, sidedefs, segs) = W.loadLevelGeometry level input
     let (x1, y1) = (minimum (map fst vs), minimum (map snd vs))
     let (x2, y2) = (maximum (map fst vs), maximum (map snd vs))
     print (x1, y1)
